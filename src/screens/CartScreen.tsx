@@ -1,0 +1,829 @@
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  Alert,
+  ActivityIndicator,
+  RefreshControl,
+  TextInput,
+} from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import {useNavigation} from '@react-navigation/native';
+import { theme } from '../theme';
+import GradientButton from '../components/GradientButton';
+import AnimatedCard from '../components/AnimatedCard';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {RootStackParamList} from '../types/navigation';
+import { apiService, Cart, CartItem } from '../services/api';
+
+const CartScreen = () => {
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  
+  // API state management
+  const [cart, setCart] = useState<Cart | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
+  const [couponCode, setCouponCode] = useState('');
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
+
+  // Load cart data
+  const loadCart = async () => {
+    try {
+      setError(null);
+      const cartData = await apiService.getCart();
+      setCart(cartData);
+      console.log('Cart loaded:', cartData.items.length, 'items');
+    } catch (err) {
+      console.error('Error loading cart:', err);
+      setError('Failed to load cart. Please try again.');
+      
+      // Fallback cart with some sample items for demo
+      setCart({
+        id: 'demo_cart_' + Date.now(),
+        items: [
+          {
+            id: 'demo_1',
+            productId: 11,
+            product: {
+              id: 11,
+              name: 'Banarasi Kattan Buti Silk Saree',
+              slug: 'banarasi-buti-kattan-silk-saree',
+              images: ['https://superadmin.samarsilkpalace.com/storage/product-variant-images/FCToUaCthEL7jSXNuUeuOgSOn3c7twWfHgkdX9dA.jpg'],
+              price: 1649,
+              originalPrice: 2999,
+              rating: 4.3,
+              reviewCount: 3,
+              category: {
+                id: 1,
+                title: 'Silk Saree\'s',
+                slug: 'silk-sarees',
+                summary: 'Elegant silk sarees collection',
+                photo: '',
+                is_parent: 0,
+              },
+              isNew: false,
+              isBestseller: true,
+              discountPercentage: 0,
+              sku: '',
+              colors: [],
+              defaultVariantId: 0,
+              variants: [],
+              sizes: '',
+              stock: 0,
+              description: '',
+              specifications: []
+            },
+            quantity: 1,
+            selectedSize: 'Free Size',
+            addedAt: new Date().toISOString(),
+            subtotal: 1649,
+          },
+          {
+            id: 'demo_2', 
+            productId: 14,
+            product: {
+              id: 14,
+              name: 'Banarasi Kattan Ada Buti Silk Saree',
+              slug: 'banarasi-ada-buti-kattan-silk-saree',
+              images: ['https://superadmin.samarsilkpalace.com/storage/product-variants/BKsdg6rfNjvuWfEakb7FT0fH4qwY4f7mSToponwi.jpg'],
+              price: 1649,
+              originalPrice: 2998,
+              rating: 4.5,
+              reviewCount: 5,
+              category: {
+                id: 1,
+                title: "Silk Saree's",
+                slug: 'silk-sarees',
+                summary: 'Elegant silk sarees collection',
+                photo: '',
+                is_parent: 0,
+              },
+              isNew: false,
+              isBestseller: true,
+              discountPercentage: 0,
+              sku: '',
+              colors: [],
+              defaultVariantId: 0,
+              variants: [],
+              sizes: '',
+              stock: 0,
+              description: '',
+              specifications: []
+            },
+            quantity: 2,
+            selectedSize: 'Free Size',
+            addedAt: new Date().toISOString(),
+            subtotal: 3298,
+          }
+        ],
+        totalItems: 3,
+        totalAmount: 4947,
+        deliveryCharge: 99,
+        finalAmount: 5046,
+        updatedAt: new Date().toISOString(),
+      });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // Initial cart load
+  useEffect(() => {
+    loadCart();
+  }, []);
+
+  // Refresh function
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadCart();
+  };
+
+  // Update quantity
+  const updateQuantity = async (cartItemId: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      removeItem(cartItemId);
+      return;
+    }
+    
+    try {
+      setUpdatingItems(prev => new Set(prev).add(cartItemId));
+      const updatedCart = await apiService.updateCartItem(cartItemId, { quantity: newQuantity });
+      setCart(updatedCart);
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+      
+      // Fallback: update locally for demo
+      if (cart) {
+        const updatedCart = {
+          ...cart,
+          items: cart.items.map(item => 
+            item.id === cartItemId 
+              ? { ...item, quantity: newQuantity, subtotal: item.product.price * newQuantity }
+              : item
+          )
+        };
+        // Recalculate totals
+        updatedCart.totalItems = updatedCart.items.reduce((sum, item) => sum + item.quantity, 0);
+        updatedCart.totalAmount = updatedCart.items.reduce((sum, item) => sum + item.subtotal, 0);
+        updatedCart.finalAmount = updatedCart.totalAmount + (updatedCart.deliveryCharge || 0);
+        setCart(updatedCart);
+      }
+    } finally {
+      setUpdatingItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(cartItemId);
+        return newSet;
+      });
+    }
+  };
+
+  // Remove item
+  const removeItem = (cartItemId: string) => {
+    Alert.alert(
+      'Remove Item',
+      'Are you sure you want to remove this item from your cart?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setUpdatingItems(prev => new Set(prev).add(cartItemId));
+              const updatedCart = await apiService.removeFromCart(cartItemId);
+              setCart(updatedCart);
+            } catch (error) {
+              console.error('Error removing item:', error);
+              
+              // Fallback: remove locally for demo
+              if (cart) {
+                const updatedCart = {
+                  ...cart,
+                  items: cart.items.filter(item => item.id !== cartItemId)
+                };
+                // Recalculate totals
+                updatedCart.totalItems = updatedCart.items.reduce((sum, item) => sum + item.quantity, 0);
+                updatedCart.totalAmount = updatedCart.items.reduce((sum, item) => sum + item.subtotal, 0);
+                updatedCart.finalAmount = updatedCart.totalAmount + (updatedCart.deliveryCharge || 0);
+                setCart(updatedCart);
+              }
+            } finally {
+              setUpdatingItems(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(cartItemId);
+                return newSet;
+              });
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Clear entire cart
+  const clearCart = () => {
+    Alert.alert(
+      'Clear Cart',
+      'Are you sure you want to remove all items from your cart?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear All',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await apiService.clearCart();
+              await loadCart(); // Reload cart after clearing
+            } catch (error) {
+              console.error('Error clearing cart:', error);
+              // Fallback: clear locally
+              setCart(prev => prev ? {
+                ...prev,
+                items: [],
+                totalItems: 0,
+                totalAmount: 0,
+                finalAmount: prev.deliveryCharge || 0,
+              } : null);
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Apply coupon
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) {
+      Alert.alert('Error', 'Please enter a coupon code');
+      return;
+    }
+
+    try {
+      setApplyingCoupon(true);
+      const updatedCart = await apiService.applyCoupon(couponCode);
+      setCart(updatedCart);
+      setCouponCode('');
+      Alert.alert('Success', 'Coupon applied successfully!');
+    } catch (error) {
+      console.error('Error applying coupon:', error);
+      Alert.alert('Error', 'Invalid coupon code or coupon has expired');
+    } finally {
+      setApplyingCoupon(false);
+    }
+  };
+
+  // Proceed to checkout
+  const proceedToCheckout = () => {
+    if (!cart || cart.items.length === 0) {
+      Alert.alert('Empty Cart', 'Please add items to your cart before proceeding.');
+      return;
+    }
+    
+    navigation.navigate('Checkout', {
+      cartItems: cart.items.map(item => ({
+        id: item.id,
+        name: item.product.name,
+        price: item.product.price,
+        originalPrice: item.product.originalPrice || item.product.price,
+        quantity: item.quantity,
+        size: item.selectedSize || null,
+        color: item.selectedColor || '',
+        image: item.product.images[0],
+      })),
+      total: cart.finalAmount,
+    });
+  };
+
+  // Continue shopping
+  const continueShopping = () => {
+    navigation.navigate('MainTabs');
+  };
+
+  // Render cart item
+  const renderCartItem = ({item, index}: {item: CartItem; index: number}) => {
+    const isUpdating = updatingItems.has(item.id);
+    const discount = item.product.originalPrice && item.product.originalPrice > item.product.price
+      ? Math.round(((item.product.originalPrice - item.product.price) / item.product.originalPrice) * 100)
+      : 0;
+
+    return (
+      <AnimatedCard
+        style={styles.cartItem}
+        elevation="md"
+        animationType="slide"
+        delay={index * 100}>
+        <View style={styles.itemContent}>
+          <Image source={{uri: item.product.images[0]}} style={styles.itemImage} />
+          
+          <View style={styles.itemDetails}>
+            <Text style={styles.itemName} numberOfLines={2}>{item.product.name}</Text>
+            <Text style={styles.itemCategory}>{item.product.category.title}</Text>
+            
+            <View style={styles.priceContainer}>
+              <Text style={styles.currentPrice}>₹{item.product.price}</Text>
+              {item.product.originalPrice && item.product.originalPrice > item.product.price && (
+                <Text style={styles.originalPrice}>₹{item.product.originalPrice}</Text>
+              )}
+              {discount > 0 && (
+                <View style={styles.discountBadge}>
+                  <Text style={styles.discountText}>{discount}% OFF</Text>
+                </View>
+              )}
+            </View>
+
+            {item.selectedSize && (
+              <Text style={styles.selectedOption}>Size: {item.selectedSize}</Text>
+            )}
+            {item.selectedColor && (
+              <Text style={styles.selectedOption}>Color: {item.selectedColor}</Text>
+            )}
+
+            <Text style={styles.subtotal}>Subtotal: ₹{item.subtotal}</Text>
+          </View>
+
+          <View style={styles.itemActions}>
+            <TouchableOpacity
+              style={styles.removeButton}
+              onPress={() => removeItem(item.id)}
+              disabled={isUpdating}>
+              <Text style={styles.removeIcon}>🗑️</Text>
+            </TouchableOpacity>
+
+            <View style={styles.quantityContainer}>
+              <TouchableOpacity
+                style={[styles.quantityButton, isUpdating && styles.disabledButton]}
+                onPress={() => updateQuantity(item.id, item.quantity - 1)}
+                disabled={isUpdating || item.quantity <= 1}>
+                <Text style={styles.quantityButtonText}>-</Text>
+              </TouchableOpacity>
+              
+              <View style={styles.quantityDisplay}>
+                {isUpdating ? (
+                  <ActivityIndicator size="small" color={theme.colors.primary[500]} />
+                ) : (
+                  <Text style={styles.quantityText}>{item.quantity}</Text>
+                )}
+              </View>
+              
+              <TouchableOpacity
+                style={[styles.quantityButton, isUpdating && styles.disabledButton]}
+                onPress={() => updateQuantity(item.id, item.quantity + 1)}
+                disabled={isUpdating}>
+                <Text style={styles.quantityButtonText}>+</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </AnimatedCard>
+    );
+  };
+
+  // Show loading spinner
+  if (loading && !refreshing) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient colors={theme.colors.gradients.primary} style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}>
+            <Text style={styles.backIcon}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Shopping Cart</Text>
+          <View style={styles.placeholder} />
+        </LinearGradient>
+        
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary[500]} />
+          <Text style={styles.loadingText}>Loading your cart...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <LinearGradient colors={theme.colors.gradients.primary} style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}>
+          <Text style={styles.backIcon}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>
+          Shopping Cart {cart ? `(${cart.totalItems})` : ''}
+        </Text>
+        {cart && cart.items.length > 0 && (
+          <TouchableOpacity 
+            style={styles.clearButton}
+            onPress={clearCart}>
+            <Text style={styles.clearIcon}>🗑️</Text>
+          </TouchableOpacity>
+        )}
+      </LinearGradient>
+
+      {/* Error Message */}
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>⚠️ {error}</Text>
+        </View>
+      )}
+
+      {/* Cart Content */}
+      {!cart || cart.items.length === 0 ? (
+        <View style={styles.emptyCart}>
+          <Text style={styles.emptyCartIcon}>🛒</Text>
+          <Text style={styles.emptyCartTitle}>Your cart is empty</Text>
+          <Text style={styles.emptyCartSubtitle}>Add some beautiful sarees to get started</Text>
+          <GradientButton
+            title="Continue Shopping"
+            onPress={continueShopping}
+            gradient={theme.colors.gradients.primary}
+            style={styles.continueButton}
+          />
+        </View>
+      ) : (
+        <>
+          {/* Cart Items */}
+          <FlatList
+            data={cart.items}
+            renderItem={renderCartItem}
+            keyExtractor={item => item.id}
+            contentContainerStyle={styles.cartList}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            ListFooterComponent={() => (
+              <View style={styles.footer}>
+                {/* Coupon Section */}
+                <View style={styles.couponSection}>
+                  <Text style={styles.sectionTitle}>Have a Coupon?</Text>
+                  <View style={styles.couponContainer}>
+                    <TextInput
+                      style={styles.couponInput}
+                      placeholder="Enter coupon code"
+                      value={couponCode}
+                      onChangeText={setCouponCode}
+                      editable={!applyingCoupon}
+                    />
+                    <TouchableOpacity
+                      style={[styles.applyButton, applyingCoupon && styles.disabledButton]}
+                      onPress={applyCoupon}
+                      disabled={applyingCoupon}>
+                      {applyingCoupon ? (
+                        <ActivityIndicator size="small" color={theme.colors.white} />
+                      ) : (
+                        <Text style={styles.applyButtonText}>Apply</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Order Summary */}
+                <View style={styles.summarySection}>
+                  <Text style={styles.sectionTitle}>Order Summary</Text>
+                  
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Items ({cart.totalItems})</Text>
+                    <Text style={styles.summaryValue}>₹{cart.totalAmount}</Text>
+                  </View>
+                  
+                  {cart.discount && cart.discount > 0 && (
+                    <View style={styles.summaryRow}>
+                      <Text style={[styles.summaryLabel, styles.discountLabel]}>Discount</Text>
+                      <Text style={[styles.summaryValue, styles.discountValue]}>-₹{cart.discount}</Text>
+                    </View>
+                  )}
+                  
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Delivery</Text>
+                    <Text style={styles.summaryValue}>
+                      {cart.deliveryCharge && cart.deliveryCharge > 0 ? `₹${cart.deliveryCharge}` : 'FREE'}
+                    </Text>
+                  </View>
+                  
+                  <View style={[styles.summaryRow, styles.totalRow]}>
+                    <Text style={styles.totalLabel}>Total</Text>
+                    <Text style={styles.totalValue}>₹{cart.finalAmount}</Text>
+                  </View>
+                </View>
+
+                {/* Checkout Button */}
+                <GradientButton
+                  title={`Proceed to Checkout - ₹${cart.finalAmount}`}
+                  onPress={proceedToCheckout}
+                  gradient={theme.colors.gradients.primary}
+                  style={styles.checkoutButton}
+                />
+              </View>
+            )}
+          />
+        </>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.neutral[50],
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: theme.spacing[12],
+    paddingBottom: theme.spacing[4],
+    paddingHorizontal: theme.spacing[5],
+  },
+  backButton: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    padding: theme.spacing[2],
+    borderRadius: theme.borderRadius.full,
+  },
+  backIcon: {
+    fontSize: 20,
+    color: theme.colors.white,
+  },
+  headerTitle: {
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.white,
+  },
+  clearButton: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    padding: theme.spacing[2],
+    borderRadius: theme.borderRadius.full,
+  },
+  clearIcon: {
+    fontSize: 18,
+  },
+  placeholder: {
+    width: 40,
+    height: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+  },
+  loadingText: {
+    marginTop: theme.spacing.md,
+    fontSize: theme.typography.size.sm,
+    color: theme.colors.neutral[600],
+    textAlign: 'center',
+  },
+  errorContainer: {
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.error?.[50] || '#fef2f2',
+    marginHorizontal: theme.spacing.md,
+    marginVertical: theme.spacing.sm,
+    borderRadius: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.error?.[200] || '#fecaca',
+  },
+  errorText: {
+    color: theme.colors.error?.[700] || '#b91c1c',
+    fontSize: theme.typography.size.sm,
+    textAlign: 'center',
+  },
+  emptyCart: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+  },
+  emptyCartIcon: {
+    fontSize: 80,
+    marginBottom: theme.spacing.lg,
+  },
+  emptyCartTitle: {
+    fontSize: theme.typography.size.xl,
+    fontWeight: theme.typography.weight.bold,
+    color: theme.colors.neutral[800],
+    marginBottom: theme.spacing.sm,
+    textAlign: 'center',
+  },
+  emptyCartSubtitle: {
+    fontSize: theme.typography.size.base,
+    color: theme.colors.neutral[600],
+    textAlign: 'center',
+    marginBottom: theme.spacing.xl,
+  },
+  continueButton: {
+    marginTop: theme.spacing.lg,
+  },
+  cartList: {
+    padding: theme.spacing.lg,
+    paddingBottom: theme.spacing.xl,
+  },
+  cartItem: {
+    backgroundColor: theme.colors.white,
+    marginBottom: theme.spacing.md,
+    borderRadius: theme.spacing.lg,
+    padding: theme.spacing.lg,
+  },
+  itemContent: {
+    flexDirection: 'row',
+  },
+  itemImage: {
+    width: 80,
+    height: 80,
+    borderRadius: theme.spacing.md,
+    marginRight: theme.spacing.md,
+  },
+  itemDetails: {
+    flex: 1,
+  },
+  itemName: {
+    fontSize: theme.typography.size.base,
+    fontWeight: theme.typography.weight.semibold,
+    color: theme.colors.neutral[900],
+    marginBottom: theme.spacing.xs,
+  },
+  itemCategory: {
+    fontSize: theme.typography.size.sm,
+    color: theme.colors.neutral[500],
+    marginBottom: theme.spacing.sm,
+  },
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.sm,
+    flexWrap: 'wrap',
+    gap: theme.spacing.xs,
+  },
+  currentPrice: {
+    fontSize: theme.typography.size.lg,
+    fontWeight: theme.typography.weight.bold,
+    color: theme.colors.primary[500],
+  },
+  originalPrice: {
+    fontSize: theme.typography.size.sm,
+    color: theme.colors.neutral[500],
+    textDecorationLine: 'line-through',
+  },
+  discountBadge: {
+    backgroundColor: theme.colors.success?.[500] || '#10b981',
+    paddingHorizontal: theme.spacing.xs,
+    paddingVertical: 2,
+    borderRadius: theme.spacing.xs,
+  },
+  discountText: {
+    fontSize: theme.typography.size.xs,
+    color: theme.colors.white,
+    fontWeight: theme.typography.weight.bold,
+  },
+  selectedOption: {
+    fontSize: theme.typography.size.sm,
+    color: theme.colors.neutral[600],
+    marginBottom: theme.spacing.xs,
+  },
+  subtotal: {
+    fontSize: theme.typography.size.sm,
+    fontWeight: theme.typography.weight.semibold,
+    color: theme.colors.neutral[800],
+  },
+  itemActions: {
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  removeButton: {
+    padding: theme.spacing.sm,
+  },
+  removeIcon: {
+    fontSize: 18,
+  },
+  quantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.neutral[100],
+    borderRadius: theme.spacing.lg,
+    padding: theme.spacing.xs,
+  },
+  quantityButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: theme.colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quantityButtonText: {
+    fontSize: theme.typography.size.lg,
+    fontWeight: theme.typography.weight.bold,
+    color: theme.colors.neutral[600],
+  },
+  quantityDisplay: {
+    width: 40,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quantityText: {
+    fontSize: theme.typography.size.base,
+    fontWeight: theme.typography.weight.semibold,
+    color: theme.colors.neutral[900],
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  footer: {
+    marginTop: theme.spacing.lg,
+  },
+  couponSection: {
+    backgroundColor: theme.colors.white,
+    padding: theme.spacing.lg,
+    borderRadius: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+  },
+  sectionTitle: {
+    fontSize: theme.typography.size.lg,
+    fontWeight: theme.typography.weight.semibold,
+    color: theme.colors.neutral[900],
+    marginBottom: theme.spacing.md,
+  },
+  couponContainer: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  couponInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[300],
+    borderRadius: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    fontSize: theme.typography.size.base,
+  },
+  applyButton: {
+    backgroundColor: theme.colors.primary[500],
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 80,
+  },
+  applyButtonText: {
+    color: theme.colors.white,
+    fontWeight: theme.typography.weight.semibold,
+  },
+  summarySection: {
+    backgroundColor: theme.colors.white,
+    padding: theme.spacing.lg,
+    borderRadius: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing.sm,
+  },
+  summaryLabel: {
+    fontSize: theme.typography.size.base,
+    color: theme.colors.neutral[600],
+  },
+  summaryValue: {
+    fontSize: theme.typography.size.base,
+    color: theme.colors.neutral[900],
+    fontWeight: theme.typography.weight.medium,
+  },
+  discountLabel: {
+    color: theme.colors.success?.[600] || '#059669',
+  },
+  discountValue: {
+    color: theme.colors.success?.[600] || '#059669',
+  },
+  totalRow: {
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.neutral[200],
+    paddingTop: theme.spacing.md,
+    marginTop: theme.spacing.md,
+  },
+  totalLabel: {
+    fontSize: theme.typography.size.lg,
+    fontWeight: theme.typography.weight.bold,
+    color: theme.colors.neutral[900],
+  },
+  totalValue: {
+    fontSize: theme.typography.size.lg,
+    fontWeight: theme.typography.weight.bold,
+    color: theme.colors.primary[500],
+  },
+  checkoutButton: {
+    marginBottom: theme.spacing.lg,
+  },
+});
+
+export default CartScreen;

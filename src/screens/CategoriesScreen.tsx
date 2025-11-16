@@ -1,0 +1,333 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {RootStackParamList} from '../types/navigation';
+import AppHeader from '../components/AppHeader';
+import { apiService, ApiCategory } from '../services/api';
+import { theme } from '../theme';
+
+type Category = {
+  id: string;
+  name: string;
+  subtitle: string;
+  image: string;
+  itemCount: number;
+  subcategories: string[];
+};
+
+const CategoriesScreen = () => {
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+
+  // State management for API data
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fallback categories in case API fails
+  const fallbackCategories = [
+    {
+      id: '1',
+      name: 'Fashion',
+      description: 'Clothing & Accessories',
+      image: 'https://via.placeholder.com/150',
+      itemCount: 124,
+      subcategories: ['Men\'s Fashion', 'Women\'s Fashion', 'Kids Fashion', 'Accessories'],
+    },
+    {
+      id: '2',
+      name: 'Electronics',
+      description: 'Gadgets & Technology',
+      image: 'https://via.placeholder.com/150',
+      itemCount: 89,
+      subcategories: ['Smartphones', 'Laptops', 'Audio', 'Gaming'],
+    },
+    {
+      id: '3',
+      name: 'Home & Garden',
+      description: 'Home Improvement',
+      image: 'https://via.placeholder.com/150',
+      itemCount: 156,
+      subcategories: ['Furniture', 'Decor', 'Kitchen', 'Garden'],
+    },
+    {
+      id: '4',
+      name: 'Sports & Fitness',
+      description: 'Athletic Gear',
+      image: 'https://via.placeholder.com/150',
+      itemCount: 78,
+      subcategories: ['Fitness', 'Outdoor', 'Team Sports', 'Water Sports'],
+    },
+    {
+      id: '5',
+      name: 'Health & Beauty',
+      description: 'Personal Care',
+      image: 'https://via.placeholder.com/150',
+      itemCount: 203,
+      subcategories: ['Skincare', 'Makeup', 'Hair Care', 'Wellness'],
+    },
+    {
+      id: '6',
+      name: 'Books & Media',
+      description: 'Entertainment',
+      image: 'https://via.placeholder.com/150',
+      itemCount: 91,
+      subcategories: ['Books', 'Movies', 'Music', 'Games'],
+    },
+  ];
+
+  // Load categories from API
+  const loadCategories = async () => {
+    try {
+      setError(null);
+      const categoriesData = await apiService.getCategories();
+      
+      if (categoriesData.length > 0) {
+        setCategories(categoriesData);
+        console.log('Categories loaded successfully:', categoriesData.length);
+      } else {
+        console.log('No categories from API, using fallback data');
+        setCategories(fallbackCategories as any);
+      }
+
+    } catch (err) {
+      console.error('Error loading categories:', err);
+      setError('Failed to load categories. Using offline content.');
+      setCategories(fallbackCategories as any);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // Initial data load
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  // Refresh function
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadCategories();
+  };
+
+  const renderCategory = ({item}: {item: ApiCategory}) => (
+    <TouchableOpacity
+      style={styles.categoryCard}
+      onPress={() => navigation.navigate('ProductList', {categoryId: String(item.id), categoryName: item.name})}>
+      <Image source={{uri: item.image}} style={styles.categoryImage} />
+      <View style={styles.categoryInfo}>
+        <Text style={styles.categoryName}>{item.name}</Text>
+        <Text style={styles.categorySubtitle}>{item.description || 'Explore this category'}</Text>
+        <Text style={styles.itemCount}>
+          {(item as any).itemCount ? `${(item as any).itemCount} items` : 'Available items'}
+        </Text>
+        {(item as any).subcategories && (item as any).subcategories.length > 0 && (
+          <View style={styles.subcategoriesContainer}>
+            {(item as any).subcategories.slice(0, 4).map((sub: string, index: number) => (
+              <Text key={index} style={styles.subcategory}>
+                {sub}{index < Math.min((item as any).subcategories.length, 4) - 1 ? ' • ' : ''}
+              </Text>
+            ))}
+            {(item as any).subcategories.length > 4 && (
+              <Text style={styles.subcategory}> +{(item as any).subcategories.length - 4} more</Text>
+            )}
+          </View>
+        )}
+      </View>
+      <Text style={styles.arrow}>→</Text>
+    </TouchableOpacity>
+  );
+
+  // Show loading spinner on initial load
+  if (loading && !refreshing) {
+    return (
+      <View style={styles.container}>
+        <AppHeader 
+          title="Categories"
+          rightComponent={
+            <TouchableOpacity 
+              style={styles.searchButton}
+              onPress={() => navigation.navigate('Search')}>
+              <Text style={styles.searchIcon}>🔍</Text>
+            </TouchableOpacity>
+          }
+        />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary[500]} />
+          <Text style={styles.loadingText}>Loading categories...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <AppHeader 
+        title={`Categories ${categories.length > 0 ? `(${categories.length})` : ''}`}
+        rightComponent={
+          <TouchableOpacity 
+            style={styles.searchButton}
+            onPress={() => navigation.navigate('Search')}>
+            <Text style={styles.searchIcon}>🔍</Text>
+          </TouchableOpacity>
+        }
+      />
+
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>⚠️ {error}</Text>
+        </View>
+      )}
+
+      {/* Categories List */}
+      {categories.length > 0 ? (
+        <FlatList
+          data={categories}
+          renderItem={renderCategory}
+          keyExtractor={item => String(item.id)}
+          contentContainerStyle={styles.categoriesList}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        />
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>📦 No categories available</Text>
+          <Text style={styles.emptySubtext}>Pull down to refresh</Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.neutral[50],
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.neutral[600],
+    marginTop: theme.spacing[3],
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  errorContainer: {
+    backgroundColor: '#ffebee',
+    padding: theme.spacing[3],
+    marginHorizontal: theme.spacing[4],
+    marginTop: theme.spacing[2],
+    borderRadius: theme.borderRadius.md,
+    borderLeftWidth: 4,
+    borderLeftColor: '#f44336',
+  },
+  errorText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: '#c62828',
+    fontWeight: theme.typography.fontWeight.medium,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing[6],
+  },
+  emptyText: {
+    fontSize: theme.typography.fontSize.xl,
+    color: theme.colors.neutral[500],
+    textAlign: 'center',
+    fontWeight: theme.typography.fontWeight.medium,
+    marginBottom: theme.spacing[2],
+  },
+  emptySubtext: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.neutral[400],
+    textAlign: 'center',
+  },
+  searchButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+  },
+  searchIcon: {
+    fontSize: 20,
+  },
+  categoriesList: {
+    padding: theme.spacing[4],
+  },
+  categoryCard: {
+    flexDirection: 'row',
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing[4],
+    marginBottom: theme.spacing[3],
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[100],
+  },
+  categoryImage: {
+    width: 80,
+    height: 80,
+    borderRadius: theme.borderRadius.lg,
+  },
+  categoryInfo: {
+    flex: 1,
+    marginLeft: theme.spacing[4],
+  },
+  categoryName: {
+    fontSize: theme.typography.fontSize.lg,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.neutral[800],
+    marginBottom: theme.spacing[1],
+  },
+  categorySubtitle: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.neutral[600],
+    marginBottom: theme.spacing[1],
+  },
+  itemCount: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.primary[500],
+    fontWeight: theme.typography.fontWeight.semibold,
+    marginBottom: theme.spacing[2],
+  },
+  subcategoriesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  subcategory: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.neutral[500],
+  },
+  arrow: {
+    fontSize: 20,
+    color: theme.colors.neutral[400],
+    marginLeft: theme.spacing[3],
+  },
+});
+
+export default CategoriesScreen;
