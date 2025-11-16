@@ -10,6 +10,7 @@ import {StatusBar, LogBox} from 'react-native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import AppNavigator from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/contexts/AuthContext';
+import { UserProfileProvider } from './src/contexts/UserProfileContext';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 // Ignore specific warnings for development
@@ -40,12 +41,14 @@ function App(): React.JSX.Element {
   return (
     <GestureHandlerRootView style={{flex: 1}}>
       <AuthProvider>
-        <StatusBar
-          barStyle="light-content"
-          backgroundColor="#f43f5e"
-          translucent={false}
-        />
-        <AppNavigator />
+        <UserProfileProvider>
+          <StatusBar
+            barStyle="light-content"
+            backgroundColor="#f43f5e"
+            translucent={false}
+          />
+          <AppNavigator />
+        </UserProfileProvider>
       </AuthProvider>
     </GestureHandlerRootView>
   );

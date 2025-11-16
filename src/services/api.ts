@@ -103,19 +103,17 @@ export interface RegisterCredentials {
 }
 
 export interface AuthUser {
-  id: string;
-  firstName: string;
-  lastName: string;
+  id: number;
+  name: string;
+  phone: string;
   email: string;
-  phone?: string;
-  avatar?: string;
-  isVerified: boolean;
-  createdAt: string;
-  preferences?: {
-    newsletter: boolean;
-    sms: boolean;
-    pushNotifications: boolean;
-  };
+  address?: string | null;
+  gstin?: string | null;
+  created_at: string;
+  updated_at: string;
+  google_id?: string | null;
+  avatar?: string | null;
+  facebook_id?: string | null;
 }
 
 export interface AuthResponse {
@@ -127,7 +125,73 @@ export interface AuthResponse {
   expiresIn?: number;
 }
 
-// Cart and Order Interfaces
+// Updated interfaces to match your API response
+export interface ApiCartItem {
+  id: number;
+  name: string;
+  price: string;
+  quantity: number;
+  image: string[];
+}
+
+export interface ApiCart {
+  items: ApiCartItem[];
+  subtotal: number;
+  discount: number;
+  shipping: number;
+  tax: number;
+  total: number;
+}
+
+export interface ApiOrderItem {
+  id: number;
+  name: string;
+  image: string | string[];
+  price: string;
+  quantity: number;
+}
+
+export interface ApiOrder {
+  id: string;
+  date: string;
+  total: string;
+  status: string;
+  statusColor: string;
+  items: ApiOrderItem[];
+}
+
+export interface ApiWishlistItem {
+  wish_id: number;
+  id: number;
+  name: string;
+  slug: string;
+  image: string[];
+  price: string;
+  originalPrice: number | null;
+  category: string;
+}
+
+export interface ApiAddress {
+  id: number;
+  name: string;
+  type: string;
+  address: string;
+  city: string;
+  state: string;
+  postal: string;
+  phone: string;
+  isDefault: boolean;
+}
+
+export interface UserData {
+  user: AuthUser;
+  orders: ApiOrder[];
+  wishlists: ApiWishlistItem[];
+  addresses: ApiAddress[];
+  cart_items: ApiCart;
+}
+
+// Legacy interfaces for backward compatibility
 export interface CartItem {
   id: string;
   productId: number;
@@ -531,6 +595,18 @@ class ApiService {
     }
   }
 
+  // Get product details by ID (deprecated - use slug instead)
+  async getProductDetails(productId: number): Promise<ApiProduct | null> {
+    try {
+      console.warn('getProductDetails by ID is deprecated. Use getProductBySlug instead.');
+      const response = await this.fetchApi<ApiProduct>(`/getProductDetails/${productId}`);
+      return response;
+    } catch (error) {
+      console.error('Error fetching product details by ID:', error);
+      throw error;
+    }
+  }
+
   // Backward compatibility - get product by ID or slug
   async getProductById(productIdOrSlug: string | number): Promise<ApiProduct | null> {
     try {
@@ -576,20 +652,37 @@ class ApiService {
   // Authentication Methods
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await this.fetchApi<AuthResponse>('/auth/login', {
+      const response = await this.fetchApi<{
+        message: string;
+        customer: AuthUser;
+        token: string;
+      }>('/login', {
         method: 'POST',
         body: JSON.stringify(credentials),
       });
       
+      // Transform the response to match our AuthResponse interface
+      const authResponse: AuthResponse = {
+        success: true,
+        message: response.message,
+        user: response.customer,
+        token: response.token,
+      };
+      
       // Set auth token if login successful
-      if (response.success && response.token) {
-        this.setAuthToken(response.token);
+      if (authResponse.token) {
+        this.setAuthToken(authResponse.token);
       }
       
-      return response;
+      return authResponse;
     } catch (error) {
       console.error('Error during login:', error);
-      throw error;
+      
+      // Return failed response
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Login failed',
+      };
     }
   }
 
@@ -677,10 +770,21 @@ class ApiService {
 
   async getCurrentUser(): Promise<AuthUser> {
     try {
-      const response = await this.fetchApi<{ user: AuthUser }>('/auth/me');
+      const response = await this.fetchApi<{user: AuthUser}>('/user');
       return response.user;
     } catch (error) {
       console.error('Error fetching current user:', error);
+      throw error;
+    }
+  }
+
+  // Get comprehensive user data including orders, cart, wishlist, addresses
+  async getUserData(): Promise<UserData> {
+    try {
+      const response = await this.fetchApi<UserData>('/user');
+      return response;
+    } catch (error) {
+      console.error('Error fetching user data:', error);
       throw error;
     }
   }
@@ -761,17 +865,75 @@ class ApiService {
 
   // ==================== CART MANAGEMENT ====================
   
-  // Get current user's cart
-  async getCart(): Promise<Cart> {
+  // Get current user's cart (using comprehensive user data)
+  async getCart(): Promise<ApiCart> {
     try {
-      const response = await this.fetchApi<Cart>('/cart');
-      return response;
+      const userData = await this.getUserData();
+      return userData.cart_items;
     } catch (error) {
       console.error('Error fetching cart:', error);
       
       // Return empty cart as fallback
       return {
-        id: 'local_cart_' + Date.now(),
+        items: [],
+        subtotal: 0,
+        discount: 0,
+        shipping: 0,
+        tax: 0,
+        total: 0,
+      };
+    }
+  }
+
+  // Get cart items in legacy format for backward compatibility
+  async getLegacyCart(): Promise<Cart> {
+    try {
+      const apiCart = await this.getCart();
+      
+      // Transform API cart to legacy format
+      const legacyItems: CartItem[] = apiCart.items.map((item, index) => ({
+        id: `cart_item_${item.id}`,
+        productId: item.id,
+        product: {
+          id: item.id,
+          name: item.name,
+          price: parseFloat(item.price),
+          images: item.image,
+          // Add other required product fields with defaults
+          slug: `product-${item.id}`,
+          originalPrice: parseFloat(item.price),
+          discountPercentage: 0,
+          sku: `SKU-${item.id}`,
+          colors: [],
+          defaultVariantId: 1,
+          variants: [],
+          sizes: '',
+          stock: 10,
+          description: '',
+          specifications: [],
+          isBestseller: false,
+          category: { id: 1, title: 'General', slug: 'general', summary: '', photo: '', is_parent: 0 }
+        } as ApiProduct,
+        quantity: item.quantity,
+        addedAt: new Date().toISOString(),
+        subtotal: parseFloat(item.price) * item.quantity,
+      }));
+
+      return {
+        id: 'user_cart',
+        items: legacyItems,
+        totalItems: apiCart.items.reduce((sum, item) => sum + item.quantity, 0),
+        totalAmount: apiCart.subtotal,
+        discount: apiCart.discount,
+        deliveryCharge: apiCart.shipping,
+        finalAmount: apiCart.total,
+        updatedAt: new Date().toISOString(),
+      };
+    } catch (error) {
+      console.error('Error fetching legacy cart:', error);
+      
+      return {
+        id: 'empty_cart',
         items: [],
         totalItems: 0,
         totalAmount: 0,
@@ -863,26 +1025,110 @@ class ApiService {
 
   // ==================== ORDER MANAGEMENT ====================
 
-  // Get user's order history
+  // Get user's order history (using comprehensive user data)
   async getOrders(params: {
+    page?: number;
+    limit?: number;
+    status?: string;
+  } = {}): Promise<{ orders: ApiOrder[]; total: number; hasMore: boolean }> {
+    try {
+      const userData = await this.getUserData();
+      let orders = userData.orders;
+
+      // Filter by status if provided
+      if (params.status) {
+        orders = orders.filter(order => 
+          order.status.toLowerCase() === params.status?.toLowerCase()
+        );
+      }
+
+      // Apply pagination
+      const startIndex = ((params.page || 1) - 1) * (params.limit || 10);
+      const endIndex = startIndex + (params.limit || 10);
+      const paginatedOrders = orders.slice(startIndex, endIndex);
+
+      return {
+        orders: paginatedOrders,
+        total: orders.length,
+        hasMore: endIndex < orders.length,
+      };
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      
+      return {
+        orders: [],
+        total: 0,
+        hasMore: false,
+      };
+    }
+  }
+
+  // Get orders in legacy format for backward compatibility
+  async getLegacyOrders(params: {
     page?: number;
     limit?: number;
     status?: Order['status'];
   } = {}): Promise<{ orders: Order[]; total: number; hasMore: boolean }> {
     try {
-      const queryParams = new URLSearchParams();
-      if (params.page) queryParams.append('page', params.page.toString());
-      if (params.limit) queryParams.append('limit', params.limit.toString());
-      if (params.status) queryParams.append('status', params.status);
+      const apiOrdersResponse = await this.getOrders(params);
+      
+      // Transform API orders to legacy format
+      const legacyOrders: Order[] = apiOrdersResponse.orders.map(apiOrder => ({
+        id: apiOrder.id,
+        orderNumber: apiOrder.id,
+        items: apiOrder.items.map(item => ({
+          id: `order_item_${item.id}`,
+          productId: item.id,
+          product: {
+            id: item.id,
+            name: item.name,
+            price: parseFloat(item.price),
+            images: Array.isArray(item.image) ? item.image : [item.image],
+            slug: `product-${item.id}`,
+            originalPrice: parseFloat(item.price),
+            discountPercentage: 0,
+            sku: `SKU-${item.id}`,
+            colors: [],
+            defaultVariantId: 1,
+            variants: [],
+            sizes: '',
+            stock: 10,
+            description: '',
+            specifications: [],
+            isBestseller: false,
+            category: { id: 1, title: 'General', slug: 'general', summary: '', photo: '', is_parent: 0 }
+          } as ApiProduct,
+          quantity: item.quantity,
+          addedAt: apiOrder.date,
+          subtotal: parseFloat(item.price) * item.quantity,
+        })) as CartItem[],
+        status: apiOrder.status.toUpperCase() as Order['status'],
+        paymentStatus: 'PENDING' as const,
+        paymentMethod: { id: 'cod', type: 'COD', name: 'Cash on Delivery' },
+        shippingAddress: { 
+          name: 'Customer', 
+          phone: '', 
+          addressLine1: '', 
+          city: '', 
+          state: '', 
+          pincode: '' 
+        },
+        totalItems: apiOrder.items.reduce((sum, item) => sum + item.quantity, 0),
+        totalAmount: parseFloat(apiOrder.total),
+        deliveryCharge: 0,
+        finalAmount: parseFloat(apiOrder.total),
+        placedAt: apiOrder.date,
+        updatedAt: apiOrder.date,
+      }));
 
-      const endpoint = queryParams.toString() ? `/orders?${queryParams.toString()}` : '/orders';
-      const response = await this.fetchApi<{ orders: Order[]; total: number; hasMore: boolean }>(endpoint);
-      
-      return response;
+      return {
+        orders: legacyOrders,
+        total: apiOrdersResponse.total,
+        hasMore: apiOrdersResponse.hasMore,
+      };
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      console.error('Error fetching legacy orders:', error);
       
-      // Return empty orders as fallback
       return {
         orders: [],
         total: 0,
@@ -945,15 +1191,483 @@ class ApiService {
     }
   }
 
-  // ==================== SHIPPING & PAYMENT ====================
+  // ==================== WISHLIST MANAGEMENT ====================
 
-  // Get user's saved addresses
-  async getAddresses(): Promise<ShippingAddress[]> {
+  // Get user's wishlist items
+  async getWishlist(): Promise<ApiWishlistItem[]> {
     try {
-      const response = await this.fetchApi<ShippingAddress[]>('/addresses');
+      const userData = await this.getUserData();
+      return userData.wishlists;
+    } catch (error) {
+      console.error('Error fetching wishlist:', error);
+      return [];
+    }
+  }
+
+  // ==================== CART OPERATIONS ====================
+
+  // Add item to cart
+  async addToCart(
+    productId: number, 
+    quantity: number = 1,
+    options?: { size?: string; color?: string; variant_id?: number }
+  ): Promise<{ success: boolean; message: string; cart?: ApiCart }> {
+    try {
+      const payload = {
+        product_id: productId,
+        quantity,
+        ...options,
+      };
+      
+      const response = await this.fetchApi<{ success: boolean; message: string; cart?: ApiCart }>('/cart/add', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      throw error;
+    }
+  }
+
+  // Add wishlist item to cart
+  async addWishlistToCart(wishlistId: number, quantity: number = 1): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await this.fetchApi<{ success: boolean; message: string }>('/wishcart/add', {
+        method: 'POST',
+        body: JSON.stringify({ wishlist_id: wishlistId, quantity }),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error adding wishlist item to cart:', error);
+      throw error;
+    }
+  }
+
+  // Update cart item
+  async updateCartItem(
+    cartItemId: number, 
+    quantity: number
+  ): Promise<{ success: boolean; message: string; cart?: ApiCart }> {
+    try {
+      const response = await this.fetchApi<{ success: boolean; message: string; cart?: ApiCart }>('/cart/update', {
+        method: 'PUT',
+        body: JSON.stringify({ cart_item_id: cartItemId, quantity }),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error updating cart item:', error);
+      throw error;
+    }
+  }
+
+  // Remove item from cart
+  async removeFromCart(cartItemId: number): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await this.fetchApi<{ success: boolean; message: string }>('/cart/remove', {
+        method: 'DELETE',
+        body: JSON.stringify({ cart_item_id: cartItemId }),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+      throw error;
+    }
+  }
+
+  // Get checkout cart details
+  async getCheckoutCart(): Promise<{
+    cart: ApiCart;
+    shipping_address?: ApiAddress;
+    recommended_products?: ApiProduct[];
+  }> {
+    try {
+      const response = await this.fetchApi<{
+        cart: ApiCart;
+        shipping_address?: ApiAddress;
+        recommended_products?: ApiProduct[];
+      }>('/cart/checkout');
+      return response;
+    } catch (error) {
+      console.error('Error fetching checkout cart:', error);
+      throw error;
+    }
+  }
+
+  // Get cart summary
+  async getCartSummary(): Promise<{
+    total_items: number;
+    subtotal: number;
+    total: number;
+    discount: number;
+    shipping: number;
+    tax: number;
+  }> {
+    try {
+      const response = await this.fetchApi<{
+        total_items: number;
+        subtotal: number;
+        total: number;
+        discount: number;
+        shipping: number;
+        tax: number;
+      }>('/cart/summary');
+      return response;
+    } catch (error) {
+      console.error('Error fetching cart summary:', error);
+      throw error;
+    }
+  }
+
+  // Get recommended products
+  async getRecommendedProducts(): Promise<ApiProduct[]> {
+    try {
+      const response = await this.fetchApi<ApiProduct[]>('/recommended-products');
+      return response;
+    } catch (error) {
+      console.error('Error fetching recommended products:', error);
+      return [];
+    }
+  }
+
+  // ==================== WISHLIST OPERATIONS ====================
+
+  // Get wishlist items (independent endpoint)
+  async getWishlistItems(): Promise<ApiWishlistItem[]> {
+    try {
+      const response = await this.fetchApi<ApiWishlistItem[]>('/wishlist');
+      return response;
+    } catch (error) {
+      console.error('Error fetching wishlist items:', error);
+      return [];
+    }
+  }
+
+  // Add item to wishlist
+  async addToWishlist(productId: number): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await this.fetchApi<{ success: boolean; message: string }>('/wishlist', {
+        method: 'POST',
+        body: JSON.stringify({ product_id: productId }),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error adding to wishlist:', error);
+      throw error;
+    }
+  }
+
+  // Remove item from wishlist by product ID
+  async removeFromWishlist(productId: number): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await this.fetchApi<{ success: boolean; message: string }>(`/wishlist/${productId}`, {
+        method: 'DELETE',
+      });
+      return response;
+    } catch (error) {
+      console.error('Error removing from wishlist:', error);
+      throw error;
+    }
+  }
+
+  // Remove from wishlist by wishlist ID
+  async removeFromWishlistById(wishlistId: number): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await this.fetchApi<{ success: boolean; message: string }>(`/wishlistremovebyid/${wishlistId}`, {
+        method: 'POST',
+      });
+      return response;
+    } catch (error) {
+      console.error('Error removing from wishlist by ID:', error);
+      throw error;
+    }
+  }
+
+  // Check if product is in wishlist
+  async checkWishlist(productId: number): Promise<{ in_wishlist: boolean; wishlist_id?: number }> {
+    try {
+      const response = await this.fetchApi<{ in_wishlist: boolean; wishlist_id?: number }>('/checkwishlist', {
+        method: 'POST',
+        body: JSON.stringify({ product_id: productId }),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error checking wishlist:', error);
+      return { in_wishlist: false };
+    }
+  }
+
+  // Sync wishlist (for offline/online sync)
+  async syncWishlist(wishlistItems: { product_id: number }[]): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await this.fetchApi<{ success: boolean; message: string }>('/sync-wishlist', {
+        method: 'POST',
+        body: JSON.stringify({ wishlist_items: wishlistItems }),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error syncing wishlist:', error);
+      throw error;
+    }
+  }
+
+  // ==================== ORDER OPERATIONS ====================
+
+  // Buy now (single product checkout)
+  async buyNow(
+    productId: number,
+    quantity: number,
+    options?: { size?: string; color?: string; variant_id?: number }
+  ): Promise<{ success: boolean; message: string; order_id?: string; payment_url?: string }> {
+    try {
+      const payload = {
+        product_id: productId,
+        quantity,
+        ...options,
+      };
+      
+      const response = await this.fetchApi<{ 
+        success: boolean; 
+        message: string; 
+        order_id?: string; 
+        payment_url?: string 
+      }>('/order/buy-now', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error in buy now:', error);
+      throw error;
+    }
+  }
+
+  // Checkout cart
+  async checkout(
+    addressId: number,
+    paymentMethod: string,
+    notes?: string
+  ): Promise<{ 
+    success: boolean; 
+    message: string; 
+    order_id?: string; 
+    payment_url?: string;
+    order_total?: number;
+  }> {
+    try {
+      const payload = {
+        address_id: addressId,
+        payment_method: paymentMethod,
+        notes,
+      };
+      
+      const response = await this.fetchApi<{ 
+        success: boolean; 
+        message: string; 
+        order_id?: string; 
+        payment_url?: string;
+        order_total?: number;
+      }>('/order/checkout', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error in checkout:', error);
+      throw error;
+    }
+  }
+
+  // Get orders list (independent endpoint)
+  async getOrdersList(params?: { 
+    status?: string; 
+    page?: number; 
+    per_page?: number; 
+  }): Promise<{ 
+    orders: ApiOrder[]; 
+    current_page: number; 
+    last_page: number; 
+    total: number; 
+  }> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.status) queryParams.append('status', params.status);
+      if (params?.page) queryParams.append('page', params.page.toString());
+      if (params?.per_page) queryParams.append('per_page', params.per_page.toString());
+
+      const endpoint = queryParams.toString() ? `/orders?${queryParams.toString()}` : '/orders';
+      const response = await this.fetchApi<{ 
+        orders: ApiOrder[]; 
+        current_page: number; 
+        last_page: number; 
+        total: number; 
+      }>(endpoint);
+      
+      return response;
+    } catch (error) {
+      console.error('Error fetching orders list:', error);
+      return { orders: [], current_page: 1, last_page: 1, total: 0 };
+    }
+  }
+
+  // Get order history
+  async getOrderHistory(params?: { 
+    year?: number; 
+    month?: number; 
+    status?: string; 
+  }): Promise<{ 
+    orders: ApiOrder[];
+    total_spent: number;
+    order_count: number;
+    period: string;
+  }> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.year) queryParams.append('year', params.year.toString());
+      if (params?.month) queryParams.append('month', params.month.toString());
+      if (params?.status) queryParams.append('status', params.status);
+
+      const endpoint = queryParams.toString() ? `/orders/history?${queryParams.toString()}` : '/orders/history';
+      const response = await this.fetchApi<{ 
+        orders: ApiOrder[];
+        total_spent: number;
+        order_count: number;
+        period: string;
+      }>(endpoint);
+      
+      return response;
+    } catch (error) {
+      console.error('Error fetching order history:', error);
+      return { orders: [], total_spent: 0, order_count: 0, period: 'Unknown' };
+    }
+  }
+
+  // ==================== ADDRESS OPERATIONS ====================
+
+  // Get user's saved addresses (using comprehensive user data)
+  async getAddresses(): Promise<ApiAddress[]> {
+    try {
+      const userData = await this.getUserData();
+      return userData.addresses;
+    } catch (error) {
+      console.error('Error fetching addresses from user data:', error);
+      return [];
+    }
+  }
+
+  // Get addresses (independent endpoint)
+  async getAddressesIndependent(): Promise<ApiAddress[]> {
+    try {
+      const response = await this.fetchApi<ApiAddress[]>('/addresses');
       return response;
     } catch (error) {
       console.error('Error fetching addresses:', error);
+      return [];
+    }
+  }
+
+  // Get addresses index
+  async getAddressesIndex(): Promise<{ addresses: ApiAddress[] }> {
+    try {
+      const response = await this.fetchApi<{ addresses: ApiAddress[] }>('/addressesind');
+      return response;
+    } catch (error) {
+      console.error('Error fetching addresses index:', error);
+      return { addresses: [] };
+    }
+  }
+
+  // Create new address
+  async createAddress(address: {
+    name: string;
+    type: string;
+    address: string;
+    city: string;
+    state: string;
+    postal: string;
+    phone: string;
+    isDefault?: boolean;
+  }): Promise<{ success: boolean; message: string; address?: ApiAddress }> {
+    try {
+      const response = await this.fetchApi<{ 
+        success: boolean; 
+        message: string; 
+        address?: ApiAddress 
+      }>('/addresses', {
+        method: 'POST',
+        body: JSON.stringify(address),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error creating address:', error);
+      throw error;
+    }
+  }
+
+  // Update address
+  async updateAddress(
+    addressId: number, 
+    address: Partial<{
+      name: string;
+      type: string;
+      address: string;
+      city: string;
+      state: string;
+      postal: string;
+      phone: string;
+      isDefault: boolean;
+    }>
+  ): Promise<{ success: boolean; message: string; address?: ApiAddress }> {
+    try {
+      const response = await this.fetchApi<{ 
+        success: boolean; 
+        message: string; 
+        address?: ApiAddress 
+      }>(`/addresses/${addressId}`, {
+        method: 'PUT',
+        body: JSON.stringify(address),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error updating address:', error);
+      throw error;
+    }
+  }
+
+  // Delete address
+  async deleteAddress(addressId: number): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await this.fetchApi<{ success: boolean; message: string }>(`/addresses/${addressId}`, {
+        method: 'DELETE',
+      });
+      return response;
+    } catch (error) {
+      console.error('Error deleting address:', error);
+      throw error;
+    }
+  }
+
+  // Get addresses in legacy format for backward compatibility
+  async getLegacyAddresses(): Promise<ShippingAddress[]> {
+    try {
+      const apiAddresses = await this.getAddresses();
+      
+      // Transform API addresses to legacy format
+      const legacyAddresses: ShippingAddress[] = apiAddresses.map(apiAddress => ({
+        id: apiAddress.id.toString(),
+        name: apiAddress.name,
+        phone: apiAddress.phone,
+        addressLine1: apiAddress.address,
+        addressLine2: undefined,
+        city: apiAddress.city,
+        state: apiAddress.state,
+        pincode: apiAddress.postal,
+        isDefault: apiAddress.isDefault,
+      }));
+
+      return legacyAddresses;
+    } catch (error) {
+      console.error('Error fetching legacy addresses:', error);
       return [];
     }
   }
@@ -1014,6 +1728,278 @@ class ApiService {
         { id: 'card', type: 'CARD', name: 'Credit/Debit Card' },
         { id: 'netbanking', type: 'NETBANKING', name: 'Net Banking' },
       ];
+    }
+  }
+
+  // ==================== RECENTLY VIEWED OPERATIONS ====================
+
+  // Get recently viewed products
+  async getRecentlyViewed(): Promise<ApiProduct[]> {
+    try {
+      const response = await this.fetchApi<ApiProduct[]>('/recently-viewed');
+      return response;
+    } catch (error) {
+      console.error('Error fetching recently viewed products:', error);
+      return [];
+    }
+  }
+
+  // Add product to recently viewed
+  async addToRecentlyViewed(productId: number): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await this.fetchApi<{ success: boolean; message: string }>('/recently-viewed', {
+        method: 'POST',
+        body: JSON.stringify({ product_id: productId }),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error adding to recently viewed:', error);
+      throw error;
+    }
+  }
+
+  // Sync recently viewed products (for offline/online sync)
+  async syncRecentlyViewed(productIds: number[]): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await this.fetchApi<{ success: boolean; message: string }>('/sync-recently-viewed', {
+        method: 'POST',
+        body: JSON.stringify({ product_ids: productIds }),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error syncing recently viewed:', error);
+      throw error;
+    }
+  }
+
+  // ==================== PAYMENT OPERATIONS ====================
+
+  // Create Razorpay order
+  async createRazorpayOrder(
+    amount: number,
+    currency: string = 'INR',
+    notes?: { [key: string]: string }
+  ): Promise<{
+    success: boolean;
+    order_id: string;
+    amount: number;
+    currency: string;
+    key: string;
+    name?: string;
+    description?: string;
+    prefill?: {
+      name?: string;
+      email?: string;
+      contact?: string;
+    };
+    theme?: {
+      color?: string;
+    };
+  }> {
+    try {
+      const response = await this.fetchApi<{
+        success: boolean;
+        order_id: string;
+        amount: number;
+        currency: string;
+        key: string;
+        name?: string;
+        description?: string;
+        prefill?: {
+          name?: string;
+          email?: string;
+          contact?: string;
+        };
+        theme?: {
+          color?: string;
+        };
+      }>('/createrazorpayorder', {
+        method: 'POST',
+        body: JSON.stringify({ amount, currency, notes }),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error creating Razorpay order:', error);
+      throw error;
+    }
+  }
+
+  // Verify and save payment
+  async verifyAndSavePayment(paymentData: {
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+    order_id?: string;
+    amount?: number;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    order_id?: string;
+    payment_status?: string;
+  }> {
+    try {
+      const response = await this.fetchApi<{
+        success: boolean;
+        message: string;
+        order_id?: string;
+        payment_status?: string;
+      }>('/paychecksave', {
+        method: 'POST',
+        body: JSON.stringify(paymentData),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error verifying payment:', error);
+      throw error;
+    }
+  }
+
+  // Get order details
+  async getOrderDetails(orderId: string): Promise<{
+    order: {
+      id: string;
+      order_number: string;
+      status: string;
+      total: number;
+      items: ApiOrderItem[];
+      shipping_address: ApiAddress;
+      payment_method: string;
+      payment_status: string;
+      created_at: string;
+      updated_at: string;
+    };
+  }> {
+    try {
+      const response = await this.fetchApi<{
+        order: {
+          id: string;
+          order_number: string;
+          status: string;
+          total: number;
+          items: ApiOrderItem[];
+          shipping_address: ApiAddress;
+          payment_method: string;
+          payment_status: string;
+          created_at: string;
+          updated_at: string;
+        };
+      }>(`/orderdetails/${orderId}`);
+      return response;
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+      throw error;
+    }
+  }
+
+  // Generate order PDF invoice
+  async generateOrderPDF(orderId: string): Promise<string> {
+    try {
+      // This returns a PDF download URL
+      const pdfUrl = `${this.baseUrl}/order/pdf/${orderId}`;
+      return pdfUrl;
+    } catch (error) {
+      console.error('Error generating order PDF:', error);
+      throw error;
+    }
+  }
+
+  // ==================== COMPREHENSIVE USER DATA UTILITIES ====================
+
+  // Get user statistics and counts
+  async getUserStatistics(): Promise<{
+    totalOrders: number;
+    pendingOrders: number;
+    completedOrders: number;
+    totalSpent: number;
+    wishlistCount: number;
+    addressCount: number;
+    cartItemsCount: number;
+    cartTotal: number;
+  }> {
+    try {
+      const userData = await this.getUserData();
+      
+      const pendingOrders = userData.orders.filter(order => 
+        order.status.toLowerCase() === 'pending'
+      ).length;
+      
+      const completedOrders = userData.orders.filter(order => 
+        order.status.toLowerCase() === 'delivered' || order.status.toLowerCase() === 'completed'
+      ).length;
+
+      const totalSpent = userData.orders.reduce((sum, order) => 
+        sum + parseFloat(order.total), 0
+      );
+
+      return {
+        totalOrders: userData.orders.length,
+        pendingOrders,
+        completedOrders,
+        totalSpent,
+        wishlistCount: userData.wishlists.length,
+        addressCount: userData.addresses.length,
+        cartItemsCount: userData.cart_items.items.reduce((sum, item) => sum + item.quantity, 0),
+        cartTotal: userData.cart_items.total,
+      };
+    } catch (error) {
+      console.error('Error fetching user statistics:', error);
+      
+      return {
+        totalOrders: 0,
+        pendingOrders: 0,
+        completedOrders: 0,
+        totalSpent: 0,
+        wishlistCount: 0,
+        addressCount: 0,
+        cartItemsCount: 0,
+        cartTotal: 0,
+      };
+    }
+  }
+
+  // Get recent activity (latest orders and wishlist additions)
+  async getRecentActivity(): Promise<{
+    recentOrders: ApiOrder[];
+    recentWishlistItems: ApiWishlistItem[];
+  }> {
+    try {
+      const userData = await this.getUserData();
+      
+      // Get 3 most recent orders
+      const recentOrders = userData.orders.slice(0, 3);
+      
+      // Get 5 most recent wishlist items
+      const recentWishlistItems = userData.wishlists.slice(0, 5);
+
+      return {
+        recentOrders,
+        recentWishlistItems,
+      };
+    } catch (error) {
+      console.error('Error fetching recent activity:', error);
+      
+      return {
+        recentOrders: [],
+        recentWishlistItems: [],
+      };
+    }
+  }
+
+  // Search user's order history
+  async searchOrders(query: string): Promise<ApiOrder[]> {
+    try {
+      const userData = await this.getUserData();
+      
+      const searchTerm = query.toLowerCase();
+      const filteredOrders = userData.orders.filter(order => 
+        order.id.toLowerCase().includes(searchTerm) ||
+        order.items.some(item => item.name.toLowerCase().includes(searchTerm))
+      );
+
+      return filteredOrders;
+    } catch (error) {
+      console.error('Error searching orders:', error);
+      return [];
     }
   }
 

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -7,159 +7,198 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/navigation';
-
-type WishlistItem = {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice: number;
-  image: string;
-  inStock: boolean;
-  discount: number;
-};
+import { useUserProfile } from '../contexts/UserProfileContext';
+import { ApiWishlistItem } from '../services/api';
 
 const WishlistScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([
-    {
-      id: '1',
-      name: 'Summer Dress',
-      price: 49.99,
-      originalPrice: 79.99,
-      image: 'https://via.placeholder.com/150',
-      inStock: true,
-      discount: 37,
-    },
-    {
-      id: '2',
-      name: 'Wireless Headphones',
-      price: 89.99,
-      originalPrice: 129.99,
-      image: 'https://via.placeholder.com/150',
-      inStock: true,
-      discount: 31,
-    },
-    {
-      id: '3',
-      name: 'Designer Handbag',
-      price: 199.99,
-      originalPrice: 299.99,
-      image: 'https://via.placeholder.com/150',
-      inStock: false,
-      discount: 33,
-    },
-    {
-      id: '4',
-      name: 'Running Shoes',
-      price: 129.99,
-      originalPrice: 159.99,
-      image: 'https://via.placeholder.com/150',
-      inStock: true,
-      discount: 19,
-    },
-  ]);
+  const { 
+    userData, 
+    isLoading, 
+    error: profileError,
+    getWishlist,
+    removeFromWishlist,
+    removeFromWishlistById,
+    addToCart,
+    refreshUserData 
+  } = useUserProfile();
+  
+  const [wishlistItems, setWishlistItems] = useState<ApiWishlistItem[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [removeLoading, setRemoveLoading] = useState<number>(0);
+  const [addLoading, setAddLoading] = useState<number>(0);
 
-  const removeFromWishlist = (id: string) => {
+  // Load wishlist items
+  const loadWishlist = async () => {
+    try {
+      if (userData?.wishlists) {
+        setWishlistItems(userData.wishlists);
+        console.log('Wishlist loaded from user data:', userData.wishlists.length, 'items');
+      } else {
+        // Fallback: fetch wishlist directly
+        const wishlistData = await getWishlist();
+        setWishlistItems(wishlistData);
+        console.log('Wishlist fetched directly:', wishlistData.length, 'items');
+      }
+    } catch (err) {
+      console.error('Error loading wishlist:', err);
+      setWishlistItems([]);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // Load wishlist when user data changes
+  useEffect(() => {
+    if (userData) {
+      setWishlistItems(userData.wishlists);
+    }
+  }, [userData]);
+
+  // Initial wishlist load
+  useEffect(() => {
+    if (!userData) {
+      loadWishlist();
+    }
+  }, []);
+
+  // Refresh function
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refreshUserData();
+  };
+
+  const handleRemoveFromWishlist = (wishlistId: number, productName: string) => {
     Alert.alert(
       'Remove from Wishlist',
-      'Are you sure you want to remove this item from your wishlist?',
+      `Are you sure you want to remove "${productName}" from your wishlist?`,
       [
-        {text: 'Cancel', style: 'cancel'},
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Remove',
           style: 'destructive',
-          onPress: () => {
-            setWishlistItems(items => items.filter(item => item.id !== id));
+          onPress: async () => {
+            setRemoveLoading(wishlistId);
+            try {
+              await removeFromWishlistById(wishlistId);
+              Alert.alert('Removed', 'Item has been removed from your wishlist.');
+            } catch (error) {
+              console.error('Error removing from wishlist:', error);
+              Alert.alert('Error', 'Failed to remove item from wishlist. Please try again.');
+            } finally {
+              setRemoveLoading(0);
+            }
           },
         },
       ]
     );
   };
 
-  const addToCart = (item: WishlistItem) => {
-    if (!item.inStock) {
-      Alert.alert('Out of Stock', 'This item is currently out of stock.');
-      return;
+  const handleAddToCart = async (productId: number, productName: string) => {
+    setAddLoading(productId);
+    
+    try {
+      await addToCart(productId, 1);
+      Alert.alert(
+        'Added to Cart',
+        `${productName} has been added to your cart successfully!`,
+        [
+          { text: 'Continue Shopping', style: 'cancel' },
+          { text: 'View Cart', onPress: () => navigation.navigate('Cart') },
+        ]
+      );
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      Alert.alert('Error', 'Failed to add item to cart. Please try again.');
+    } finally {
+      setAddLoading(0);
     }
-    Alert.alert(
-      'Added to Cart',
-      `${item.name} has been added to your cart.`,
-      [
-        {text: 'Continue Shopping'},
-        {text: 'View Cart', onPress: () => navigation.navigate('Cart')},
-      ]
-    );
   };
 
-  const renderWishlistItem = ({item}: {item: WishlistItem}) => (
+  const renderWishlistItem = ({item}: {item: ApiWishlistItem}) => {
+    const discountPercentage = item.originalPrice 
+      ? Math.round(((item.originalPrice - parseFloat(item.price)) / item.originalPrice) * 100)
+      : 0;
+    const isRemoving = removeLoading === item.wish_id;
+    const isAdding = addLoading === item.id;
+
+    return (
     <View style={styles.itemCard}>
       <TouchableOpacity
-        onPress={() => navigation.navigate('ProductDetails', {productId: item.id})}
+        onPress={() => navigation.navigate('ProductDetails', {productSlug: item.slug})}>
         style={styles.itemContent}>
-        <Image source={{uri: item.image}} style={styles.itemImage} />
+        <Image 
+          source={{
+            uri: Array.isArray(item.image) 
+              ? item.image[0] 
+              : item.image || 'https://via.placeholder.com/150'
+          }} 
+          style={styles.itemImage} 
+        />
         
         {/* Discount Badge */}
-        {item.discount > 0 && (
+        {discountPercentage > 0 && (
           <View style={styles.discountBadge}>
-            <Text style={styles.discountText}>{item.discount}% OFF</Text>
-          </View>
-        )}
-        
-        {/* Stock Status */}
-        {!item.inStock && (
-          <View style={styles.outOfStockOverlay}>
-            <Text style={styles.outOfStockText}>Out of Stock</Text>
+            <Text style={styles.discountText}>{discountPercentage}% OFF</Text>
           </View>
         )}
         
         <View style={styles.itemDetails}>
           <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+          <Text style={styles.category}>{item.category}</Text>
           <View style={styles.priceContainer}>
-            <Text style={styles.currentPrice}>₹{item.price}</Text>
-            <Text style={styles.originalPrice}>₹{item.originalPrice}</Text>
+            <Text style={styles.currentPrice}>₹{parseFloat(item.price).toLocaleString()}</Text>
+            {item.originalPrice && (
+              <Text style={styles.originalPrice}>₹{item.originalPrice.toLocaleString()}</Text>
+            )}
           </View>
-          <Text style={styles.savings}>
-            You save ₹{(item.originalPrice - item.price).toFixed(2)}
-          </Text>
+          {item.originalPrice && (
+            <Text style={styles.savings}>
+              You save ₹{(item.originalPrice - parseFloat(item.price)).toFixed(2)}
+            </Text>
+          )}
         </View>
       </TouchableOpacity>
       
       <View style={styles.itemActions}>
         <TouchableOpacity
-          style={[
-            styles.addToCartButton,
-            !item.inStock && styles.disabledButton,
-          ]}
-          onPress={() => addToCart(item)}
-          disabled={!item.inStock}>
-          <Text
-            style={[
-              styles.addToCartText,
-              !item.inStock && styles.disabledButtonText,
-            ]}>
-            {item.inStock ? 'Add to Cart' : 'Out of Stock'}
-          </Text>
+          style={[styles.addToCartButton, isAdding && styles.disabledButton]}
+          onPress={() => handleAddToCart(item.id, item.name)}
+          disabled={isAdding || isRemoving}>
+          {isAdding ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.addToCartText}>Add to Cart</Text>
+          )}
         </TouchableOpacity>
         
         <TouchableOpacity
-          style={styles.removeButton}
-          onPress={() => removeFromWishlist(item.id)}>
-          <Text style={styles.removeButtonText}>Remove</Text>
+          style={[styles.removeButton, isRemoving && styles.disabledButton]}
+          onPress={() => handleRemoveFromWishlist(item.wish_id, item.name)}
+          disabled={isRemoving || isAdding}>
+          {isRemoving ? (
+            <ActivityIndicator size="small" color="#ff6b6b" />
+          ) : (
+            <Text style={styles.removeButtonText}>Remove</Text>
+          )}
         </TouchableOpacity>
       </View>
     </View>
-  );
+    );
+  };
 
   const EmptyWishlist = () => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyIcon}>💝</Text>
       <Text style={styles.emptyTitle}>Your Wishlist is Empty</Text>
       <Text style={styles.emptySubtitle}>
-        Save items you love to your wishlist and shop them later
+        Save your favorite sarees and products here to shop them later
       </Text>
       <TouchableOpacity
         style={styles.shopButton}
@@ -168,6 +207,26 @@ const WishlistScreen = () => {
       </TouchableOpacity>
     </View>
   );
+
+  // Show loading spinner
+  if (isLoading && !wishlistItems.length) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Text style={styles.backButton}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>My Wishlist</Text>
+          <View style={styles.placeholder} />
+        </View>
+        
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#f43f5e" />
+          <Text style={styles.loadingText}>Loading your wishlist...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -179,12 +238,15 @@ const WishlistScreen = () => {
         <Text style={styles.headerTitle}>
           Wishlist ({wishlistItems.length})
         </Text>
-        {wishlistItems.length > 0 && (
-          <TouchableOpacity onPress={() => setWishlistItems([])}>
-            <Text style={styles.clearButton}>Clear All</Text>
-          </TouchableOpacity>
-        )}
+        <View style={styles.placeholder} />
       </View>
+
+      {/* Error Message */}
+      {profileError && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>⚠️ {profileError}</Text>
+        </View>
+      )}
 
       {/* Wishlist Items */}
       {wishlistItems.length > 0 ? (
@@ -192,9 +254,12 @@ const WishlistScreen = () => {
           <FlatList
             data={wishlistItems}
             renderItem={renderWishlistItem}
-            keyExtractor={item => item.id}
+            keyExtractor={item => `wishlist_${item.wish_id}`}
             contentContainerStyle={styles.itemsList}
             showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
           />
           
           {/* Move All to Cart Button */}
@@ -202,28 +267,30 @@ const WishlistScreen = () => {
             <TouchableOpacity
               style={styles.moveAllButton}
               onPress={() => {
-                const inStockItems = wishlistItems.filter(item => item.inStock);
-                if (inStockItems.length === 0) {
-                  Alert.alert('No Items Available', 'All items in your wishlist are out of stock.');
-                  return;
-                }
                 Alert.alert(
                   'Move to Cart',
-                  `Move ${inStockItems.length} available items to cart?`,
+                  `Move all ${wishlistItems.length} items to cart?`,
                   [
                     {text: 'Cancel'},
                     {
                       text: 'Move All',
-                      onPress: () => {
-                        Alert.alert('Items Moved', 'Available items have been moved to your cart.');
-                        navigation.navigate('Cart');
+                      onPress: async () => {
+                        try {
+                          for (const item of wishlistItems) {
+                            await addToCart(item.id, 1);
+                          }
+                          Alert.alert('Items Moved', 'All items have been moved to your cart.');
+                          navigation.navigate('Cart');
+                        } catch (error) {
+                          Alert.alert('Error', 'Failed to move some items to cart.');
+                        }
                       },
                     },
                   ]
                 );
               }}>
               <Text style={styles.moveAllText}>
-                Move Available Items to Cart
+                Move All Items to Cart
               </Text>
             </TouchableOpacity>
           </View>
@@ -246,6 +313,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 15,
     backgroundColor: '#f8f9fa',
+  },
+  placeholder: {
+    width: 30,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  errorContainer: {
+    backgroundColor: '#ffebee',
+    margin: 16,
+    padding: 16,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#f44336',
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#c62828',
+    fontWeight: '500',
   },
   backButton: {
     fontSize: 24,

@@ -53,7 +53,7 @@ const SearchScreen = () => {
       style={styles.resultItem}
       onPress={() => {
         if (item.type === 'product') {
-          navigation.navigate('ProductDetails', {productId: item.id});
+          navigation.navigate('ProductDetails', {productSlug: item.slug});
         } else {
           navigation.navigate('ProductList', {categoryName: item.name});
         }

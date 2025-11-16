@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -7,21 +7,32 @@ import {
   Image,
   ScrollView,
   Alert,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/navigation';
+import {useAuth} from '../contexts/AuthContext';
+import {useUserProfile} from '../contexts/UserProfileContext';
 
 const ProfileScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const { state: authState, logout } = useAuth();
+  const { 
+    userData, 
+    userStatistics, 
+    isLoading, 
+    error, 
+    refreshUserData 
+  } = useUserProfile();
+  
+  const [refreshing, setRefreshing] = useState(false);
 
-  const user = {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
-    avatar: 'https://via.placeholder.com/100',
-    memberSince: 'January 2022',
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refreshUserData();
+    setRefreshing(false);
   };
 
   const menuItems = [
@@ -85,9 +96,13 @@ const ProfileScreen = () => {
         {
           text: 'Logout',
           style: 'destructive',
-          onPress: () => {
-            setIsLoggedIn(false);
-            navigation.navigate('Login');
+          onPress: async () => {
+            try {
+              await logout();
+              navigation.navigate('Login');
+            } catch (error) {
+              console.error('Logout error:', error);
+            }
           },
         },
       ]
@@ -110,7 +125,7 @@ const ProfileScreen = () => {
     </TouchableOpacity>
   );
 
-  if (!isLoggedIn) {
+  if (!authState.isAuthenticated) {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
@@ -134,21 +149,68 @@ const ProfileScreen = () => {
     );
   }
 
+  if (isLoading && !userData) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Profile</Text>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#f43f5e" />
+          <Text style={styles.loadingText}>Loading your profile...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  const user = userData?.user || authState.user;
+  const stats = userStatistics;
+  
+  // Format member since date
+  const memberSince = user?.created_at ? 
+    new Date(user.created_at).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long' 
+    }) : 'Recently';
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+      }>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Profile</Text>
+        <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton}>
+          <Text style={styles.refreshText}>🔄</Text>
+        </TouchableOpacity>
       </View>
+
+      {/* Error Message */}
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>⚠️ {error}</Text>
+          <TouchableOpacity onPress={refreshUserData} style={styles.retryButton}>
+            <Text style={styles.retryText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* User Info */}
       <View style={styles.userSection}>
         <View style={styles.userInfo}>
-          <Image source={{uri: user.avatar}} style={styles.avatar} />
+          <Image 
+            source={{
+              uri: user?.avatar || 'https://via.placeholder.com/100/f43f5e/ffffff?text=' + (user?.name?.charAt(0) || 'U')
+            }} 
+            style={styles.avatar} 
+          />
           <View style={styles.userDetails}>
-            <Text style={styles.userName}>{user.name}</Text>
-            <Text style={styles.userEmail}>{user.email}</Text>
-            <Text style={styles.memberSince}>Member since {user.memberSince}</Text>
+            <Text style={styles.userName}>{user?.name || 'User'}</Text>
+            <Text style={styles.userEmail}>{user?.email || 'No email'}</Text>
+            {user?.phone && <Text style={styles.userPhone}>📱 {user.phone}</Text>}
+            <Text style={styles.memberSince}>Member since {memberSince}</Text>
           </View>
           <TouchableOpacity
             style={styles.editButton}
@@ -161,18 +223,36 @@ const ProfileScreen = () => {
       {/* Stats */}
       <View style={styles.statsSection}>
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>12</Text>
+          <Text style={styles.statNumber}>{stats?.totalOrders || 0}</Text>
           <Text style={styles.statLabel}>Orders</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>24</Text>
+          <Text style={styles.statNumber}>{stats?.wishlistCount || 0}</Text>
           <Text style={styles.statLabel}>Wishlist</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>₹850</Text>
+          <Text style={styles.statNumber}>₹{stats?.totalSpent?.toLocaleString() || '0'}</Text>
           <Text style={styles.statLabel}>Total Spent</Text>
+        </View>
+      </View>
+
+      {/* Additional Stats Row */}
+      <View style={styles.statsSection}>
+        <View style={styles.statItem}>
+          <Text style={styles.statNumber}>{stats?.pendingOrders || 0}</Text>
+          <Text style={styles.statLabel}>Pending</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={styles.statNumber}>{stats?.cartItemsCount || 0}</Text>
+          <Text style={styles.statLabel}>Cart Items</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={styles.statNumber}>{stats?.addressCount || 0}</Text>
+          <Text style={styles.statLabel}>Addresses</Text>
         </View>
       </View>
 
@@ -207,13 +287,64 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 15,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f43f5e',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingTop: 50,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
+  },
+  refreshButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  refreshText: {
+    fontSize: 18,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  errorContainer: {
+    backgroundColor: '#ffebee',
+    margin: 16,
+    padding: 16,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#f44336',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#c62828',
+    fontWeight: '500',
+  },
+  retryButton: {
+    backgroundColor: '#f44336',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+  },
+  retryText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
   },
   userSection: {
     padding: 20,
@@ -239,6 +370,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   userEmail: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  userPhone: {
     fontSize: 14,
     color: '#666',
     marginBottom: 4,

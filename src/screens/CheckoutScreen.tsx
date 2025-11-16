@@ -23,8 +23,15 @@ const CheckoutScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute();
   
-  // Get cart data from route params
-  const { cart } = route.params as { cart: Cart };
+  // Get cart data from route params (handle both cart and individual item checkout)
+  const params = route.params as any;
+  const cart = params?.cart;
+  const cartItems = params?.cartItems;
+  const total = params?.total;
+  const subtotal = params?.subtotal;
+  const shipping = params?.shipping;
+  const tax = params?.tax;
+  const discount = params?.discount;
 
   // State management
   const [loading, setLoading] = useState(false);
@@ -170,60 +177,86 @@ const CheckoutScreen = () => {
     }
   };
 
-  // Render cart summary
-  const renderCartSummary = () => (
-    <AnimatedCard style={styles.section} elevation="md">
-      <Text style={styles.sectionTitle}>Order Summary</Text>
-      
-      {cart.items.slice(0, 3).map(item => (
-        <View key={item.id} style={styles.orderItem}>
-          <Image source={{uri: item.product.images[0]}} style={styles.orderItemImage} />
-          <View style={styles.orderItemDetails}>
-            <Text style={styles.orderItemName} numberOfLines={2}>{item.product.name}</Text>
-            <Text style={styles.orderItemInfo}>
-              Qty: {item.quantity} • ₹{item.product.price}
-            </Text>
-            {item.selectedSize && (
-              <Text style={styles.orderItemOption}>Size: {item.selectedSize}</Text>
-            )}
-          </View>
-          <Text style={styles.orderItemPrice}>₹{item.subtotal}</Text>
-        </View>
-      ))}
-      
-      {cart.items.length > 3 && (
-        <Text style={styles.moreItems}>
-          +{cart.items.length - 3} more item{cart.items.length > 4 ? 's' : ''}
-        </Text>
-      )}
+  // Render cart summary (handle both cart and individual items)
+  const renderCartSummary = () => {
+    // Determine the items to display
+    const items = cart?.items || cartItems || [];
+    const itemsToShow = items.slice(0, 3);
+    
+    // Calculate totals
+    const itemsCount = cart?.totalItems || 
+      (cartItems ? cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0) : 0);
+    const itemsTotal = cart?.totalAmount || subtotal || 0;
+    const discountAmount = cart?.discount || discount || 0;
+    const shippingAmount = cart?.deliveryCharge || shipping || 0;
+    const finalTotal = cart?.finalAmount || total || 0;
 
-      <View style={styles.orderSummary}>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Items ({cart.totalItems})</Text>
-          <Text style={styles.summaryValue}>₹{cart.totalAmount}</Text>
-        </View>
+    return (
+      <AnimatedCard style={styles.section} elevation="md">
+        <Text style={styles.sectionTitle}>Order Summary</Text>
         
-        {cart.discount && cart.discount > 0 && (
-          <View style={styles.summaryRow}>
-            <Text style={[styles.summaryLabel, styles.discountLabel]}>Discount</Text>
-            <Text style={[styles.summaryValue, styles.discountValue]}>-₹{cart.discount}</Text>
+        {itemsToShow.map((item: any, index: number) => (
+          <View key={item.id || index} style={styles.orderItem}>
+            <Image 
+              source={{
+                uri: item.product?.images?.[0] || 
+                     (Array.isArray(item.image) ? item.image[0] : item.image) || 
+                     item.images?.[0] || 
+                     'https://via.placeholder.com/50'
+              }} 
+              style={styles.orderItemImage} 
+            />
+            <View style={styles.orderItemDetails}>
+              <Text style={styles.orderItemName} numberOfLines={2}>
+                {item.product?.name || item.name}
+              </Text>
+              <Text style={styles.orderItemInfo}>
+                Qty: {item.quantity} • ₹{item.product?.price || item.price}
+              </Text>
+              {item.selectedSize && (
+                <Text style={styles.orderItemOption}>Size: {item.selectedSize}</Text>
+              )}
+            </View>
+            <Text style={styles.orderItemPrice}>
+              ₹{item.subtotal || (parseFloat(item.price) * item.quantity)}
+            </Text>
           </View>
-        )}
+        ))}
         
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Delivery</Text>
-          <Text style={styles.summaryValue}>
-            {cart.deliveryCharge && cart.deliveryCharge > 0 ? `₹${cart.deliveryCharge}` : 'FREE'}
+        {items.length > 3 && (
+          <Text style={styles.moreItems}>
+            +{items.length - 3} more item{items.length > 4 ? 's' : ''}
           </Text>
+        )}
+
+        <View style={styles.orderSummary}>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Items ({itemsCount})</Text>
+            <Text style={styles.summaryValue}>₹{itemsTotal}</Text>
+          </View>
+          
+          {discountAmount > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={[styles.summaryLabel, styles.discountLabel]}>Discount</Text>
+              <Text style={[styles.summaryValue, styles.discountValue]}>-₹{discountAmount}</Text>
+            </View>
+          )}
+          
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Delivery</Text>
+            <Text style={styles.summaryValue}>
+              {shippingAmount > 0 ? `₹${shippingAmount}` : 'FREE'}
+            </Text>
+          </View>
+          
+          <View style={[styles.summaryRow, styles.totalRow]}>
+            <Text style={styles.totalLabel}>Total Amount</Text>
+            <Text style={styles.totalValue}>₹{finalTotal}</Text>
+          </View>
         </View>
-        
-        <View style={[styles.summaryRow, styles.totalRow]}>
-          <Text style={styles.totalLabel}>Total Amount</Text>
-          <Text style={styles.totalValue}>₹{cart.finalAmount}</Text>
-        </View>
-      </View>
-    </AnimatedCard>
-  );
+      </AnimatedCard>
+    );
+  };
 
   // Render address selection
   const renderAddressSelection = () => (
@@ -445,11 +478,11 @@ const CheckoutScreen = () => {
         <View style={styles.footer}>
           <View style={styles.totalSummary}>
             <Text style={styles.finalTotalLabel}>Total Amount:</Text>
-            <Text style={styles.finalTotalValue}>₹{cart.finalAmount}</Text>
+            <Text style={styles.finalTotalValue}>₹{cart?.finalAmount || total || 0}</Text>
           </View>
           
           <GradientButton
-            title={loading ? 'Placing Order...' : `Place Order - ₹${cart.finalAmount}`}
+            title={loading ? 'Placing Order...' : `Place Order - ₹${cart?.finalAmount || total || 0}`}
             onPress={placeOrder}
             gradient={theme.colors.gradients.primary}
             style={styles.placeOrderButton}

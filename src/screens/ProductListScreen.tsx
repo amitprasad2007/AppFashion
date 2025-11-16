@@ -158,7 +158,7 @@ const ProductListScreen = () => {
   const renderProduct = ({item, index}: {item: ApiProduct; index: number}) => (
     <AnimatedCard
       style={styles.productCard}
-      onPress={() => navigation.navigate('ProductDetails', {productId: item.id.toString()})}
+      onPress={() => navigation.navigate('ProductDetails', {productSlug: item.slug})}>
       elevation="lg"
       animationType="slide"
       delay={index * 100}>

@@ -19,16 +19,27 @@ import AnimatedCard from '../components/AnimatedCard';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/navigation';
 import { apiService, ApiProduct } from '../services/api';
+import { useUserProfile } from '../contexts/UserProfileContext';
 
 const {width} = Dimensions.get('window');
 
 const ProductDetailsScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute();
+  const { 
+    addToCart, 
+    addToWishlist, 
+    removeFromWishlist, 
+    checkWishlist,
+    addToRecentlyViewed 
+  } = useUserProfile();
+  
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const [selectedSize, setSelectedSize] = useState('');
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [togglingWishlist, setTogglingWishlist] = useState(false);
   
   // API state management
   const [product, setProduct] = useState<ApiProduct | null>(null);
@@ -57,6 +68,21 @@ const ProductDetailsScreen = () => {
       
       if (productData) {
         setProduct(productData);
+        
+        // Check if product is in wishlist
+        try {
+          const wishlistStatus = await checkWishlist(productData.id);
+          setIsFavorite(wishlistStatus.in_wishlist);
+        } catch (error) {
+          console.log('Error checking wishlist status:', error);
+        }
+
+        // Add to recently viewed
+        try {
+          await addToRecentlyViewed(productData.id);
+        } catch (error) {
+          console.log('Error adding to recently viewed:', error);
+        }
         
         // Load related products using the correct API with product slug
         let related: ApiProduct[] = [];
@@ -125,7 +151,8 @@ const ProductDetailsScreen = () => {
     if (!product) return;
     
     try {
-      await apiService.addToCart(product.id, quantity, {
+      setAddingToCart(true);
+      await addToCart(product.id, quantity, {
         size: selectedSize,
       });
       
@@ -140,6 +167,32 @@ const ProductDetailsScreen = () => {
     } catch (error) {
       console.error('Error adding to cart:', error);
       Alert.alert('Error', 'Failed to add item to cart. Please try again.');
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
+  // Handle wishlist toggle
+  const handleWishlistToggle = async () => {
+    if (!product) return;
+    
+    try {
+      setTogglingWishlist(true);
+      
+      if (isFavorite) {
+        await removeFromWishlist(product.id);
+        setIsFavorite(false);
+        Alert.alert('Removed', 'Item removed from wishlist');
+      } else {
+        await addToWishlist(product.id);
+        setIsFavorite(true);
+        Alert.alert('Added', 'Item added to wishlist');
+      }
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
+      Alert.alert('Error', 'Failed to update wishlist. Please try again.');
+    } finally {
+      setTogglingWishlist(false);
     }
   };
 
@@ -147,9 +200,33 @@ const ProductDetailsScreen = () => {
   const handleBuyNow = () => {
     if (!product) return;
     
-    navigation.navigate('Checkout', {
-      product: product,
+    // Create cart item format for checkout - ensure image is always an array of strings
+    const productImages = Array.isArray(product.images) 
+      ? product.images 
+      : typeof product.images === 'string' 
+        ? [product.images]
+        : ['https://via.placeholder.com/50'];
+        
+    const cartItem = {
+      id: product.id,
+      name: product.name,
+      price: product.price.toString(),
       quantity: quantity,
+      image: productImages[0], // Use first image as string
+      images: productImages, // Keep array for compatibility
+      selectedSize: selectedSize,
+    };
+
+    const orderTotal = product.price * quantity;
+    
+    navigation.navigate('Checkout', {
+      cartItems: [cartItem],
+      total: orderTotal,
+      subtotal: orderTotal,
+      shipping: 0,
+      tax: 0,
+      discount: 0,
+      isBuyNow: true,
     });
   };
 
@@ -238,9 +315,14 @@ const ProductDetailsScreen = () => {
         
         {/* Favorite Button */}
         <TouchableOpacity 
-          style={styles.favoriteButton}
-          onPress={() => setIsFavorite(!isFavorite)}>
-          <Text style={styles.favoriteIcon}>{isFavorite ? '❤️' : '🤍'}</Text>
+          style={[styles.favoriteButton, togglingWishlist && styles.disabledButton]}
+          onPress={handleWishlistToggle}
+          disabled={togglingWishlist}>
+          {togglingWishlist ? (
+            <ActivityIndicator size="small" color="#f43f5e" />
+          ) : (
+            <Text style={styles.favoriteIcon}>{isFavorite ? '❤️' : '🤍'}</Text>
+          )}
         </TouchableOpacity>
 
         {/* Image Pagination */}
@@ -334,8 +416,15 @@ const ProductDetailsScreen = () => {
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart}>
-            <Text style={styles.addToCartText}>Add to Cart</Text>
+          <TouchableOpacity 
+            style={[styles.addToCartButton, addingToCart && styles.disabledButton]} 
+            onPress={handleAddToCart}
+            disabled={addingToCart}>
+            {addingToCart ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.addToCartText}>Add to Cart</Text>
+            )}
           </TouchableOpacity>
           <GradientButton
             title="Buy Now"
@@ -355,7 +444,7 @@ const ProductDetailsScreen = () => {
               <TouchableOpacity
                 key={item.id}
                 style={styles.relatedProduct}
-                onPress={() => navigation.push('ProductDetails', { productId: item.id })}>
+                onPress={() => navigation.push('ProductDetails', { productSlug: item.slug })}>
                 <Image source={{uri: item.images[0]}} style={styles.relatedImage} />
                 <Text style={styles.relatedName} numberOfLines={2}>{item.name}</Text>
                 <Text style={styles.relatedPrice}>₹{item.price}</Text>
@@ -718,6 +807,9 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.size.sm,
     fontWeight: theme.typography.weight.semibold,
     color: theme.colors.primary[500],
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
 });
 

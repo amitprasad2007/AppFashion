@@ -18,135 +18,78 @@ import GradientButton from '../components/GradientButton';
 import AnimatedCard from '../components/AnimatedCard';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/navigation';
-import { apiService, Cart, CartItem } from '../services/api';
+import { ApiCart, ApiCartItem } from '../services/api';
+import { useUserProfile } from '../contexts/UserProfileContext';
 
 const CartScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const { 
+    userData, 
+    isLoading, 
+    error: profileError,
+    getCart,
+    updateCartItem,
+    removeFromCart,
+    refreshUserData 
+  } = useUserProfile();
   
-  // API state management
-  const [cart, setCart] = useState<Cart | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Local state management
+  const [cart, setCart] = useState<ApiCart | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
+  const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set());
   const [couponCode, setCouponCode] = useState('');
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
-  // Load cart data
+  // Load cart data from user profile context
   const loadCart = async () => {
     try {
-      setError(null);
-      const cartData = await apiService.getCart();
-      setCart(cartData);
-      console.log('Cart loaded:', cartData.items.length, 'items');
+      if (userData?.cart_items) {
+        setCart(userData.cart_items);
+        console.log('Cart loaded from user data:', userData.cart_items.items.length, 'items');
+      } else {
+        // Fallback: fetch cart directly
+        const cartData = await getCart();
+        setCart(cartData);
+        console.log('Cart fetched directly:', cartData.items.length, 'items');
+      }
     } catch (err) {
       console.error('Error loading cart:', err);
-      setError('Failed to load cart. Please try again.');
-      
-      // Fallback cart with some sample items for demo
+      // Set empty cart on error
       setCart({
-        id: 'demo_cart_' + Date.now(),
-        items: [
-          {
-            id: 'demo_1',
-            productId: 11,
-            product: {
-              id: 11,
-              name: 'Banarasi Kattan Buti Silk Saree',
-              slug: 'banarasi-buti-kattan-silk-saree',
-              images: ['https://superadmin.samarsilkpalace.com/storage/product-variant-images/FCToUaCthEL7jSXNuUeuOgSOn3c7twWfHgkdX9dA.jpg'],
-              price: 1649,
-              originalPrice: 2999,
-              rating: 4.3,
-              reviewCount: 3,
-              category: {
-                id: 1,
-                title: 'Silk Saree\'s',
-                slug: 'silk-sarees',
-                summary: 'Elegant silk sarees collection',
-                photo: '',
-                is_parent: 0,
-              },
-              isNew: false,
-              isBestseller: true,
-              discountPercentage: 0,
-              sku: '',
-              colors: [],
-              defaultVariantId: 0,
-              variants: [],
-              sizes: '',
-              stock: 0,
-              description: '',
-              specifications: []
-            },
-            quantity: 1,
-            selectedSize: 'Free Size',
-            addedAt: new Date().toISOString(),
-            subtotal: 1649,
-          },
-          {
-            id: 'demo_2', 
-            productId: 14,
-            product: {
-              id: 14,
-              name: 'Banarasi Kattan Ada Buti Silk Saree',
-              slug: 'banarasi-ada-buti-kattan-silk-saree',
-              images: ['https://superadmin.samarsilkpalace.com/storage/product-variants/BKsdg6rfNjvuWfEakb7FT0fH4qwY4f7mSToponwi.jpg'],
-              price: 1649,
-              originalPrice: 2998,
-              rating: 4.5,
-              reviewCount: 5,
-              category: {
-                id: 1,
-                title: "Silk Saree's",
-                slug: 'silk-sarees',
-                summary: 'Elegant silk sarees collection',
-                photo: '',
-                is_parent: 0,
-              },
-              isNew: false,
-              isBestseller: true,
-              discountPercentage: 0,
-              sku: '',
-              colors: [],
-              defaultVariantId: 0,
-              variants: [],
-              sizes: '',
-              stock: 0,
-              description: '',
-              specifications: []
-            },
-            quantity: 2,
-            selectedSize: 'Free Size',
-            addedAt: new Date().toISOString(),
-            subtotal: 3298,
-          }
-        ],
-        totalItems: 3,
-        totalAmount: 4947,
-        deliveryCharge: 99,
-        finalAmount: 5046,
-        updatedAt: new Date().toISOString(),
+        items: [],
+        subtotal: 0,
+        discount: 0,
+        shipping: 0,
+        tax: 0,
+        total: 0,
       });
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
   };
 
+  // Load cart when user data changes
+  useEffect(() => {
+    if (userData) {
+      setCart(userData.cart_items);
+    }
+  }, [userData]);
+
   // Initial cart load
   useEffect(() => {
-    loadCart();
+    if (!userData) {
+      loadCart();
+    }
   }, []);
 
   // Refresh function
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    loadCart();
+    await refreshUserData();
   };
 
   // Update quantity
-  const updateQuantity = async (cartItemId: string, newQuantity: number) => {
+  const updateQuantity = async (cartItemId: number, newQuantity: number) => {
     if (newQuantity <= 0) {
       removeItem(cartItemId);
       return;
@@ -154,27 +97,11 @@ const CartScreen = () => {
     
     try {
       setUpdatingItems(prev => new Set(prev).add(cartItemId));
-      const updatedCart = await apiService.updateCartItem(cartItemId, { quantity: newQuantity });
-      setCart(updatedCart);
+      await updateCartItem(cartItemId, newQuantity);
+      // Cart will be updated via refreshUserData in the context
     } catch (error) {
       console.error('Error updating quantity:', error);
-      
-      // Fallback: update locally for demo
-      if (cart) {
-        const updatedCart = {
-          ...cart,
-          items: cart.items.map(item => 
-            item.id === cartItemId 
-              ? { ...item, quantity: newQuantity, subtotal: item.product.price * newQuantity }
-              : item
-          )
-        };
-        // Recalculate totals
-        updatedCart.totalItems = updatedCart.items.reduce((sum, item) => sum + item.quantity, 0);
-        updatedCart.totalAmount = updatedCart.items.reduce((sum, item) => sum + item.subtotal, 0);
-        updatedCart.finalAmount = updatedCart.totalAmount + (updatedCart.deliveryCharge || 0);
-        setCart(updatedCart);
-      }
+      Alert.alert('Error', 'Failed to update item quantity. Please try again.');
     } finally {
       setUpdatingItems(prev => {
         const newSet = new Set(prev);
@@ -185,7 +112,7 @@ const CartScreen = () => {
   };
 
   // Remove item
-  const removeItem = (cartItemId: string) => {
+  const removeItem = (cartItemId: number) => {
     Alert.alert(
       'Remove Item',
       'Are you sure you want to remove this item from your cart?',
@@ -197,23 +124,11 @@ const CartScreen = () => {
           onPress: async () => {
             try {
               setUpdatingItems(prev => new Set(prev).add(cartItemId));
-              const updatedCart = await apiService.removeFromCart(cartItemId);
-              setCart(updatedCart);
+              await removeFromCart(cartItemId);
+              // Cart will be updated via refreshUserData in the context
             } catch (error) {
               console.error('Error removing item:', error);
-              
-              // Fallback: remove locally for demo
-              if (cart) {
-                const updatedCart = {
-                  ...cart,
-                  items: cart.items.filter(item => item.id !== cartItemId)
-                };
-                // Recalculate totals
-                updatedCart.totalItems = updatedCart.items.reduce((sum, item) => sum + item.quantity, 0);
-                updatedCart.totalAmount = updatedCart.items.reduce((sum, item) => sum + item.subtotal, 0);
-                updatedCart.finalAmount = updatedCart.totalAmount + (updatedCart.deliveryCharge || 0);
-                setCart(updatedCart);
-              }
+              Alert.alert('Error', 'Failed to remove item. Please try again.');
             } finally {
               setUpdatingItems(prev => {
                 const newSet = new Set(prev);
@@ -229,6 +144,8 @@ const CartScreen = () => {
 
   // Clear entire cart
   const clearCart = () => {
+    if (!cart || cart.items.length === 0) return;
+    
     Alert.alert(
       'Clear Cart',
       'Are you sure you want to remove all items from your cart?',
@@ -239,20 +156,13 @@ const CartScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              setLoading(true);
-              await apiService.clearCart();
-              await loadCart(); // Reload cart after clearing
+              // Remove each item individually since we don't have a clear cart endpoint
+              for (const item of cart.items) {
+                await removeFromCart(item.id);
+              }
             } catch (error) {
               console.error('Error clearing cart:', error);
-              // Fallback: clear locally
-              setCart(prev => prev ? {
-                ...prev,
-                items: [],
-                totalItems: 0,
-                totalAmount: 0,
-                finalAmount: prev.deliveryCharge || 0,
-              } : null);
-              setLoading(false);
+              Alert.alert('Error', 'Failed to clear cart. Please try again.');
             }
           },
         },
@@ -260,7 +170,7 @@ const CartScreen = () => {
     );
   };
 
-  // Apply coupon
+  // Apply coupon (placeholder - implement when coupon API is available)
   const applyCoupon = async () => {
     if (!couponCode.trim()) {
       Alert.alert('Error', 'Please enter a coupon code');
@@ -269,10 +179,9 @@ const CartScreen = () => {
 
     try {
       setApplyingCoupon(true);
-      const updatedCart = await apiService.applyCoupon(couponCode);
-      setCart(updatedCart);
+      // TODO: Implement coupon API endpoint
+      Alert.alert('Feature Coming Soon', 'Coupon functionality will be available soon!');
       setCouponCode('');
-      Alert.alert('Success', 'Coupon applied successfully!');
     } catch (error) {
       console.error('Error applying coupon:', error);
       Alert.alert('Error', 'Invalid coupon code or coupon has expired');
@@ -291,15 +200,16 @@ const CartScreen = () => {
     navigation.navigate('Checkout', {
       cartItems: cart.items.map(item => ({
         id: item.id,
-        name: item.product.name,
-        price: item.product.price,
-        originalPrice: item.product.originalPrice || item.product.price,
+        name: item.name,
+        price: parseFloat(item.price),
         quantity: item.quantity,
-        size: item.selectedSize || null,
-        color: item.selectedColor || '',
-        image: item.product.images[0],
+        image: Array.isArray(item.image) ? item.image[0] : item.image,
       })),
-      total: cart.finalAmount,
+      total: cart.total,
+      subtotal: cart.subtotal,
+      shipping: cart.shipping,
+      tax: cart.tax,
+      discount: cart.discount,
     });
   };
 
@@ -309,11 +219,10 @@ const CartScreen = () => {
   };
 
   // Render cart item
-  const renderCartItem = ({item, index}: {item: CartItem; index: number}) => {
+  const renderCartItem = ({item, index}: {item: ApiCartItem; index: number}) => {
     const isUpdating = updatingItems.has(item.id);
-    const discount = item.product.originalPrice && item.product.originalPrice > item.product.price
-      ? Math.round(((item.product.originalPrice - item.product.price) / item.product.originalPrice) * 100)
-      : 0;
+    const itemPrice = parseFloat(item.price);
+    const itemTotal = itemPrice * item.quantity;
 
     return (
       <AnimatedCard
@@ -322,32 +231,21 @@ const CartScreen = () => {
         animationType="slide"
         delay={index * 100}>
         <View style={styles.itemContent}>
-          <Image source={{uri: item.product.images[0]}} style={styles.itemImage} />
+          <Image 
+            source={{
+              uri: Array.isArray(item.image) ? item.image[0] : item.image || 'https://via.placeholder.com/100'
+            }} 
+            style={styles.itemImage} 
+          />
           
           <View style={styles.itemDetails}>
-            <Text style={styles.itemName} numberOfLines={2}>{item.product.name}</Text>
-            <Text style={styles.itemCategory}>{item.product.category.title}</Text>
+            <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
             
             <View style={styles.priceContainer}>
-              <Text style={styles.currentPrice}>₹{item.product.price}</Text>
-              {item.product.originalPrice && item.product.originalPrice > item.product.price && (
-                <Text style={styles.originalPrice}>₹{item.product.originalPrice}</Text>
-              )}
-              {discount > 0 && (
-                <View style={styles.discountBadge}>
-                  <Text style={styles.discountText}>{discount}% OFF</Text>
-                </View>
-              )}
+              <Text style={styles.currentPrice}>₹{item.price}</Text>
             </View>
 
-            {item.selectedSize && (
-              <Text style={styles.selectedOption}>Size: {item.selectedSize}</Text>
-            )}
-            {item.selectedColor && (
-              <Text style={styles.selectedOption}>Color: {item.selectedColor}</Text>
-            )}
-
-            <Text style={styles.subtotal}>Subtotal: ₹{item.subtotal}</Text>
+            <Text style={styles.subtotal}>Subtotal: ₹{itemTotal.toFixed(2)}</Text>
           </View>
 
           <View style={styles.itemActions}>
@@ -388,7 +286,7 @@ const CartScreen = () => {
   };
 
   // Show loading spinner
-  if (loading && !refreshing) {
+  if (isLoading && !cart) {
     return (
       <View style={styles.container}>
         <LinearGradient colors={theme.colors.gradients.primary} style={styles.header}>
@@ -419,7 +317,7 @@ const CartScreen = () => {
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
-          Shopping Cart {cart ? `(${cart.totalItems})` : ''}
+          Shopping Cart {cart ? `(${cart.items.reduce((sum, item) => sum + item.quantity, 0)})` : ''}
         </Text>
         {cart && cart.items.length > 0 && (
           <TouchableOpacity 
@@ -431,9 +329,9 @@ const CartScreen = () => {
       </LinearGradient>
 
       {/* Error Message */}
-      {error && (
+      {profileError && (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>⚠️ {error}</Text>
+          <Text style={styles.errorText}>⚠️ {profileError}</Text>
         </View>
       )}
 
@@ -492,33 +390,40 @@ const CartScreen = () => {
                   <Text style={styles.sectionTitle}>Order Summary</Text>
                   
                   <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Items ({cart.totalItems})</Text>
-                    <Text style={styles.summaryValue}>₹{cart.totalAmount}</Text>
+                    <Text style={styles.summaryLabel}>Items ({cart.items.reduce((sum, item) => sum + item.quantity, 0)})</Text>
+                    <Text style={styles.summaryValue}>₹{cart.subtotal}</Text>
                   </View>
                   
-                  {cart.discount && cart.discount > 0 && (
+                  {cart.discount > 0 && (
                     <View style={styles.summaryRow}>
                       <Text style={[styles.summaryLabel, styles.discountLabel]}>Discount</Text>
                       <Text style={[styles.summaryValue, styles.discountValue]}>-₹{cart.discount}</Text>
                     </View>
                   )}
                   
-                  <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Delivery</Text>
-                    <Text style={styles.summaryValue}>
-                      {cart.deliveryCharge && cart.deliveryCharge > 0 ? `₹${cart.deliveryCharge}` : 'FREE'}
-                    </Text>
-                  </View>
+                  {cart.shipping > 0 && (
+                    <View style={styles.summaryRow}>
+                      <Text style={styles.summaryLabel}>Shipping</Text>
+                      <Text style={styles.summaryValue}>₹{cart.shipping}</Text>
+                    </View>
+                  )}
+                  
+                  {cart.tax > 0 && (
+                    <View style={styles.summaryRow}>
+                      <Text style={styles.summaryLabel}>Tax</Text>
+                      <Text style={styles.summaryValue}>₹{cart.tax}</Text>
+                    </View>
+                  )}
                   
                   <View style={[styles.summaryRow, styles.totalRow]}>
                     <Text style={styles.totalLabel}>Total</Text>
-                    <Text style={styles.totalValue}>₹{cart.finalAmount}</Text>
+                    <Text style={styles.totalValue}>₹{cart.total}</Text>
                   </View>
                 </View>
 
                 {/* Checkout Button */}
                 <GradientButton
-                  title={`Proceed to Checkout - ₹${cart.finalAmount}`}
+                  title={`Proceed to Checkout - ₹${cart.total}`}
                   onPress={proceedToCheckout}
                   gradient={theme.colors.gradients.primary}
                   style={styles.checkoutButton}

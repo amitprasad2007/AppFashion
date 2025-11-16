@@ -17,161 +17,67 @@ import AnimatedCard from '../components/AnimatedCard';
 import GradientButton from '../components/GradientButton';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/navigation';
-import { apiService, Order, OrderStatusUpdate } from '../services/api';
+import { apiService, ApiOrder } from '../services/api';
+import { useUserProfile } from '../contexts/UserProfileContext';
 
 const OrdersScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   
-  // API state management
-  const [orders, setOrders] = useState<Order[]>([]);
+  const { 
+    userData, 
+    isLoading,
+    error: profileError,
+    getOrders,
+    refreshUserData 
+  } = useUserProfile();
+
+  // Local state management
+  const [orders, setOrders] = useState<ApiOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedFilter, setSelectedFilter] = useState<'ALL' | Order['status']>('ALL');
-  const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(1);
+  const [selectedFilter, setSelectedFilter] = useState<'ALL' | string>('ALL');
 
   const statusFilters = [
-    { key: 'ALL', label: 'All Orders', count: 0 },
-    { key: 'PENDING', label: 'Pending', count: 0 },
-    { key: 'CONFIRMED', label: 'Confirmed', count: 0 },
-    { key: 'SHIPPED', label: 'Shipped', count: 0 },
-    { key: 'DELIVERED', label: 'Delivered', count: 0 },
-    { key: 'CANCELLED', label: 'Cancelled', count: 0 },
+    { key: 'ALL', label: 'All Orders', count: orders.length },
+    { key: 'Pending', label: 'Pending', count: orders.filter(o => o.status === 'Pending').length },
+    { key: 'Confirmed', label: 'Confirmed', count: orders.filter(o => o.status === 'Confirmed').length },
+    { key: 'Shipped', label: 'Shipped', count: orders.filter(o => o.status === 'Shipped').length },
+    { key: 'Delivered', label: 'Delivered', count: orders.filter(o => o.status === 'Delivered').length },
+    { key: 'Cancelled', label: 'Cancelled', count: orders.filter(o => o.status === 'Cancelled').length },
   ];
 
   // Load orders from API
-  const loadOrders = async (pageNum: number = 1, isRefresh: boolean = false) => {
+  const loadOrders = async (isRefresh: boolean = false) => {
     try {
-      if (isRefresh) setError(null);
+      setError(null);
       
-      const params: any = { page: pageNum, limit: 10 };
-      if (selectedFilter !== 'ALL') {
-        params.status = selectedFilter;
-      }
-      
-      const response = await apiService.getOrders(params);
-      
-      if (isRefresh || pageNum === 1) {
-        setOrders(response.orders);
+      // Use the comprehensive user data if available
+      if (userData?.orders) {
+        let filteredOrders = userData.orders;
+        
+        // Apply status filter
+        if (selectedFilter !== 'ALL') {
+          filteredOrders = userData.orders.filter(order => 
+            order.status.toLowerCase() === selectedFilter.toLowerCase()
+          );
+        }
+        
+        setOrders(filteredOrders);
+        console.log('Orders loaded from user data:', filteredOrders.length);
       } else {
-        setOrders(prev => [...prev, ...response.orders]);
+        // Fallback: fetch orders directly
+        const fetchedOrders = await getOrders({
+          status: selectedFilter !== 'ALL' ? selectedFilter : undefined
+        });
+        setOrders(fetchedOrders);
+        console.log('Orders fetched directly:', fetchedOrders.length);
       }
-      
-      setHasMore(response.hasMore);
-      setPage(pageNum);
-      
-      console.log('Orders loaded:', response.orders.length, 'total:', response.total);
       
     } catch (err) {
       console.error('Error loading orders:', err);
       setError('Failed to load orders. Please try again.');
-      
-      // Fallback orders for demo
-      if (pageNum === 1) {
-        setOrders([
-          {
-            id: 'demo_order_1',
-            orderNumber: 'SSP2024001',
-            items: [
-              {
-                id: 'item_1',
-                productId: 11,
-                product: {
-                  id: 11,
-                  name: 'Banarasi Kattan Buti Silk Saree',
-                  slug: 'banarasi-buti-kattan-silk-saree',
-                  images: ['https://superadmin.samarsilkpalace.com/storage/product-variant-images/FCToUaCthEL7jSXNuUeuOgSOn3c7twWfHgkdX9dA.jpg'],
-                  price: 1649,
-                  originalPrice: 2999,
-                  rating: 4.3,
-                  reviewCount: 3,
-                  category: 'Silk Saree\'s',
-                  isNew: false,
-                  isBestseller: true,
-                },
-                quantity: 1,
-                selectedSize: 'Free Size',
-                addedAt: new Date().toISOString(),
-                subtotal: 1649,
-              }
-            ],
-            status: 'DELIVERED',
-            paymentStatus: 'PAID',
-            paymentMethod: {
-              id: 'cod',
-              type: 'COD',
-              name: 'Cash on Delivery'
-            },
-            shippingAddress: {
-              name: 'John Doe',
-              phone: '+91 9876543210',
-              addressLine1: '123 Main Street',
-              city: 'Mumbai',
-              state: 'Maharashtra',
-              pincode: '400001'
-            },
-            totalItems: 1,
-            totalAmount: 1649,
-            deliveryCharge: 0,
-            finalAmount: 1649,
-            placedAt: '2024-01-15T10:30:00Z',
-            updatedAt: '2024-01-20T14:15:00Z',
-            estimatedDelivery: '2024-01-25',
-          },
-          {
-            id: 'demo_order_2',
-            orderNumber: 'SSP2024002',
-            items: [
-              {
-                id: 'item_2',
-                productId: 149,
-                product: {
-                  id: 149,
-                  name: 'KANJIVARAM MUGHALAI BUTA SAREE',
-                  slug: 'kanjivaram-mughalai-buta-saree',
-                  images: ['https://superadmin.samarsilkpalace.com/storage/product-variant-images/LQrlXIjm5oeWlAXZaYgHfrUnE1x5ibqoGRpJWuPR.jpg'],
-                  price: 2723,
-                  originalPrice: 4950,
-                  rating: 4.8,
-                  reviewCount: 8,
-                  category: 'Kanjivaram Silk',
-                  isNew: false,
-                  isBestseller: true,
-                },
-                quantity: 1,
-                selectedSize: 'Free Size',
-                addedAt: new Date().toISOString(),
-                subtotal: 2723,
-              }
-            ],
-            status: 'SHIPPED',
-            paymentStatus: 'PAID',
-            paymentMethod: {
-              id: 'upi',
-              type: 'UPI',
-              name: 'UPI Payment'
-            },
-            shippingAddress: {
-              name: 'Jane Smith',
-              phone: '+91 9876543211',
-              addressLine1: '456 Oak Avenue',
-              city: 'Delhi',
-              state: 'Delhi',
-              pincode: '110001'
-            },
-            totalItems: 1,
-            totalAmount: 2723,
-            deliveryCharge: 99,
-            finalAmount: 2822,
-            placedAt: '2024-01-18T15:45:00Z',
-            updatedAt: '2024-01-22T09:20:00Z',
-            estimatedDelivery: '2024-01-28',
-            trackingId: 'TRK123456789'
-          }
-        ]);
-        setHasMore(false);
-      }
+      setOrders([]); // Clear orders on error
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -180,21 +86,24 @@ const OrdersScreen = () => {
 
   // Initial data load
   useEffect(() => {
-    loadOrders(1, true);
-  }, [selectedFilter]);
+    loadOrders(true);
+  }, [selectedFilter, userData]);
+
+  // Update loading state based on user profile loading
+  useEffect(() => {
+    setLoading(isLoading && !userData);
+  }, [isLoading, userData]);
+
+  // Update error state
+  useEffect(() => {
+    setError(profileError);
+  }, [profileError]);
 
   // Refresh function
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    setPage(1);
-    loadOrders(1, true);
-  };
-
-  // Load more orders
-  const loadMore = () => {
-    if (!loading && hasMore) {
-      loadOrders(page + 1, false);
-    }
+    await refreshUserData();
+    setRefreshing(false);
   };
 
   // Cancel order
@@ -207,14 +116,8 @@ const OrdersScreen = () => {
         {
           text: 'Yes, Cancel',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              await apiService.cancelOrder(orderId, 'Customer requested cancellation');
-              onRefresh(); // Reload orders
-            } catch (error) {
-              console.error('Error cancelling order:', error);
-              Alert.alert('Error', 'Failed to cancel order. Please try again.');
-            }
+          onPress: () => {
+            Alert.alert('Cancel Order', 'Order cancellation functionality coming soon!');
           },
         },
       ]
@@ -231,65 +134,34 @@ const OrdersScreen = () => {
     navigation.navigate('OrderDetails', { orderId });
   };
 
-  // Reorder items
-  const reorderItems = (order: Order) => {
-    Alert.alert(
-      'Reorder Items',
-      'Add these items to your cart again?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Add to Cart',
-          onPress: async () => {
-            try {
-              // Add each item to cart
-              for (const item of order.items) {
-                await apiService.addToCart(item.product.id, item.quantity, {
-                  size: item.selectedSize,
-                  color: item.selectedColor,
-                });
-              }
-              Alert.alert('Success', 'Items added to cart!', [
-                { text: 'View Cart', onPress: () => navigation.navigate('Cart') },
-                { text: 'Continue', style: 'cancel' }
-              ]);
-            } catch (error) {
-              console.error('Error reordering:', error);
-              Alert.alert('Error', 'Failed to add items to cart. Please try again.');
-            }
-          },
-        },
-      ]
-    );
-  };
 
   // Get status color
-  const getStatusColor = (status: Order['status']) => {
-    switch (status) {
-      case 'PENDING': return theme.colors.warning?.[500] || '#f59e0b';
-      case 'CONFIRMED': return theme.colors.primary[500];
-      case 'PROCESSING': return theme.colors.info?.[500] || '#3b82f6';
-      case 'SHIPPED': return theme.colors.info?.[600] || '#2563eb';
-      case 'OUT_FOR_DELIVERY': return theme.colors.purple?.[500] || '#8b5cf6';
-      case 'DELIVERED': return theme.colors.success?.[500] || '#10b981';
-      case 'CANCELLED': return theme.colors.error?.[500] || '#ef4444';
-      case 'RETURNED': return theme.colors.gray?.[500] || '#6b7280';
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending': return theme.colors.warning?.[500] || '#f59e0b';
+      case 'confirmed': return theme.colors.primary[500];
+      case 'processing': return theme.colors.info?.[500] || '#3b82f6';
+      case 'shipped': return theme.colors.info?.[600] || '#2563eb';
+      case 'out for delivery': return theme.colors.purple?.[500] || '#8b5cf6';
+      case 'delivered': return theme.colors.success?.[500] || '#10b981';
+      case 'cancelled': return theme.colors.error?.[500] || '#ef4444';
+      case 'returned': return theme.colors.gray?.[500] || '#6b7280';
       default: return theme.colors.neutral[500];
     }
   };
 
   // Format status text
-  const formatStatus = (status: Order['status']) => {
-    return status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+  const formatStatus = (status: string) => {
+    return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   // Filter orders by status
   const filteredOrders = selectedFilter === 'ALL' 
     ? orders 
-    : orders.filter(order => order.status === selectedFilter);
+    : orders.filter(order => order.status.toLowerCase() === selectedFilter.toLowerCase());
 
   // Render order item
-  const renderOrder = ({item, index}: {item: Order; index: number}) => (
+  const renderOrder = ({item, index}: {item: ApiOrder; index: number}) => (
     <AnimatedCard
       style={styles.orderCard}
       elevation="md"
@@ -300,14 +172,8 @@ const OrdersScreen = () => {
       {/* Order Header */}
       <View style={styles.orderHeader}>
         <View>
-          <Text style={styles.orderNumber}>#{item.orderNumber}</Text>
-          <Text style={styles.orderDate}>
-            {new Date(item.placedAt).toLocaleDateString('en-IN', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric'
-            })}
-          </Text>
+          <Text style={styles.orderNumber}>#{item.id}</Text>
+          <Text style={styles.orderDate}>{item.date}</Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
           <Text style={styles.statusText}>{formatStatus(item.status)}</Text>
@@ -318,13 +184,20 @@ const OrdersScreen = () => {
       <View style={styles.itemsPreview}>
         {item.items.slice(0, 2).map((orderItem, idx) => (
           <View key={orderItem.id} style={styles.orderItemRow}>
-            <Image source={{uri: orderItem.product.images[0]}} style={styles.orderItemImage} />
+            <Image 
+              source={{
+                uri: Array.isArray(orderItem.image) 
+                  ? orderItem.image[0] 
+                  : orderItem.image || 'https://via.placeholder.com/50'
+              }} 
+              style={styles.orderItemImage} 
+            />
             <View style={styles.orderItemDetails}>
               <Text style={styles.orderItemName} numberOfLines={1}>
-                {orderItem.product.name}
+                {orderItem.name}
               </Text>
               <Text style={styles.orderItemInfo}>
-                Qty: {orderItem.quantity} • ₹{orderItem.product.price}
+                Qty: {orderItem.quantity} • ₹{orderItem.price}
               </Text>
             </View>
           </View>
@@ -340,29 +213,25 @@ const OrdersScreen = () => {
       <View style={styles.orderSummary}>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Total Items:</Text>
-          <Text style={styles.summaryValue}>{item.totalItems}</Text>
+          <Text style={styles.summaryValue}>{item.items.reduce((sum, orderItem) => sum + orderItem.quantity, 0)}</Text>
         </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Order Total:</Text>
-          <Text style={styles.summaryValue}>₹{item.finalAmount}</Text>
+          <Text style={styles.summaryValue}>₹{item.total}</Text>
         </View>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Payment:</Text>
-          <Text style={styles.summaryValue}>{item.paymentMethod.name}</Text>
+          <Text style={styles.summaryLabel}>Order Status:</Text>
+          <Text style={styles.summaryValue}>{item.status}</Text>
         </View>
-        {item.estimatedDelivery && (
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Expected by:</Text>
-            <Text style={styles.summaryValue}>
-              {new Date(item.estimatedDelivery).toLocaleDateString('en-IN')}
-            </Text>
-          </View>
-        )}
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Order Date:</Text>
+          <Text style={styles.summaryValue}>{item.date}</Text>
+        </View>
       </View>
 
       {/* Order Actions */}
       <View style={styles.orderActions}>
-        {item.status === 'SHIPPED' || item.status === 'OUT_FOR_DELIVERY' ? (
+        {item.status.toLowerCase() === 'shipped' || item.status.toLowerCase() === 'out for delivery' ? (
           <TouchableOpacity
             style={styles.actionButton}
             onPress={() => trackOrder(item.id)}>
@@ -370,7 +239,7 @@ const OrdersScreen = () => {
           </TouchableOpacity>
         ) : null}
         
-        {item.status === 'PENDING' || item.status === 'CONFIRMED' ? (
+        {item.status.toLowerCase() === 'pending' || item.status.toLowerCase() === 'confirmed' ? (
           <TouchableOpacity
             style={[styles.actionButton, styles.cancelButton]}
             onPress={() => cancelOrder(item.id)}>
@@ -378,10 +247,10 @@ const OrdersScreen = () => {
           </TouchableOpacity>
         ) : null}
         
-        {item.status === 'DELIVERED' ? (
+        {item.status.toLowerCase() === 'delivered' ? (
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => reorderItems(item)}>
+            onPress={() => Alert.alert('Reorder', 'Reorder functionality coming soon!')}>
             <Text style={styles.actionButtonText}>Reorder</Text>
           </TouchableOpacity>
         ) : null}
@@ -467,7 +336,7 @@ const OrdersScreen = () => {
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>📦</Text>
           <Text style={styles.emptyTitle}>
-            {selectedFilter === 'ALL' ? 'No orders yet' : `No ${formatStatus(selectedFilter as Order['status']).toLowerCase()} orders`}
+            {selectedFilter === 'ALL' ? 'No orders yet' : `No ${formatStatus(selectedFilter).toLowerCase()} orders`}
           </Text>
           <Text style={styles.emptySubtitle}>
             {selectedFilter === 'ALL' 
@@ -493,15 +362,6 @@ const OrdersScreen = () => {
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
-          onEndReached={loadMore}
-          onEndReachedThreshold={0.3}
-          ListFooterComponent={() => (
-            loading && orders.length > 0 ? (
-              <View style={styles.loadMoreContainer}>
-                <ActivityIndicator size="small" color={theme.colors.primary[500]} />
-              </View>
-            ) : null
-          )}
         />
       )}
     </View>
