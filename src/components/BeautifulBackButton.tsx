@@ -129,7 +129,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    backdropFilter: 'blur(20px)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
   },

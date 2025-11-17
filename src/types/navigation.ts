@@ -6,8 +6,8 @@ export type RootStackParamList = {
   Categories: {categoryId?: string};
   Search: undefined;
   Cart: undefined;
-  Checkout: {cartItems: Array<{id: string; name: string; price: number; originalPrice: number; quantity: number; size: string | null; color: string; image: string}>; total: number};
-  OrderConfirmation: undefined;
+  Checkout: {cartItems: Array<{id: string; name: string; price: number; originalPrice: number; quantity: number; size: string | null; color: string; image: string}>; total: number; subtotal: number; shipping: number; tax: number; discount: number};
+  OrderConfirmation: {orderId: string; orderNumber: string};
   Orders: undefined;
   Profile: undefined;
   Wishlist: undefined;

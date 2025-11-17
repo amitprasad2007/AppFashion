@@ -71,13 +71,28 @@ const CheckoutScreen = () => {
         apiService.getPaymentMethods()
       ]);
       
-      setAddresses(addressesData);
+      // Transform ApiAddress to ShippingAddress format
+      const transformedAddresses: ShippingAddress[] = addressesData.map(apiAddr => ({
+        id: apiAddr.id.toString(),
+        name: apiAddr.name,
+        phone: apiAddr.phone,
+        email: '', // ApiAddress doesn't have email field
+        addressLine1: apiAddr.address,
+        addressLine2: '', // ApiAddress doesn't have addressLine2
+        city: apiAddr.city,
+        state: apiAddr.state,
+        pincode: apiAddr.postal,
+        landmark: '', // ApiAddress doesn't have landmark
+        isDefault: apiAddr.isDefault,
+      }));
+      
+      setAddresses(transformedAddresses);
       setPaymentMethods(paymentMethodsData);
       
       // Auto-select default address and first payment method
       const defaultAddress = addressesData.find(addr => addr.isDefault) || addressesData[0];
       if (defaultAddress) {
-        setSelectedAddress(defaultAddress);
+        setSelectedAddress(transformedAddresses.find(addr => addr.id === defaultAddress.id.toString()) || null);
       }
       
       if (paymentMethodsData.length > 0) {
@@ -113,24 +128,43 @@ const CheckoutScreen = () => {
       }
 
       setLoading(true);
-      const savedAddress = await apiService.saveAddress(newAddress);
-      setAddresses(prev => [...prev, savedAddress]);
-      setSelectedAddress(savedAddress);
-      setShowAddressForm(false);
-      
-      // Reset form
-      setNewAddress({
-        name: '',
-        phone: '',
-        email: '',
-        addressLine1: '',
-        addressLine2: '',
-        city: '',
-        state: '',
-        pincode: '',
-        landmark: '',
-        isDefault: false,
+      const savedAddress = await apiService.createAddress({
+        name: newAddress.name,
+        type: 'shipping',
+        phone: newAddress.phone,
+        address: newAddress.addressLine1,
+        city: newAddress.city,
+        state: newAddress.state,
+        postal: newAddress.pincode,
+        isDefault: newAddress.isDefault,
       });
+      setAddresses(prev => [...prev, {
+        id: savedAddress.address?.id.toString() || '',
+        name: savedAddress.address?.name || '',
+        phone: savedAddress.address?.phone || '',
+        email: '',
+        addressLine1: savedAddress.address?.address || '',
+        addressLine2: '',
+        city: savedAddress.address?.city || '',
+        state: savedAddress.address?.state || '',
+        pincode: savedAddress.address?.postal || '',
+        landmark: '',
+        isDefault: savedAddress.address?.isDefault || false,
+      }]);
+      setSelectedAddress({
+        id: savedAddress.address?.id.toString() || '',
+        name: savedAddress.address?.name || '',
+        phone: savedAddress.address?.phone || '',
+        email: '',
+        addressLine1: savedAddress.address?.address || '',
+        addressLine2: '',
+        city: savedAddress.address?.city || '',
+        state: savedAddress.address?.state || '',
+        pincode: savedAddress.address?.postal || '',
+        landmark: '',
+        isDefault: savedAddress.address?.isDefault || false,
+      });
+      setShowAddressForm(false);
       
     } catch (error) {
       console.error('Error saving address:', error);
@@ -155,19 +189,172 @@ const CheckoutScreen = () => {
 
       setLoading(true);
       
-      const orderData = {
-        shippingAddress: selectedAddress,
-        paymentMethod: selectedPayment,
-        notes: orderNotes.trim() || undefined,
-      };
+      // Determine the items to process
+      const items = cart?.items || cartItems || [];
       
-      const order = await apiService.placeOrder(orderData);
-      
-      // Navigate to order confirmation
-      navigation.navigate('OrderConfirmation', { 
-        orderId: order.id,
-        orderNumber: order.orderNumber 
-      });
+      // Calculate totals
+      const itemsCount = cart?.totalItems || 
+        (cartItems ? cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0) : 0);
+      const itemsTotal = cart?.totalAmount || subtotal || 0;
+      const discountAmount = cart?.discount || discount || 0;
+      const shippingAmount = cart?.deliveryCharge || shipping || 0;
+      const taxAmount = tax || 0;
+      const finalTotal = cart?.finalAmount || total || 0;
+
+      // Validate required data
+      if (items.length === 0) {
+        Alert.alert('Error', 'No items found in cart. Please add items to cart first.');
+        return;
+      }
+
+      if (finalTotal <= 0) {
+        Alert.alert('Error', 'Invalid order total. Please check your cart.');
+        return;
+      }
+
+      // Check if this is COD payment
+      if (selectedPayment.type === 'COD' || selectedPayment.id === 'cod') {
+        // Validate cart items before processing
+        if (!items || items.length === 0) {
+          throw new Error('No items found in cart');
+        }
+
+        // Use the specific COD checkout API
+        const codOrderData = {
+          items: items.map((item: any) => {
+            // Handle different item structures from cart vs direct items
+            const itemData = item.product || item;
+            const itemImage = Array.isArray(itemData.images) ? itemData.images[0] :
+                             Array.isArray(itemData.image) ? itemData.image[0] :
+                             typeof itemData.image === 'string' ? itemData.image :
+                             itemData.images?.[0] || '';
+            
+            // Ensure all required fields are present
+            const cartId = item.cart_id || item.id || Math.floor(Math.random() * 1000000);
+            const productId = itemData.id || item.id;
+            const productName = itemData.name || item.name;
+            const productPrice = (itemData.price || item.price || 0).toString();
+            const quantity = item.quantity || 1;
+            const color = item.selectedColor || item.color || itemData.color || 'Default';
+            const slug = itemData.slug || item.slug || `product-${productId}`;
+
+            // Validate required fields
+            if (!productId || !productName || !productPrice) {
+              console.error('Missing required item data:', {
+                productId, productName, productPrice, item
+              });
+              throw new Error(`Missing required product data for item: ${productName || 'Unknown'}`);
+            }
+            
+            return {
+              cart_id: cartId,
+              id: productId,
+              name: productName,
+              price: productPrice,
+              quantity: quantity,
+              image: itemImage,
+              color: color,
+              slug: slug,
+            };
+          }),
+          address_id: parseInt(selectedAddress.id || '1'),
+          shipping: Number(shippingAmount) || 0,
+          payment_method: 'cod',
+          subtotal: Number(itemsTotal) || 0,
+          shippingcost: Number(shippingAmount) || 0,
+          tax: Number(taxAmount) || 0,
+          total: Number(finalTotal) || 0,
+          totalquantity: Number(itemsCount) || 0,
+          coupon_code: null,
+        };
+
+        console.log('🛒 COD Order Data (Validated):', JSON.stringify(codOrderData, null, 2));
+
+        // Check if user is authenticated before making the API call
+        const authToken = apiService.getAuthToken();
+        if (!authToken) {
+          Alert.alert('Authentication Required', 'Please login to place an order.');
+          return;
+        }
+
+        // Check if there are items in server cart first
+        console.log('🔍 Checking server cart status...');
+        try {
+          const serverCart = await apiService.getCart();
+          console.log('📦 Server cart items:', serverCart.items.length);
+          
+          if (serverCart.items.length === 0) {
+            console.log('⚠️ Server cart is empty, attempting to sync items...');
+            // Try to add current items to server cart
+            for (const item of codOrderData.items) {
+              try {
+                console.log(`🔄 Adding item ${item.id} to server cart...`);
+                await apiService.addToCart(item.id, item.quantity);
+              } catch (addError) {
+                console.warn(`Failed to add item ${item.id}:`, addError);
+              }
+            }
+          }
+        } catch (cartError) {
+          console.warn('Could not check/sync cart:', cartError);
+        }
+
+        const response = await apiService.checkoutCOD(codOrderData);
+        
+        console.log('📡 COD Checkout Response:', response);
+        
+        if (response.success) {
+          const orderDetails = response.order;
+          const orderId = response.order_id || orderDetails?.order_id;
+          const orderNumber = response.order_number || orderDetails?.order_id;
+          
+          // Clear cart after successful order (optional)
+          try {
+            await apiService.clearCart();
+          } catch (clearError) {
+            console.warn('Could not clear cart after order:', clearError);
+          }
+          
+          // Show success message with order details
+          Alert.alert(
+            'Order Placed Successfully! 🎉', 
+            `Your order has been placed successfully!\n\nOrder ID: ${orderId}\nPayment: Cash on Delivery\nStatus: ${orderDetails?.status || 'Pending'}\nTotal: ₹${orderDetails?.total_amount || finalTotal}`,
+            [{ 
+              text: 'View Order', 
+              onPress: () => {
+                // Navigate to order confirmation with detailed order info
+                navigation.navigate('OrderConfirmation', { 
+                  orderId: orderId,
+                  orderNumber: orderNumber,
+                  orderTotal: orderDetails?.total_amount || finalTotal,
+                  paymentMethod: 'Cash on Delivery',
+                  paymentStatus: orderDetails?.payment_status || 'unpaid',
+                  orderStatus: orderDetails?.status || 'pending',
+                  orderItems: orderDetails?.cart_items || [],
+                  orderDetails: orderDetails
+                });
+              }
+            }]
+          );
+        } else {
+          throw new Error(response.message || 'Order placement failed');
+        }
+      } else {
+        // Use the legacy order placement for other payment methods
+        const orderData = {
+          shippingAddress: selectedAddress,
+          paymentMethod: selectedPayment,
+          notes: orderNotes.trim() || undefined,
+        };
+        
+        const order = await apiService.placeOrder(orderData);
+        
+        // Navigate to order confirmation
+        navigation.navigate('OrderConfirmation', { 
+          orderId: order.id,
+          orderNumber: order.orderNumber 
+        });
+      }
       
     } catch (error) {
       console.error('Error placing order:', error);

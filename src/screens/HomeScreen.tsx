@@ -241,7 +241,7 @@ const HomeScreen = () => {
           <FlatList
             data={categories}
             renderItem={renderCategory}
-            keyExtractor={item => item.id}
+            keyExtractor={item => item.id.toString()}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalList}
@@ -265,7 +265,7 @@ const HomeScreen = () => {
           <FlatList
             data={bestsellerProducts}
             renderItem={renderBestsellerProduct}
-            keyExtractor={item => item.id}
+            keyExtractor={item => item.id.toString()}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalList}
@@ -285,7 +285,7 @@ const HomeScreen = () => {
           <FlatList
             data={featuredProducts}
             renderItem={renderProduct}
-            keyExtractor={item => item.id}
+            keyExtractor={item => item.id.toString()}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalList}

@@ -296,14 +296,6 @@ class ApiService {
 
   private async fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     try {
-      // 🔍 Log network requests for debugging
-      console.log('🌐 API Request:', {
-        url: `${BASE_URL}${endpoint}`,
-        method: options.method || 'GET',
-        headers: options.headers,
-        body: options.body ? JSON.parse(options.body as string) : undefined
-      });
-
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
       
@@ -322,6 +314,26 @@ class ApiService {
         headers['Authorization'] = `Bearer ${this.authToken}`;
       }
 
+      // 🔍 Log network requests for debugging (after headers are constructed)
+      console.log('🌐 API Request:', {
+        url: `${BASE_URL}${endpoint}`,
+        method: options.method || 'GET',
+        headers: headers,
+        body: options.body ? JSON.parse(options.body as string) : undefined
+      });
+
+      // Additional logging for checkout requests
+      if (endpoint === '/order/checkout') {
+        console.log('🛒 COD Checkout Request Details:', {
+          endpoint,
+          method: options.method,
+          bodyString: options.body,
+          parsedBody: options.body ? JSON.parse(options.body as string) : undefined,
+          authToken: this.authToken ? 'Present' : 'Missing',
+          headers: headers
+        });
+      }
+
       const response = await fetch(`${BASE_URL}${endpoint}`, {
         headers,
         signal: controller.signal,
@@ -331,7 +343,32 @@ class ApiService {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Try to get error details from response body
+        let errorDetails = '';
+        try {
+          const errorText = await response.text();
+          console.error('🚨 API Error Details:', {
+            status: response.status,
+            statusText: response.statusText,
+            url: `${BASE_URL}${endpoint}`,
+            method: options.method || 'GET',
+            responseBody: errorText,
+            requestBody: options.body
+          });
+          
+          // Try to parse error response as JSON
+          try {
+            const errorJson = JSON.parse(errorText);
+            errorDetails = errorJson.message || errorJson.error || errorText;
+          } catch {
+            errorDetails = errorText;
+          }
+        } catch (textError) {
+          console.error('Could not read error response:', textError);
+          errorDetails = `HTTP ${response.status}`;
+        }
+        
+        throw new Error(`HTTP error! status: ${response.status} - ${errorDetails}`);
       }
 
       // Get response text first to handle potential JSON parse errors
@@ -425,25 +462,28 @@ class ApiService {
       // Return mock data as fallback
       return [
         {
-          id: '1',
+          id: 1,
           name: 'Traditional Sarees',
-          image: 'https://via.placeholder.com/200x200/ff6b6b/ffffff?text=Traditional',
           description: 'Classic traditional sarees',
-          itemCount: 120,
+          image: 'https://via.placeholder.com/200x200/ff6b6b/ffffff?text=Traditional',
+          count: 120,
+          slug: 'traditional-sarees',
         },
         {
-          id: '2',
+          id: 2,
           name: 'Silk Sarees',
-          image: 'https://via.placeholder.com/200x200/4ecdc4/ffffff?text=Silk',
           description: 'Premium silk collections',
-          itemCount: 85,
+          image: 'https://via.placeholder.com/200x200/4ecdc4/ffffff?text=Silk',
+          count: 85,
+          slug: 'silk-sarees',
         },
         {
-          id: '3',
+          id: 3,
           name: 'Cotton Sarees',
-          image: 'https://via.placeholder.com/200x200/45b7d1/ffffff?text=Cotton',
           description: 'Comfortable cotton wear',
-          itemCount: 95,
+          image: 'https://via.placeholder.com/200x200/45b7d1/ffffff?text=Cotton',
+          count: 95,
+          slug: 'cotton-sarees',
         },
       ];
     }
@@ -469,36 +509,87 @@ class ApiService {
       // Return mock data as fallback
       return [
         {
-          id: '1',
+          id: 1,
           name: 'Elegant Saree Collection',
-          price: '₹2,499',
-          image: 'https://via.placeholder.com/300x400/ff6b6b/ffffff?text=Saree+1',
+          slug: 'elegant-saree-collection',
+          price: 2499,
+          originalPrice: 3124,
+          discountPercentage: 20,
           rating: 4.8,
           description: 'Beautiful traditional saree with modern touch',
-          category: 'Traditional Wear',
-          discount: 20,
+          category: {
+            id: 1,
+            title: 'Traditional Wear',
+            slug: 'traditional-wear',
+            summary: 'Traditional sarees',
+            photo: 'https://via.placeholder.com/200x200/ff6b6b/ffffff?text=Traditional',
+            is_parent: 1,
+          },
+          sku: 'SKU-001',
+          images: ['https://via.placeholder.com/300x400/ff6b6b/ffffff?text=Saree+1'],
+          colors: [],
+          defaultVariantId: 1,
+          variants: [],
+          sizes: 'One Size',
+          stock: 10,
+          specifications: [],
+          isBestseller: true,
           inStock: true,
         },
         {
-          id: '2',
+          id: 2,
           name: 'Designer Silk Saree',
-          price: '₹3,999',
-          image: 'https://via.placeholder.com/300x400/4ecdc4/ffffff?text=Saree+2',
+          slug: 'designer-silk-saree',
+          price: 3999,
+          originalPrice: 4705,
+          discountPercentage: 15,
           rating: 4.9,
           description: 'Premium silk saree for special occasions',
-          category: 'Silk Sarees',
-          discount: 15,
+          category: {
+            id: 2,
+            title: 'Silk Sarees',
+            slug: 'silk-sarees',
+            summary: 'Premium silk collections',
+            photo: 'https://via.placeholder.com/200x200/4ecdc4/ffffff?text=Silk',
+            is_parent: 1,
+          },
+          sku: 'SKU-002',
+          images: ['https://via.placeholder.com/300x400/4ecdc4/ffffff?text=Saree+2'],
+          colors: [],
+          defaultVariantId: 1,
+          variants: [],
+          sizes: 'One Size',
+          stock: 8,
+          specifications: [],
+          isBestseller: true,
           inStock: true,
         },
         {
-          id: '3',
+          id: 3,
           name: 'Cotton Comfort Saree',
-          price: '₹1,299',
-          image: 'https://via.placeholder.com/300x400/45b7d1/ffffff?text=Saree+3',
+          slug: 'cotton-comfort-saree',
+          price: 1299,
+          originalPrice: 1443,
+          discountPercentage: 10,
           rating: 4.6,
           description: 'Comfortable cotton saree for daily wear',
-          category: 'Cotton Sarees',
-          discount: 10,
+          category: {
+            id: 3,
+            title: 'Cotton Sarees',
+            slug: 'cotton-sarees',
+            summary: 'Comfortable cotton wear',
+            photo: 'https://via.placeholder.com/200x200/45b7d1/ffffff?text=Cotton',
+            is_parent: 1,
+          },
+          sku: 'SKU-003',
+          images: ['https://via.placeholder.com/300x400/45b7d1/ffffff?text=Saree+3'],
+          colors: [],
+          defaultVariantId: 1,
+          variants: [],
+          sizes: 'One Size',
+          stock: 15,
+          specifications: [],
+          isBestseller: true,
           inStock: true,
         },
       ];
@@ -558,17 +649,6 @@ class ApiService {
       return featuredProducts;
     } catch (error) {
       console.error('Error fetching products:', error);
-      return [];
-    }
-  }
-
-  // Add method for recommended products
-  async getRecommendedProducts(): Promise<ApiProduct[]> {
-    try {
-      const response = await this.fetchApi<ApiProduct[]>('/recommeded-products'); // Note: typo in your API
-      return Array.isArray(response) ? response : (response as any)?.data || [];
-    } catch (error) {
-      console.error('Error fetching recommended products:', error);
       return [];
     }
   }
@@ -829,19 +909,17 @@ class ApiService {
         success: true,
         message: `Mock ${provider} login successful`,
         user: {
-          id: 'mock_' + Date.now(),
-          firstName: 'Test',
-          lastName: 'User',
-          email: userInfo?.email || 'test@example.com',
+          id: Date.now(),
+          name: 'Test User',
           phone: '',
-          avatar: userInfo?.photo,
-          isVerified: true,
-          createdAt: new Date().toISOString(),
-          preferences: {
-            newsletter: true,
-            sms: false,
-            pushNotifications: true,
-          },
+          email: userInfo?.email || 'test@example.com',
+          address: null,
+          gstin: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          google_id: provider === 'google' ? 'mock_google_id' : null,
+          avatar: userInfo?.photo || null,
+          facebook_id: provider === 'facebook' ? 'mock_facebook_id' : null,
         },
         token: 'mock_jwt_token_' + Date.now(),
         refreshToken: 'mock_refresh_token_' + Date.now(),
@@ -858,7 +936,7 @@ class ApiService {
   }
 
   // Get OAuth redirect URL (for web-based OAuth flow)
-  getOAuthRedirectUrl(provider: 'google' | 'facebook'): string {
+  getOAuthRedirectUrl(provider: 'google' | 'facebook' | 'apple'): string {
     const baseUrl = BASE_URL.replace('/api', ''); // Remove /api to get base URL
     return `${baseUrl}/auth/${provider}`;
   }
@@ -943,59 +1021,6 @@ class ApiService {
     }
   }
 
-  // Add item to cart
-  async addToCart(productId: number, quantity: number = 1, options: {
-    size?: string;
-    color?: string;
-  } = {}): Promise<Cart> {
-    try {
-      const response = await this.fetchApi<Cart>('/cart/add', {
-        method: 'POST',
-        body: JSON.stringify({
-          productId,
-          quantity,
-          selectedSize: options.size,
-          selectedColor: options.color,
-        }),
-      });
-      return response;
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-      throw error;
-    }
-  }
-
-  // Update cart item
-  async updateCartItem(cartItemId: string, updates: {
-    quantity?: number;
-    size?: string;
-    color?: string;
-  }): Promise<Cart> {
-    try {
-      const response = await this.fetchApi<Cart>(`/cart/items/${cartItemId}`, {
-        method: 'PUT',
-        body: JSON.stringify(updates),
-      });
-      return response;
-    } catch (error) {
-      console.error('Error updating cart item:', error);
-      throw error;
-    }
-  }
-
-  // Remove item from cart
-  async removeFromCart(cartItemId: string): Promise<Cart> {
-    try {
-      const response = await this.fetchApi<Cart>(`/cart/items/${cartItemId}`, {
-        method: 'DELETE',
-      });
-      return response;
-    } catch (error) {
-      console.error('Error removing from cart:', error);
-      throw error;
-    }
-  }
-
   // Clear entire cart
   async clearCart(): Promise<{ success: boolean; message: string }> {
     try {
@@ -1020,6 +1045,61 @@ class ApiService {
     } catch (error) {
       console.error('Error applying coupon:', error);
       throw error;
+    }
+  }
+
+  // ==================== ADDRESS MANAGEMENT ====================
+
+  // Get user addresses
+  async getAddresses(): Promise<ApiAddress[]> {
+    try {
+      const userData = await this.getUserData();
+      return userData.addresses;
+    } catch (error) {
+      console.error('Error fetching addresses:', error);
+      return [];
+    }
+  }
+
+  // Create new address
+  async createAddress(addressData: {
+    name: string;
+    type: string;
+    phone: string;
+    address: string;
+    city: string;
+    state: string;
+    postal: string;
+    isDefault: boolean;
+  }): Promise<{ success: boolean; message: string; address?: ApiAddress }> {
+    try {
+      const response = await this.fetchApi<{ success: boolean; message: string; address?: ApiAddress }>('/addresses', {
+        method: 'POST',
+        body: JSON.stringify(addressData),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error creating address:', error);
+      throw error;
+    }
+  }
+
+  // Get payment methods
+  async getPaymentMethods(): Promise<PaymentMethod[]> {
+    try {
+      // Return standard payment methods since this endpoint might not exist
+      return [
+        { id: 'cod', type: 'COD', name: 'Cash on Delivery' },
+        { id: 'upi', type: 'UPI', name: 'UPI Payment' },
+        { id: 'card', type: 'CARD', name: 'Credit/Debit Card' },
+        { id: 'netbanking', type: 'NETBANKING', name: 'Net Banking' },
+      ];
+    } catch (error) {
+      console.error('Error fetching payment methods:', error);
+      // Return fallback payment methods
+      return [
+        { id: 'cod', type: 'COD', name: 'Cash on Delivery' },
+      ];
     }
   }
 
@@ -1386,7 +1466,10 @@ class ApiService {
   // Check if product is in wishlist
   async checkWishlist(productId: number): Promise<{ in_wishlist: boolean; wishlist_id?: number }> {
     try {
-      const response = await this.fetchApi<{ in_wishlist: boolean; wishlist_id?: number }>('/checkwishlist', {
+      // Use different endpoints based on authentication status
+      const endpoint = this.authToken ? '/checkwishlist' : '/guest/checkwishlist';
+      
+      const response = await this.fetchApi<{ in_wishlist: boolean; wishlist_id?: number }>(endpoint, {
         method: 'POST',
         body: JSON.stringify({ product_id: productId }),
       });
@@ -1475,6 +1558,88 @@ class ApiService {
     } catch (error) {
       console.error('Error in checkout:', error);
       throw error;
+    }
+  }
+
+  // COD Checkout with specific API endpoint and payload structure
+  async checkoutCOD(orderData: {
+    items: Array<{
+      cart_id: number;
+      id: number;
+      name: string;
+      price: string;
+      quantity: number;
+      image: string;
+      color: string;
+      slug: string;
+    }>;
+    address_id: number;
+    shipping: number;
+    payment_method: string;
+    subtotal: number;
+    shippingcost: number;
+    tax: number;
+    total: number;
+    totalquantity: number;
+    coupon_code?: string | null;
+  }): Promise<{ 
+    success: boolean; 
+    message: string; 
+    order_id?: string; 
+    order_number?: string;
+    order?: any;
+  }> {
+    try {
+      console.log('🛒 Starting COD Checkout Process...');
+      
+      // Send the checkout request with original payload structure
+      console.log('💳 Processing checkout with original payload...');
+      const checkoutPayload = orderData;
+
+      console.log('🔍 Final checkout payload:', JSON.stringify(checkoutPayload, null, 2));
+
+      const response = await this.fetchApi<{ 
+        message: string; 
+        order: {
+          order_id: string;
+          customer_id: number;
+          address_id: number;
+          sub_total: number;
+          quantity: number;
+          total_amount: number;
+          coupon: number;
+          payment_method: string;
+          payment_status: string;
+          status: string;
+          payment_details: string;
+          updated_at: string;
+          created_at: string;
+          id: number;
+          cart_items: Array<any>;
+        };
+      }>('/order/checkout', {
+        method: 'POST',
+        body: JSON.stringify(checkoutPayload),
+      });
+
+      console.log('✅ Checkout successful:', response);
+
+      // Transform response to match expected format
+      return {
+        success: true,
+        message: response.message,
+        order_id: response.order.order_id,
+        order_number: response.order.order_id,
+        order: response.order,
+      };
+    } catch (error) {
+      console.error('Error in COD checkout:', error);
+      
+      // Return error response in expected format
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'COD checkout failed',
+      };
     }
   }
 
@@ -1672,51 +1837,10 @@ class ApiService {
     }
   }
 
-  // Save new address
-  async saveAddress(address: Omit<ShippingAddress, 'id'>): Promise<ShippingAddress> {
-    try {
-      const response = await this.fetchApi<ShippingAddress>('/addresses', {
-        method: 'POST',
-        body: JSON.stringify(address),
-      });
-      return response;
-    } catch (error) {
-      console.error('Error saving address:', error);
-      throw error;
-    }
-  }
-
-  // Update existing address
-  async updateAddress(addressId: string, updates: Partial<ShippingAddress>): Promise<ShippingAddress> {
-    try {
-      const response = await this.fetchApi<ShippingAddress>(`/addresses/${addressId}`, {
-        method: 'PUT',
-        body: JSON.stringify(updates),
-      });
-      return response;
-    } catch (error) {
-      console.error('Error updating address:', error);
-      throw error;
-    }
-  }
-
-  // Delete address
-  async deleteAddress(addressId: string): Promise<{ success: boolean; message: string }> {
-    try {
-      const response = await this.fetchApi<{ success: boolean; message: string }>(`/addresses/${addressId}`, {
-        method: 'DELETE',
-      });
-      return response;
-    } catch (error) {
-      console.error('Error deleting address:', error);
-      throw error;
-    }
-  }
-
   // Get available payment methods
   async getPaymentMethods(): Promise<PaymentMethod[]> {
     try {
-      const response = await this.fetchApi<PaymentMethod[]>('/payment/methods');
+      const response = await this.fetchApi<PaymentMethod[]>('/payment-methods');
       return response;
     } catch (error) {
       console.error('Error fetching payment methods:', error);
@@ -1895,7 +2019,7 @@ class ApiService {
   async generateOrderPDF(orderId: string): Promise<string> {
     try {
       // This returns a PDF download URL
-      const pdfUrl = `${this.baseUrl}/order/pdf/${orderId}`;
+      const pdfUrl = `${BASE_URL}/order/pdf/${orderId}`;
       return pdfUrl;
     } catch (error) {
       console.error('Error generating order PDF:', error);
@@ -2004,7 +2128,7 @@ class ApiService {
   }
 
   // Handle OAuth callback (for web-based OAuth flow)
-  async handleOAuthCallback(provider: 'google' | 'facebook', params: { [key: string]: string }): Promise<AuthResponse> {
+  async handleOAuthCallback(provider: 'google' | 'facebook' | 'apple', params: { [key: string]: string }): Promise<AuthResponse> {
     try {
       const baseUrl = BASE_URL.replace('/api', '');
       const callbackUrl = `${baseUrl}/auth/${provider}/callback`;

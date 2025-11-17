@@ -282,7 +282,7 @@ class OAuthService {
               },
             },
           },
-          (error, result) => {
+          (error: any, result: any) => {
             if (error) {
               reject(error);
             } else {

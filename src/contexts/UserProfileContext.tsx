@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { apiService, UserData, ApiOrder, ApiWishlistItem, ApiAddress, ApiCart } from '../services/api';
+import { apiService, UserData, ApiOrder, ApiWishlistItem, ApiAddress, ApiCart, ApiProduct } from '../services/api';
 import { useAuth } from './AuthContext';
 
 interface UserProfileContextType {

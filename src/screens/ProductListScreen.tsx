@@ -158,10 +158,10 @@ const ProductListScreen = () => {
   const renderProduct = ({item, index}: {item: ApiProduct; index: number}) => (
     <AnimatedCard
       style={styles.productCard}
-      onPress={() => navigation.navigate('ProductDetails', {productSlug: item.slug})}>
+      onPress={() => navigation.navigate('ProductDetails', {productId: item.id.toString()})}>
       elevation="lg"
       animationType="slide"
-      delay={index * 100}>
+      delay={index * 100}
       <Image source={{uri: item.images[0]}} style={styles.productImage} />
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.6)']}

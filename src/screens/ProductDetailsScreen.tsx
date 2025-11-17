@@ -88,8 +88,7 @@ const ProductDetailsScreen = () => {
         let related: ApiProduct[] = [];
         try {
           // Use getRelatedProducts endpoint with product slug
-          const relatedResponse = await apiService.fetchApi<ApiProduct[]>(`/getRelatedProducts/${productData.slug}`);
-          related = Array.isArray(relatedResponse) ? relatedResponse : [];
+          related = await apiService.getRelatedProducts(productData.slug);
           console.log('Related products loaded:', related.length);
         } catch (error) {
           console.log('getRelatedProducts endpoint failed, using featured products as fallback');
@@ -208,13 +207,14 @@ const ProductDetailsScreen = () => {
         : ['https://via.placeholder.com/50'];
         
     const cartItem = {
-      id: product.id,
+      id: product.id.toString(),
       name: product.name,
-      price: product.price.toString(),
+      price: product.price,
+      originalPrice: product.originalPrice,
       quantity: quantity,
+      size: selectedSize || null,
+      color: '',
       image: productImages[0], // Use first image as string
-      images: productImages, // Keep array for compatibility
-      selectedSize: selectedSize,
     };
 
     const orderTotal = product.price * quantity;
@@ -226,7 +226,6 @@ const ProductDetailsScreen = () => {
       shipping: 0,
       tax: 0,
       discount: 0,
-      isBuyNow: true,
     });
   };
 
@@ -444,7 +443,7 @@ const ProductDetailsScreen = () => {
               <TouchableOpacity
                 key={item.id}
                 style={styles.relatedProduct}
-                onPress={() => navigation.push('ProductDetails', { productSlug: item.slug })}>
+                onPress={() => navigation.push('ProductDetails', { productId: item.slug })}>
                 <Image source={{uri: item.images[0]}} style={styles.relatedImage} />
                 <Text style={styles.relatedName} numberOfLines={2}>{item.name}</Text>
                 <Text style={styles.relatedPrice}>₹{item.price}</Text>

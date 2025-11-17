@@ -131,7 +131,7 @@ const WishlistScreen = () => {
     return (
     <View style={styles.itemCard}>
       <TouchableOpacity
-        onPress={() => navigation.navigate('ProductDetails', {productSlug: item.slug})}>
+        onPress={() => navigation.navigate('ProductDetails', {productId: item.slug})}
         style={styles.itemContent}>
         <Image 
           source={{
@@ -418,6 +418,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginBottom: 8,
+  },
+  category: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+    textTransform: 'uppercase',
   },
   priceContainer: {
     flexDirection: 'row',

@@ -7,7 +7,7 @@ import {
   ScrollView,
   Image,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/navigation';
 import ScreenWrapper from '../components/ScreenWrapper';
@@ -20,49 +20,94 @@ type OrderItem = {
   price: number;
   quantity: number;
   image: string;
+  color?: string;
+  amount?: string;
 };
+
+type OrderConfirmationRouteProps = RouteProp<RootStackParamList, 'OrderConfirmation'>;
 
 const OrderConfirmationScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const route = useRoute<OrderConfirmationRouteProps>();
+
+  // Extract order data from route params with fallbacks
+  const {
+    orderId = 'N/A',
+    orderNumber = 'N/A',
+    orderTotal = 0,
+    paymentMethod = 'COD',
+    paymentStatus = 'pending',
+    orderStatus = 'pending',
+    orderItems = [],
+    orderDetails: serverOrderDetails,
+  } = route.params || {};
+
+  // Helper function to format currency
+  const formatCurrency = (amount: number | string) => {
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    return `₹${numAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  // Helper function to get estimated delivery date
+  const getEstimatedDelivery = () => {
+    const deliveryDate = new Date();
+    deliveryDate.setDate(deliveryDate.getDate() + 7); // 7 days from now
+    return deliveryDate.toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Transform cart items to display format
+  const transformOrderItems = () => {
+    if (serverOrderDetails?.cart_items && Array.isArray(serverOrderDetails.cart_items)) {
+      return serverOrderDetails.cart_items.map((item: any) => ({
+        id: item.id?.toString() || item.product_id?.toString() || Math.random().toString(),
+        name: item.product?.name || item.name || 'Unknown Product',
+        price: parseFloat(item.price || item.product?.price || '0'),
+        quantity: item.quantity || 1,
+        image: item.product?.image || item.image || 'https://via.placeholder.com/60',
+        color: item.product?.color || item.color || '',
+        amount: item.amount || (parseFloat(item.price || '0') * (item.quantity || 1)).toString(),
+      }));
+    } else if (orderItems && Array.isArray(orderItems)) {
+      return orderItems.map((item: any) => ({
+        id: item.id?.toString() || Math.random().toString(),
+        name: item.name || item.product?.name || 'Unknown Product',
+        price: parseFloat(item.price || item.product?.price || '0'),
+        quantity: item.quantity || 1,
+        image: item.image || item.product?.image || 'https://via.placeholder.com/60',
+        color: item.color || item.selectedColor || '',
+        amount: item.amount || (parseFloat(item.price || '0') * (item.quantity || 1)).toString(),
+      }));
+    }
+    return [];
+  };
 
   const orderDetails = {
-    orderNumber: 'ORD001234',
-    orderDate: new Date().toLocaleDateString(),
-    estimatedDelivery: 'Dec 18, 2024',
-    total: 269.97,
-    items: [
-      {
-        id: '1',
-        name: 'Summer Dress',
-        price: 49.99,
-        quantity: 2,
-        image: 'https://via.placeholder.com/60',
-      },
-      {
-        id: '2',
-        name: 'Wireless Headphones',
-        price: 89.99,
-        quantity: 1,
-        image: 'https://via.placeholder.com/60',
-      },
-      {
-        id: '3',
-        name: 'Running Shoes',
-        price: 129.99,
-        quantity: 1,
-        image: 'https://via.placeholder.com/60',
-      },
-    ],
-    shippingAddress: {
-      name: 'John Doe',
-      address: '123 Main St, Apt 4B',
-      city: 'New York, NY 10001',
-      country: 'United States',
-    },
+    orderNumber: orderNumber || orderId,
+    orderDate: serverOrderDetails?.created_at 
+      ? new Date(serverOrderDetails.created_at).toLocaleDateString('en-IN')
+      : new Date().toLocaleDateString('en-IN'),
+    estimatedDelivery: getEstimatedDelivery(),
+    total: serverOrderDetails?.total_amount || orderTotal,
+    subtotal: serverOrderDetails?.sub_total || orderTotal,
+    tax: 0, // Calculate if needed
+    shipping: 0, // Free shipping for COD
+    items: transformOrderItems(),
     paymentMethod: {
-      type: 'Credit Card',
-      last4: '1234',
+      type: paymentMethod === 'cod' ? 'Cash on Delivery' : paymentMethod,
+      status: paymentStatus,
+      orderStatus: orderStatus,
     },
+    orderInfo: {
+      orderId: orderId,
+      orderNumber: orderNumber,
+      customerId: serverOrderDetails?.customer_id,
+      addressId: serverOrderDetails?.address_id,
+      paymentDetails: serverOrderDetails?.payment_details,
+    }
   };
 
   const handleTrackOrder = () => {
@@ -73,28 +118,41 @@ const OrderConfirmationScreen = () => {
     navigation.navigate('MainTabs');
   };
 
-  const renderOrderItem = (item: OrderItem) => (
-    <View key={item.id} style={styles.orderItem}>
-      <EnhancedImage 
-        source={{uri: item.image}} 
-        style={styles.itemImage}
-        width={60}
-        height={60}
-        borderRadius={theme.borderRadius.lg}
-        placeholder={item.name}
-        fallbackIcon="📦"
-      />
-      <View style={styles.itemDetails}>
-        <Text style={styles.itemName}>{item.name}</Text>
-        <Text style={styles.itemPrice}>
-          ₹{item.price} × {item.quantity}
-        </Text>
+  const renderOrderItem = (item: OrderItem) => {
+    const itemImageUrl = typeof item.image === 'string' && item.image.startsWith('http') 
+      ? item.image 
+      : item.image 
+        ? `https://superadmin.samarsilkpalace.com/storage/${item.image}`
+        : 'https://via.placeholder.com/60';
+    
+    return (
+      <View key={item.id} style={styles.orderItem}>
+        <EnhancedImage 
+          source={{uri: itemImageUrl}} 
+          style={styles.itemImage}
+          width={60}
+          height={60}
+          borderRadius={theme.borderRadius.lg}
+          placeholder={item.name}
+          fallbackIcon="📦"
+        />
+        <View style={styles.itemDetails}>
+          <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+          {item.color && item.color !== 'Default' && (
+            <Text style={styles.itemColor}>Color: {item.color}</Text>
+          )}
+          <Text style={styles.itemPrice}>
+            {formatCurrency(item.price)} × {item.quantity}
+          </Text>
+        </View>
+        <View style={styles.itemTotalContainer}>
+          <Text style={styles.itemTotal}>
+            {formatCurrency(item.amount || (item.price * item.quantity))}
+          </Text>
+        </View>
       </View>
-      <Text style={styles.itemTotal}>
-        ₹{(item.price * item.quantity).toFixed(2)}
-      </Text>
-    </View>
-  );
+    );
+  };
 
   return (
     <ScreenWrapper 
@@ -103,7 +161,7 @@ const OrderConfirmationScreen = () => {
       headerComponent={
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Order Confirmed</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.closeButton}>
+          <TouchableOpacity onPress={() => navigation.navigate('MainTabs')} style={styles.closeButton}>
             <Text style={styles.closeIcon}>✕</Text>
           </TouchableOpacity>
         </View>
@@ -114,7 +172,7 @@ const OrderConfirmationScreen = () => {
         <Text style={styles.successIcon}>✅</Text>
         <Text style={styles.successTitle}>Order Confirmed!</Text>
         <Text style={styles.successSubtitle}>
-          Thank you for your purchase. Your order has been placed successfully.
+          Thank you for your purchase. Your order has been placed successfully with {orderDetails.paymentMethod.type}.
         </Text>
       </View>
 
@@ -135,24 +193,33 @@ const OrderConfirmationScreen = () => {
             <Text style={styles.infoLabel}>Estimated Delivery</Text>
             <Text style={styles.infoValue}>{orderDetails.estimatedDelivery}</Text>
           </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Order Status</Text>
+            <Text style={[styles.infoValue, styles.statusValue]}>
+              {orderDetails.paymentMethod.orderStatus?.charAt(0).toUpperCase() + 
+               orderDetails.paymentMethod.orderStatus?.slice(1) || 'Pending'}
+            </Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Payment Status</Text>
+            <Text style={[styles.infoValue, styles.paymentStatusValue]}>
+              {orderDetails.paymentMethod.status?.charAt(0).toUpperCase() + 
+               orderDetails.paymentMethod.status?.slice(1) || 'Pending'}
+            </Text>
+          </View>
         </View>
       </View>
 
       {/* Order Items */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Items Ordered</Text>
-        {orderDetails.items.map(renderOrderItem)}
-      </View>
-
-      {/* Shipping Address */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Shipping Address</Text>
-        <View style={styles.addressCard}>
-          <Text style={styles.addressName}>{orderDetails.shippingAddress.name}</Text>
-          <Text style={styles.addressText}>{orderDetails.shippingAddress.address}</Text>
-          <Text style={styles.addressText}>{orderDetails.shippingAddress.city}</Text>
-          <Text style={styles.addressText}>{orderDetails.shippingAddress.country}</Text>
-        </View>
+        <Text style={styles.sectionTitle}>Items Ordered ({orderDetails.items.length})</Text>
+        {orderDetails.items.length > 0 ? (
+          orderDetails.items.map(renderOrderItem)
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>No items to display</Text>
+          </View>
+        )}
       </View>
 
       {/* Payment Method */}
@@ -161,7 +228,9 @@ const OrderConfirmationScreen = () => {
         <View style={styles.paymentCard}>
           <Text style={styles.paymentType}>{orderDetails.paymentMethod.type}</Text>
           <Text style={styles.paymentDetails}>
-            **** **** **** {orderDetails.paymentMethod.last4}
+            {orderDetails.paymentMethod.type === 'Cash on Delivery' 
+              ? 'Pay when your order is delivered to your doorstep'
+              : `Payment Status: ${orderDetails.paymentMethod.status}`}
           </Text>
         </View>
       </View>
@@ -172,21 +241,25 @@ const OrderConfirmationScreen = () => {
         <View style={styles.totalCard}>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Subtotal</Text>
-            <Text style={styles.totalValue}>₹261.97</Text>
+            <Text style={styles.totalValue}>{formatCurrency(orderDetails.subtotal)}</Text>
           </View>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Shipping</Text>
-            <Text style={styles.totalValue}>Free</Text>
+            <Text style={styles.totalValue}>
+              {orderDetails.shipping > 0 ? formatCurrency(orderDetails.shipping) : 'Free'}
+            </Text>
           </View>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Tax</Text>
-            <Text style={styles.totalValue}>₹8.00</Text>
-          </View>
+          {orderDetails.tax > 0 && (
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Tax</Text>
+              <Text style={styles.totalValue}>{formatCurrency(orderDetails.tax)}</Text>
+            </View>
+          )}
           <View style={styles.divider} />
           <View style={styles.totalRow}>
             <Text style={styles.grandTotalLabel}>Total</Text>
             <Text style={styles.grandTotalValue}>
-              ₹{orderDetails.total.toFixed(2)}
+              {formatCurrency(orderDetails.total)}
             </Text>
           </View>
         </View>
@@ -338,6 +411,33 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
+  itemColor: {
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 2,
+  },
+  itemTotalContainer: {
+    alignItems: 'flex-end',
+  },
+  emptyState: {
+    backgroundColor: '#f8f9fa',
+    padding: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: '#666',
+    fontStyle: 'italic',
+  },
+  statusValue: {
+    color: '#28a745',
+    fontWeight: '600',
+  },
+  paymentStatusValue: {
+    color: '#ffc107',
+    fontWeight: '600',
+  },
   addressCard: {
     backgroundColor: '#f8f9fa',
     padding: 15,
@@ -479,6 +579,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#fff',
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeIcon: {
+    fontSize: 18,
+    color: '#666',
+    fontWeight: 'bold',
+  },
+  contentContainer: {
+    flex: 1,
   },
 });
 

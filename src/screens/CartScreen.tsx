@@ -199,10 +199,13 @@ const CartScreen = () => {
     
     navigation.navigate('Checkout', {
       cartItems: cart.items.map(item => ({
-        id: item.id,
+        id: item.id.toString(),
         name: item.name,
         price: parseFloat(item.price),
+        originalPrice: parseFloat(item.price),
         quantity: item.quantity,
+        size: null,
+        color: '',
         image: Array.isArray(item.image) ? item.image[0] : item.image,
       })),
       total: cart.total,
@@ -354,7 +357,7 @@ const CartScreen = () => {
           <FlatList
             data={cart.items}
             renderItem={renderCartItem}
-            keyExtractor={item => item.id}
+            keyExtractor={item => item.id.toString()}
             contentContainerStyle={styles.cartList}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

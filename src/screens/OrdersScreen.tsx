@@ -126,7 +126,7 @@ const OrdersScreen = () => {
 
   // Track order
   const trackOrder = (orderId: string) => {
-    navigation.navigate('OrderTracking', { orderId });
+    navigation.navigate('OrderDetails', { orderId });
   };
 
   // View order details
@@ -138,14 +138,14 @@ const OrdersScreen = () => {
   // Get status color
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'pending': return theme.colors.warning?.[500] || '#f59e0b';
+      case 'pending': return theme.colors.warning[500];
       case 'confirmed': return theme.colors.primary[500];
-      case 'processing': return theme.colors.info?.[500] || '#3b82f6';
-      case 'shipped': return theme.colors.info?.[600] || '#2563eb';
-      case 'out for delivery': return theme.colors.purple?.[500] || '#8b5cf6';
-      case 'delivered': return theme.colors.success?.[500] || '#10b981';
-      case 'cancelled': return theme.colors.error?.[500] || '#ef4444';
-      case 'returned': return theme.colors.gray?.[500] || '#6b7280';
+      case 'processing': return theme.colors.secondary[500];
+      case 'shipped': return theme.colors.secondary[600];
+      case 'out for delivery': return '#8b5cf6';
+      case 'delivered': return theme.colors.success[500];
+      case 'cancelled': return theme.colors.error[500];
+      case 'returned': return theme.colors.neutral[500];
       default: return theme.colors.neutral[500];
     }
   };
@@ -347,7 +347,7 @@ const OrdersScreen = () => {
           {selectedFilter === 'ALL' && (
             <GradientButton
               title="Start Shopping"
-              onPress={() => navigation.navigate('Home')}
+              onPress={() => navigation.navigate('MainTabs' as any)}
               gradient={theme.colors.gradients.primary}
               style={styles.shopButton}
             />

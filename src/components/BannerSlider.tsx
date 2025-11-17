@@ -394,8 +394,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     opacity: 0.1,
-    backgroundColor: 'transparent',
-    backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(255,215,0,0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.2) 0%, transparent 50%)',
+    backgroundColor: 'rgba(255, 215, 0, 0.05)',
   },
   bannerContent: {
     flex: 1.3,
