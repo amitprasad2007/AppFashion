@@ -2,7 +2,7 @@
 export type RootStackParamList = {
   MainTabs: undefined;
   ProductList: {categoryId?: string; categoryName?: string};
-  ProductDetails: {productId: string};
+  ProductDetails: {productId?: string; productSlug?: string; product?: any};
   Categories: {categoryId?: string};
   Search: undefined;
   Cart: undefined;

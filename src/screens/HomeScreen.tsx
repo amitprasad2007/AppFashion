@@ -9,16 +9,24 @@ import {
   FlatList,
   ActivityIndicator,
   RefreshControl,
+  ImageBackground,
+  Dimensions,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { theme } from '../theme';
 import AnimatedCard from '../components/AnimatedCard';
 import GradientButton from '../components/GradientButton';
 import BannerSlider from '../components/BannerSlider';
-import { apiService, ApiCategory, ApiProduct } from '../services/api';
+import EnhancedHeader from '../components/EnhancedHeader';
+import GlassCard from '../components/GlassCard';
+import CollectionsSection from '../components/CollectionsSection';
+import FloatingElements from '../components/FloatingElements';
+import { apiService, ApiCategory, ApiProduct, ApiCollection } from '../services/api';
 import type { Product, Category, RootStackParamList } from '../types/navigation';
 import { StackNavigationProp } from '@react-navigation/stack';
+
+const { width, height } = Dimensions.get('window');
 
 const HomeScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -27,543 +35,521 @@ const HomeScreen = () => {
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<ApiProduct[]>([]);
   const [bestsellerProducts, setBestsellerProducts] = useState<ApiProduct[]>([]);
+  const [collections, setCollections] = useState<ApiCollection[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fallback data in case API fails
-  const fallbackCategories: Category[] = [
-    {id: '1', name: 'Fashion', image: 'https://via.placeholder.com/100'},
-    {id: '2', name: 'Electronics', image: 'https://via.placeholder.com/100'},
-    {id: '3', name: 'Home & Garden', image: 'https://via.placeholder.com/100'},
-    {id: '4', name: 'Sports', image: 'https://via.placeholder.com/100'},
-  ];
-
-  const fallbackFeaturedProducts: Product[] = [
-    {id: '1', name: 'Summer Dress', price: '₹49.99', image: 'https://via.placeholder.com/150', rating: 4.8},
-    {id: '2', name: 'Wireless Headphones', price: '₹89.99', image: 'https://via.placeholder.com/150', rating: 4.7},
-    {id: '3', name: 'Running Shoes', price: '₹129.99', image: 'https://via.placeholder.com/150', rating: 4.9},
-  ];
-
   // Load data from API
   const loadData = async () => {
     try {
+      setLoading(true);
       setError(null);
-      
-      // Fetch data from all endpoints simultaneously
-      const [categoriesData, featuredData, bestsellerData] = await Promise.all([
+
+      console.log('🔄 Loading home screen data...');
+
+      // Load data concurrently for better performance
+      const [categoriesData, featuredData, bestsellerData, collectionsData] = await Promise.allSettled([
         apiService.getCategories(),
         apiService.getFeaturedProducts(),
-        apiService.getBestsellerProducts()
+        apiService.getBestsellerProducts(),
+        apiService.getFeaturedCollections(),
       ]);
 
-      // Update state with API data or fallback to static data
-      setCategories(categoriesData.length > 0 ? categoriesData : fallbackCategories as any);
-      setFeaturedProducts(featuredData.length > 0 ? featuredData : fallbackFeaturedProducts as any);
-      setBestsellerProducts(bestsellerData);
+      // Handle categories
+      if (categoriesData.status === 'fulfilled') {
+        setCategories(categoriesData.value);
+        console.log('✅ Categories loaded:', categoriesData.value.length);
+      } else {
+        console.error('❌ Failed to load categories:', categoriesData.reason);
+      }
 
-      console.log('Data loaded successfully:', {
-        categories: categoriesData.length,
-        featured: featuredData.length,
-        bestsellers: bestsellerData.length
-      });
+      // Handle featured products
+      if (featuredData.status === 'fulfilled') {
+        setFeaturedProducts(featuredData.value);
+        console.log('✅ Featured products loaded:', featuredData.value.length);
+      } else {
+        console.error('❌ Failed to load featured products:', featuredData.reason);
+      }
 
-    } catch (err) {
-      console.error('Error loading home screen data:', err);
-      setError('Failed to load data. Using offline content.');
-      
-      // Use fallback data on error
-      setCategories(fallbackCategories as any);
-      setFeaturedProducts(fallbackFeaturedProducts as any);
-      setBestsellerProducts([]);
+      // Handle bestseller products
+      if (bestsellerData.status === 'fulfilled') {
+        setBestsellerProducts(bestsellerData.value);
+        console.log('✅ Bestseller products loaded:', bestsellerData.value.length);
+      } else {
+        console.error('❌ Failed to load bestseller products:', bestsellerData.reason);
+      }
+
+      // Handle collections
+      if (collectionsData.status === 'fulfilled') {
+        setCollections(collectionsData.value);
+        console.log('✅ Collections loaded:', collectionsData.value.length);
+      } else {
+        console.error('❌ Failed to load collections:', collectionsData.reason);
+      }
+
+    } catch (error) {
+      console.error('❌ Error loading home data:', error);
+      setError('Failed to load data. Please try again.');
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
-  // Initial data load
   useEffect(() => {
     loadData();
   }, []);
 
-  // Refresh function
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    loadData();
+    await loadData();
+    setRefreshing(false);
   };
 
-  const handleBannerPress = (banner: any) => {
-    console.log('Banner pressed:', banner.title);
-    
-    // Handle different banner types based on your API data
-    if (banner.path) {
-      // If banner has specific path, navigate there
-      console.log('Navigate to path:', banner.path);
-      // You can add custom navigation logic here based on the path
-      // Example: if (banner.path.includes('bridal')) navigation.navigate('BridalCollection')
-    }
-    
-    // For now, navigate to product list for all banners
-    (navigation as any).navigate('ProductList');
+  const handleCollectionPress = (collection: ApiCollection) => {
+    console.log('Collection pressed:', collection.name);
+    // navigation.navigate('ProductList', { collectionSlug: collection.slug });
   };
 
-  const renderCategory = ({item, index}: {item: ApiCategory; index: number}) => (
-    <AnimatedCard
-      style={styles.categoryItem}
-      onPress={() => (navigation as any).navigate('Categories', {categoryId: item.id})}
-      elevation="md"
-      animationType="scale"
-      delay={index * 100}>
-      <LinearGradient
-        colors={theme.colors.gradients.ocean}
-        style={styles.categoryGradient}>
-        <Image source={{uri: item.image}} style={styles.categoryImage as any} />
-      </LinearGradient>
-      <Text style={styles.categoryName}>{item.name}</Text>
-      <Text style={styles.categoryCount}>{item.count} items</Text>
-    </AnimatedCard>
-  );
+  const renderCategoryCard = ({ item, index }: { item: ApiCategory; index: number }) => {
+    const gradients = [
+      theme.glassGradients.aurora,
+      theme.glassGradients.sunset,
+      theme.glassGradients.ocean,
+      theme.glassGradients.emerald,
+      theme.glassGradients.purple,
+      theme.glassGradients.rose,
+    ];
+    
+    const gradient = gradients[index % gradients.length];
 
-  const renderProduct = ({item, index}: {item: ApiProduct; index: number}) => (
-    <AnimatedCard
-      style={styles.productItem}
-      onPress={() => (navigation as any).navigate('ProductDetails', {productSlug: item.slug})}
-      elevation="lg"
-      animationType="slide"
-      delay={index * 150}>
-      <Image source={{uri: item.images[0]}} style={styles.productImage as any} />
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.8)']}
-        style={styles.productOverlay}>
-        <View style={styles.productInfo}>
-          <Text style={styles.productName}>{item.name}</Text>
-          <Text style={styles.productPrice}>₹{item.price}</Text>
-          <View style={styles.ratingContainer}>
-            <Text style={styles.rating}>⭐ {item.rating || 4.8}</Text>
-            <Text style={styles.wishlistIcon}>🤍</Text>
-          </View>
-          {item.originalPrice && item.originalPrice > item.price && (
-            <View style={styles.discountBadge}>
-              <Text style={styles.discountText}>{Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)}% OFF</Text>
-            </View>
-          )}
-        </View>
-      </LinearGradient>
-    </AnimatedCard>
-  );
-
-  const renderBestsellerProduct = ({item, index}: {item: ApiProduct; index: number}) => (
-    <AnimatedCard
-      style={styles.bestsellerItem}
-      onPress={() => (navigation as any).navigate('ProductDetails', {productSlug: item.slug})}
-      elevation="lg"
-      animationType="fade"
-      delay={index * 100}>
-      <View style={styles.bestsellerBadge}>
-        <Text style={styles.bestsellerBadgeText}>🔥 BESTSELLER</Text>
-      </View>
-      <Image source={{uri: item.images[0]}} style={styles.bestsellerImage as any} />
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.9)']}
-        style={styles.bestsellerOverlay}>
-        <View style={styles.bestsellerInfo}>
-          <Text style={styles.bestsellerName}>{item.name}</Text>
-          <Text style={styles.bestsellerPrice}>₹{item.price}</Text>
-          <View style={styles.ratingContainer}>
-            <Text style={styles.rating}>⭐ {item.rating || 4.9}</Text>
-            <Text style={styles.wishlistIcon}>❤️</Text>
-          </View>
-        </View>
-      </LinearGradient>
-    </AnimatedCard>
-  );
-
-  // Show loading spinner on initial load
-  if (loading && !refreshing) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary[500]} />
-        <Text style={styles.loadingText}>Loading amazing deals...</Text>
-      </View>
+      <AnimatedCard delay={index * 100}>
+        <TouchableOpacity 
+          style={styles.categoryCard}
+          onPress={() => navigation.navigate('Categories')}
+          activeOpacity={0.9}
+        >
+          <ImageBackground
+            source={{ uri: item.image }}
+            style={styles.categoryBackground}
+            imageStyle={styles.categoryBackgroundImage}
+          >
+            <LinearGradient
+              colors={gradient}
+              style={styles.categoryOverlay}
+            />
+            <GlassCard style={styles.categoryContent} variant="light">
+              <Text style={styles.categoryName}>{item.name}</Text>
+              <Text style={styles.categoryCount}>{item.count || 0} Items</Text>
+              <View style={styles.categoryIcon}>
+                <Text style={styles.categoryIconText}>→</Text>
+              </View>
+            </GlassCard>
+          </ImageBackground>
+        </TouchableOpacity>
+      </AnimatedCard>
+    );
+  };
+
+  const renderProductCard = ({ item, index }: { item: ApiProduct; index: number }) => {
+    const imageUrl = item.images && item.images.length > 0 
+      ? item.images[0] 
+      : `https://picsum.photos/300/300?random=${item.id}`;
+
+    return (
+      <AnimatedCard delay={index * 150}>
+        <TouchableOpacity
+          style={styles.productCard}
+          onPress={() => navigation.navigate('ProductDetails', { product: item })}
+          activeOpacity={0.9}
+        >
+          <GlassCard style={styles.productGlassCard} variant="base">
+            <ImageBackground
+              source={{ uri: imageUrl }}
+              style={styles.productImage}
+              imageStyle={styles.productImageStyle}
+            >
+              <LinearGradient
+                colors={['transparent', 'rgba(0,0,0,0.8)']}
+                style={styles.productImageOverlay}
+              />
+              
+              {item.discountPercentage > 0 && (
+                <View style={styles.discountBadge}>
+                  <LinearGradient
+                    colors={['#ff6b6b', '#ff5252']}
+                    style={styles.discountBadgeGradient}
+                  >
+                    <Text style={styles.discountText}>-{item.discountPercentage}%</Text>
+                  </LinearGradient>
+                </View>
+              )}
+            </ImageBackground>
+            
+            <View style={styles.productContent}>
+              <Text style={styles.productName} numberOfLines={2}>{item.name || 'Product Name'}</Text>
+              <Text style={styles.productCategory}>{item.category?.title || 'Category'}</Text>
+              
+              <View style={styles.productPricing}>
+                <Text style={styles.productPrice}>₹{item.price || 0}</Text>
+                {(item.originalPrice || 0) > (item.price || 0) && (
+                  <Text style={styles.productOriginalPrice}>₹{item.originalPrice}</Text>
+                )}
+              </View>
+              
+              {item.rating && (
+                <View style={styles.ratingContainer}>
+                  <Text style={styles.ratingText}>⭐ {item.rating || 4.5}</Text>
+                </View>
+              )}
+            </View>
+          </GlassCard>
+        </TouchableOpacity>
+      </AnimatedCard>
+    );
+  };
+
+  if (loading) {
+    return (
+      <LinearGradient
+        colors={theme.glassGradients.aurora}
+        style={styles.loadingContainer}
+      >
+        <GlassCard style={styles.loadingCard}>
+          <ActivityIndicator size="large" color={theme.colors.white} />
+          <Text style={styles.loadingText}>Loading magical experience...</Text>
+        </GlassCard>
+      </LinearGradient>
     );
   }
 
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }>
-      {/* Header */}
+    <View style={styles.container}>
       <LinearGradient
-        colors={theme.colors.gradients.primary}
-        style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.headerGreeting}>Hello, Fashionista! 👋</Text>
-            <Text style={styles.headerTitle}>Discover Amazing Deals</Text>
-            {error && (
-              <Text style={styles.errorText}>⚠️ {error}</Text>
-            )}
-          </View>
-          <View style={styles.headerRight}>
-            <TouchableOpacity 
-              style={styles.loginButton}
-              onPress={() => (navigation as any).navigate('Login')}>
-              <Text style={styles.loginButtonText}>Login</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.searchButton}
-              onPress={() => (navigation as any).navigate('Search')}>
-              <Text style={styles.searchIcon}>🔍</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </LinearGradient>
-
-      {/* Dynamic Banner Slider */}
-      <BannerSlider 
-        autoSlide={true}
-        slideInterval={4000}
-        onBannerPress={handleBannerPress}
+        colors={theme.glassGradients.aurora}
+        style={styles.backgroundGradient}
+      />
+      <FloatingElements count={8} />
+      
+      <EnhancedHeader 
+        title="✨ Samar Silk Palace"
+        rightComponent={
+          <TouchableOpacity style={styles.searchButton}>
+            <GlassCard style={styles.searchIcon} variant="light">
+              <Text style={styles.searchIconText}>🔍</Text>
+            </GlassCard>
+          </TouchableOpacity>
+        }
       />
 
-      {/* Categories */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Shop by Category</Text>
-          <TouchableOpacity onPress={() => (navigation as any).navigate('Categories')}>
-            <Text style={styles.viewAllText}>View All ({categories.length})</Text>
-          </TouchableOpacity>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.colors.white}
+            colors={[theme.colors.primary[500]]}
+          />
+        }
+      >
+        {/* Hero Banner Section */}
+        <View style={styles.heroSection}>
+          <BannerSlider />
         </View>
-        {categories.length > 0 ? (
+
+        {/* Collections Section */}
+        <CollectionsSection onCollectionPress={handleCollectionPress} />
+
+        {/* Categories Section */}
+        <View style={styles.section}>
+          <GlassCard style={styles.sectionHeader} variant="light">
+            <Text style={styles.sectionTitle}>🛍️ Shop by Category</Text>
+            <Text style={styles.sectionSubtitle}>Explore our curated categories</Text>
+          </GlassCard>
+          
           <FlatList
             data={categories}
-            renderItem={renderCategory}
-            keyExtractor={item => item.id.toString()}
+            renderItem={renderCategoryCard}
+            keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}
+            contentContainerStyle={styles.categoriesList}
           />
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>📦 No categories available</Text>
-          </View>
-        )}
-      </View>
+        </View>
 
-      {/* Bestseller Products */}
-      {bestsellerProducts.length > 0 && (
+        {/* Featured Products Section */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>🔥 Bestsellers</Text>
-            <TouchableOpacity onPress={() => (navigation as any).navigate('ProductList', { type: 'bestseller' })}>
-              <Text style={styles.viewAllText}>View All ({bestsellerProducts.length})</Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={bestsellerProducts}
-            renderItem={renderBestsellerProduct}
-            keyExtractor={item => item.id.toString()}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}
-          />
-        </View>
-      )}
-
-      {/* Featured Products */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>✨ Featured Products</Text>
-          <TouchableOpacity onPress={() => (navigation as any).navigate('ProductList', { type: 'featured' })}>
-            <Text style={styles.viewAllText}>View All ({featuredProducts.length})</Text>
-          </TouchableOpacity>
-        </View>
-        {featuredProducts.length > 0 ? (
+          <GlassCard style={styles.sectionHeader} variant="light">
+            <Text style={styles.sectionTitle}>⭐ Featured Products</Text>
+            <Text style={styles.sectionSubtitle}>Handpicked just for you</Text>
+          </GlassCard>
+          
           <FlatList
             data={featuredProducts}
-            renderItem={renderProduct}
-            keyExtractor={item => item.id.toString()}
+            renderItem={renderProductCard}
+            keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}
+            contentContainerStyle={styles.productsList}
           />
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>✨ No featured products available</Text>
-          </View>
-        )}
-      </View>
-    </ScrollView>
+        </View>
+
+        {/* Bestseller Products Section */}
+        <View style={styles.section}>
+          <GlassCard style={styles.sectionHeader} variant="light">
+            <Text style={styles.sectionTitle}>🔥 Bestsellers</Text>
+            <Text style={styles.sectionSubtitle}>What everyone's buying</Text>
+          </GlassCard>
+          
+          <FlatList
+            data={bestsellerProducts}
+            renderItem={renderProductCard}
+            keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.productsList}
+          />
+        </View>
+
+        {/* Call to Action */}
+        <View style={styles.ctaSection}>
+          <GlassCard style={styles.ctaCard} gradientColors={theme.glassGradients.sunset}>
+            <Text style={styles.ctaTitle}>Ready to Shop?</Text>
+            <Text style={styles.ctaSubtitle}>Explore our complete collection</Text>
+            <GradientButton
+              title="Browse All Products"
+              onPress={() => navigation.navigate('ProductList')}
+              style={styles.ctaButton}
+            />
+          </GlassCard>
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.neutral[50],
+    backgroundColor: theme.light.background,
+  },
+  backgroundGradient: {
+    ...StyleSheet.absoluteFillObject,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.neutral[50],
+  },
+  loadingCard: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing[8],
+    paddingHorizontal: theme.spacing[6],
   },
   loadingText: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.neutral[600],
-    marginTop: theme.spacing[3],
-    fontWeight: theme.typography.fontWeight.medium,
-  },
-  header: {
-    paddingTop: theme.spacing[12],
-    paddingBottom: theme.spacing[6],
-    paddingHorizontal: theme.spacing[5],
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing[3],
-  },
-  loginButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: theme.spacing[4],
-    paddingVertical: theme.spacing[2],
-    borderRadius: theme.borderRadius.full,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
-  },
-  loginButtonText: {
+    fontSize: theme.typography.body.large.fontSize,
     color: theme.colors.white,
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.semibold,
-  },
-  headerGreeting: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.white,
-    opacity: 0.9,
-    marginBottom: theme.spacing[1],
-  },
-  headerTitle: {
-    fontSize: theme.typography.fontSize['2xl'],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.white,
-  },
-  errorText: {
-    fontSize: theme.typography.fontSize.xs,
-    color: '#ffcccb',
-    marginTop: theme.spacing[1],
-    fontWeight: theme.typography.fontWeight.medium,
+    marginTop: theme.spacing[4],
+    fontWeight: '600',
   },
   searchButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    padding: theme.spacing[3],
-    borderRadius: theme.borderRadius.full,
+    marginRight: theme.spacing[2],
   },
   searchIcon: {
-    fontSize: 20,
-  },
-  section: {
-    marginVertical: theme.spacing[6],
-    paddingHorizontal: theme.spacing[5],
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing[4],
-  },
-  sectionTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.neutral[800],
-  },
-  viewAllText: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.primary[500],
-    fontWeight: theme.typography.fontWeight.medium,
-  },
-  horizontalList: {
-    paddingLeft: theme.spacing[1],
-    paddingRight: theme.spacing[1],
-  },
-  emptyState: {
-    alignItems: 'center',
-    padding: theme.spacing[6],
-    backgroundColor: theme.colors.neutral[100],
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 2,
-    borderColor: theme.colors.neutral[200],
-    borderStyle: 'dashed',
-  },
-  emptyText: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.neutral[500],
-    textAlign: 'center',
-    fontWeight: theme.typography.fontWeight.medium,
-  },
-  categoryItem: {
-    alignItems: 'center',
-    marginRight: theme.spacing[4],
-    width: 100,
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing[3],
-  },
-  categoryGradient: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 40,
+    height: 40,
+    borderRadius: theme.borderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: theme.spacing[2],
   },
-  categoryImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  searchIconText: {
+    fontSize: 18,
   },
-  categoryName: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: theme.spacing[10],
+  },
+  heroSection: {
+    marginBottom: theme.spacing[6],
+  },
+  section: {
+    marginBottom: theme.spacing[8],
+  },
+  sectionHeader: {
+    marginHorizontal: theme.spacing[4],
+    marginBottom: theme.spacing[4],
+    alignItems: 'center',
+  },
+  sectionTitle: {
+    fontSize: theme.typography.heading.h2.fontSize,
+    fontWeight: theme.typography.heading.h2.fontWeight as any,
+    color: theme.colors.white,
     textAlign: 'center',
-    color: theme.colors.neutral[700],
+    marginBottom: theme.spacing[1],
   },
-  categoryCount: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.neutral[500],
+  sectionSubtitle: {
+    fontSize: theme.typography.body.medium.fontSize,
+    color: theme.colors.white,
     textAlign: 'center',
-    marginTop: theme.spacing[1],
+    opacity: 0.9,
   },
-  productItem: {
+  categoriesList: {
+    paddingHorizontal: theme.spacing[4],
+  },
+  categoryCard: {
+    width: 150,
+    height: 120,
     marginRight: theme.spacing[4],
-    width: 180,
-    backgroundColor: theme.colors.white,
     borderRadius: theme.borderRadius.xl,
     overflow: 'hidden',
-    position: 'relative',
+  },
+  categoryBackground: {
+    flex: 1,
+  },
+  categoryBackgroundImage: {
+    borderRadius: theme.borderRadius.xl,
+  },
+  categoryOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.8,
+  },
+  categoryContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: theme.spacing[2],
+  },
+  categoryName: {
+    fontSize: theme.typography.heading.h4.fontSize,
+    fontWeight: '600',
+    color: theme.colors.white,
+    textAlign: 'center',
+    marginBottom: theme.spacing[1],
+  },
+  categoryCount: {
+    fontSize: theme.typography.caption.fontSize,
+    color: theme.colors.white,
+    opacity: 0.9,
+    marginBottom: theme.spacing[2],
+  },
+  categoryIcon: {
+    width: 30,
+    height: 30,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: theme.borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryIconText: {
+    color: theme.colors.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  productsList: {
+    paddingHorizontal: theme.spacing[4],
+  },
+  productCard: {
+    width: 200,
+    marginRight: theme.spacing[4],
+  },
+  productGlassCard: {
+    overflow: 'hidden',
+    borderRadius: theme.borderRadius.xl,
   },
   productImage: {
     width: '100%',
-    height: 200,
+    height: 160,
   },
-  productOverlay: {
+  productImageStyle: {
+    borderTopLeftRadius: theme.borderRadius.xl,
+    borderTopRightRadius: theme.borderRadius.xl,
+  },
+  productImageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  discountBadge: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    top: theme.spacing[2],
+    right: theme.spacing[2],
+  },
+  discountBadgeGradient: {
+    paddingHorizontal: theme.spacing[2],
+    paddingVertical: theme.spacing[1],
+    borderRadius: theme.borderRadius.sm,
+  },
+  discountText: {
+    color: theme.colors.white,
+    fontSize: theme.typography.caption.fontSize,
+    fontWeight: 'bold',
+  },
+  productContent: {
     padding: theme.spacing[4],
   },
-  productInfo: {
-    alignItems: 'flex-start',
-    position: 'relative',
-  },
   productName: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.white,
+    fontSize: theme.typography.body.medium.fontSize,
+    fontWeight: '600',
+    color: theme.light.onSurface,
     marginBottom: theme.spacing[1],
   },
+  productCategory: {
+    fontSize: theme.typography.caption.fontSize,
+    color: theme.light.tertiary,
+    marginBottom: theme.spacing[2],
+  },
+  productPricing: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing[2],
+  },
   productPrice: {
-    fontSize: theme.typography.fontSize.lg,
-    color: theme.colors.white,
-    fontWeight: theme.typography.fontWeight.bold,
+    fontSize: theme.typography.body.large.fontSize,
+    fontWeight: 'bold',
+    color: theme.colors.primary[600],
+    marginRight: theme.spacing[2],
+  },
+  productOriginalPrice: {
+    fontSize: theme.typography.body.small.fontSize,
+    color: theme.light.tertiary,
+    textDecorationLine: 'line-through',
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginTop: theme.spacing[2],
   },
-  rating: {
-    fontSize: theme.typography.fontSize.sm,
+  ratingText: {
+    fontSize: theme.typography.caption.fontSize,
+    color: theme.light.onSurface,
+  },
+  ctaSection: {
+    marginHorizontal: theme.spacing[4],
+    marginTop: theme.spacing[4],
+  },
+  ctaCard: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing[8],
+  },
+  ctaTitle: {
+    fontSize: theme.typography.heading.h2.fontSize,
+    fontWeight: theme.typography.heading.h2.fontWeight as any,
     color: theme.colors.white,
-  },
-  wishlistIcon: {
-    fontSize: 18,
-  },
-  discountBadge: {
-    position: 'absolute',
-    top: -35,
-    right: 0,
-    backgroundColor: '#ff4757',
-    paddingHorizontal: theme.spacing[2],
-    paddingVertical: theme.spacing[1],
-    borderRadius: theme.borderRadius.md,
-  },
-  discountText: {
-    color: theme.colors.white,
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
-  },
-  // Bestseller Product Styles
-  bestsellerItem: {
-    marginRight: theme.spacing[4],
-    width: 200,
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.borderRadius.xl,
-    overflow: 'hidden',
-    position: 'relative',
-    borderWidth: 2,
-    borderColor: '#ff6b6b',
-  },
-  bestsellerBadge: {
-    position: 'absolute',
-    top: theme.spacing[3],
-    left: theme.spacing[3],
-    backgroundColor: '#ff4757',
-    paddingHorizontal: theme.spacing[2],
-    paddingVertical: theme.spacing[1],
-    borderRadius: theme.borderRadius.lg,
-    zIndex: 2,
-  },
-  bestsellerBadgeText: {
-    color: theme.colors.white,
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
-    letterSpacing: 0.5,
-  },
-  bestsellerImage: {
-    width: '100%',
-    height: 220,
-  },
-  bestsellerOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: theme.spacing[4],
-  },
-  bestsellerInfo: {
-    alignItems: 'flex-start',
-  },
-  bestsellerName: {
-    fontSize: theme.typography.fontSize.base + 1,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.white,
+    textAlign: 'center',
     marginBottom: theme.spacing[2],
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
   },
-  bestsellerPrice: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: '#ffd700',
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
+  ctaSubtitle: {
+    fontSize: theme.typography.body.large.fontSize,
+    color: theme.colors.white,
+    textAlign: 'center',
+    opacity: 0.9,
+    marginBottom: theme.spacing[6],
+  },
+  ctaButton: {
+    paddingHorizontal: theme.spacing[8],
   },
 });
 

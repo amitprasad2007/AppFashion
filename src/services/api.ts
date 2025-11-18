@@ -86,6 +86,26 @@ export interface ApiProduct {
   inStock?: boolean;
 }
 
+// Collection interfaces for the new collections API
+export interface ApiCollectionType {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+export interface ApiCollection {
+  id: number;
+  collection_type_id: number;
+  name: string;
+  slug: string;
+  description: string;
+  banner_image: string;
+  thumbnail_image: string;
+  seo_title?: string;
+  seo_description?: string;
+  collection_type: ApiCollectionType;
+}
+
 // Authentication Interfaces
 export interface LoginCredentials {
   email: string;
@@ -283,6 +303,7 @@ export interface ApiResponse<T> {
 
 class ApiService {
   private authToken: string | null = null;
+  private guestSessionToken: string | null = null;
 
   // Set authentication token for API requests
   setAuthToken(token: string | null) {
@@ -292,6 +313,24 @@ class ApiService {
   // Get current auth token
   getAuthToken(): string | null {
     return this.authToken;
+  }
+
+  // Generate guest session token (matching website implementation)
+  private generateGuestSessionToken(): string {
+    // Create session token exactly like the website: random string + timestamp
+    return Math.random().toString(36).slice(2) + Date.now().toString(36);
+  }
+
+  // Get or generate session token for guest API calls
+  private getSessionToken(): string {
+    // Check if we already have a guest session token stored
+    if (!this.guestSessionToken) {
+      // Generate a new one and store it (matching website localStorage logic)
+      this.guestSessionToken = this.generateGuestSessionToken();
+      console.log('🔑 Generated new guest session token:', this.guestSessionToken);
+    }
+    
+    return this.guestSessionToken;
   }
 
   private async fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -1464,16 +1503,37 @@ class ApiService {
   }
 
   // Check if product is in wishlist
-  async checkWishlist(productId: number): Promise<{ in_wishlist: boolean; wishlist_id?: number }> {
+  // Check wishlist status for a product (with session token and variant support)
+  async checkWishlist(
+    productId: number, 
+    productVariantId?: number
+  ): Promise<{ in_wishlist: boolean; wishlist_id?: number }> {
     try {
       // Use different endpoints based on authentication status
       const endpoint = this.authToken ? '/checkwishlist' : '/guest/checkwishlist';
       
-      const response = await this.fetchApi<{ in_wishlist: boolean; wishlist_id?: number }>(endpoint, {
+      const requestBody: any = { 
+        product_id: productId,
+        product_variant_id: productVariantId || null // Always include product_variant_id (required parameter)
+      };
+      
+      // For guest users, add session token
+      if (!this.authToken) {
+        const sessionToken = this.getSessionToken();
+        requestBody.session_token = sessionToken;
+        console.log('🔍 Checking wishlist for product:', productId, 'variant:', productVariantId || 'null', 'with session token:', sessionToken);
+      }
+      
+      const response = await this.fetchApi<{ in_wishlist: boolean; wish_id?: number }>(endpoint, {
         method: 'POST',
-        body: JSON.stringify({ product_id: productId }),
+        body: JSON.stringify(requestBody),
       });
-      return response;
+      
+      // Normalize the response to match our interface
+      return {
+        in_wishlist: response.in_wishlist,
+        wishlist_id: response.wish_id
+      };
     } catch (error) {
       console.error('Error checking wishlist:', error);
       return { in_wishlist: false };
@@ -1868,17 +1928,30 @@ class ApiService {
     }
   }
 
-  // Add product to recently viewed
+  // Add product to recently viewed (with session token support)
   async addToRecentlyViewed(productId: number): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await this.fetchApi<{ success: boolean; message: string }>('/recently-viewed', {
+      // Use different endpoints based on authentication status
+      const endpoint = this.authToken ? '/recently-viewed' : '/guest/recently-viewed';
+      
+      const requestBody: any = { product_id: productId };
+      
+      // For guest users, add session token
+      if (!this.authToken) {
+        const sessionToken = this.getSessionToken();
+        requestBody.session_token = sessionToken;
+        console.log('🔍 Adding to recently viewed for product:', productId, 'with session token:', sessionToken);
+      }
+      
+      const response = await this.fetchApi<{ success: boolean; message: string }>(endpoint, {
         method: 'POST',
-        body: JSON.stringify({ product_id: productId }),
+        body: JSON.stringify(requestBody),
       });
       return response;
     } catch (error) {
       console.error('Error adding to recently viewed:', error);
-      throw error;
+      // Return success for fallback to prevent blocking the user flow
+      return { success: true, message: 'Added to recently viewed (offline mode)' };
     }
   }
 
@@ -2150,6 +2223,162 @@ class ApiService {
     } catch (error) {
       console.error(`Error handling ${provider} OAuth callback:`, error);
       throw error;
+    }
+  }
+
+  // ==================== COLLECTIONS API ====================
+  
+  async getCollectionTypes(): Promise<ApiCollectionType[]> {
+    try {
+      console.log('🔍 Fetching collection types...');
+      
+      const externalUrl = 'https://superadmin.samarsilkpalace.com/api/collection-types';
+      const response = await fetch(externalUrl);
+      const data = await response.json();
+      
+      console.log('✅ Successfully fetched collection types:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ Error fetching collection types:', error);
+      return [];
+    }
+  }
+
+  // ==================== COLLECTIONS MANAGEMENT ====================
+  
+  async getFeaturedCollections(): Promise<ApiCollection[]> {
+    try {
+      console.log('🔍 Fetching featured collections...');
+      const response = await this.fetchApi<ApiCollection[]>('/featured-collections');
+      
+      // Handle both direct array and wrapped response
+      if (Array.isArray(response)) {
+        return response;
+      } else if (response && (response as any).data) {
+        return (response as any).data;
+      } else {
+        console.warn('Unexpected featured collections API response structure:', response);
+        return [];
+      }
+    } catch (error) {
+      console.error('Error fetching featured collections:', error);
+      console.log('🔄 Using mock data for featured collections');
+      
+      // Return mock data as fallback
+      return [
+        {
+          id: 1,
+          collection_type_id: 1,
+          name: 'Bridal Collection',
+          slug: 'bridal-collection',
+          description: 'Exquisite bridal wear for your special day',
+          banner_image: 'https://via.placeholder.com/400x300/ff6b6b/ffffff?text=Bridal+Collection',
+          thumbnail_image: 'https://via.placeholder.com/200x150/ff6b6b/ffffff?text=Bridal',
+          collection_type: {
+            id: 1,
+            name: 'Bridal',
+            slug: 'bridal',
+          },
+        },
+        {
+          id: 2,
+          collection_type_id: 2,
+          name: 'Festive Elegance',
+          slug: 'festive-elegance',
+          description: 'Traditional wear for festive occasions',
+          banner_image: 'https://via.placeholder.com/400x300/4ecdc4/ffffff?text=Festive+Collection',
+          thumbnail_image: 'https://via.placeholder.com/200x150/4ecdc4/ffffff?text=Festive',
+          collection_type: {
+            id: 2,
+            name: 'Festive',
+            slug: 'festive',
+          },
+        },
+      ];
+    }
+  }
+
+  async getAllCollections(): Promise<ApiCollection[]> {
+    try {
+      console.log('🔍 Fetching all collections...');
+      const response = await this.fetchApi<ApiCollection[]>('/collections');
+      
+      // Handle both direct array and wrapped response
+      if (Array.isArray(response)) {
+        return response;
+      } else if (response && (response as any).data) {
+        return (response as any).data;
+      } else {
+        console.warn('Unexpected all collections API response structure:', response);
+        return [];
+      }
+    } catch (error) {
+      console.error('Error fetching all collections:', error);
+      console.log('🔄 Using mock data for all collections');
+      
+      // Return mock data as fallback
+      return [
+        {
+          id: 3,
+          collection_type_id: 3,
+          name: 'Summer Collection',
+          slug: 'summer-collection',
+          description: 'Light and breezy summer wear',
+          banner_image: 'https://via.placeholder.com/400x300/45b7d1/ffffff?text=Summer+Collection',
+          thumbnail_image: 'https://via.placeholder.com/200x150/45b7d1/ffffff?text=Summer',
+          collection_type: {
+            id: 3,
+            name: 'Seasonal',
+            slug: 'seasonal',
+          },
+        },
+        {
+          id: 4,
+          collection_type_id: 4,
+          name: 'Designer Collection',
+          slug: 'designer-collection',
+          description: 'Exclusive designer pieces',
+          banner_image: 'https://via.placeholder.com/400x300/8b5cf6/ffffff?text=Designer+Collection',
+          thumbnail_image: 'https://via.placeholder.com/200x150/8b5cf6/ffffff?text=Designer',
+          collection_type: {
+            id: 4,
+            name: 'Designer',
+            slug: 'designer',
+          },
+        },
+      ];
+    }
+  }
+
+  async getFeaturedCollections(): Promise<ApiCollection[]> {
+    try {
+      console.log('🔍 Fetching featured collections...');
+      
+      const externalUrl = 'https://superadmin.samarsilkpalace.com/api/collections/featured';
+      const response = await fetch(externalUrl);
+      const data = await response.json();
+      
+      console.log('✅ Successfully fetched featured collections:', data);
+      return Array.isArray(data) ? data : [data];
+    } catch (error) {
+      console.error('❌ Error fetching featured collections:', error);
+      return [];
+    }
+  }
+
+  async getCollectionBySlug(slug: string): Promise<ApiCollection | null> {
+    try {
+      console.log('🔍 Fetching collection by slug:', slug);
+      
+      const externalUrl = `https://superadmin.samarsilkpalace.com/api/collections/${slug}`;
+      const response = await fetch(externalUrl);
+      const data = await response.json();
+      
+      console.log('✅ Successfully fetched collection:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ Error fetching collection by slug:', error);
+      return null;
     }
   }
 }

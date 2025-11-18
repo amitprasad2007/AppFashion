@@ -18,6 +18,10 @@ import { theme } from '../../theme';
 import AnimatedCard from '../../components/AnimatedCard';
 import GradientButton from '../../components/GradientButton';
 import OAuthButton from '../../components/OAuth/OAuthButton';
+import EnhancedHeader from '../../components/EnhancedHeader';
+import GlassCard from '../../components/GlassCard';
+import GlassInput from '../../components/GlassInput';
+import FloatingElements from '../../components/FloatingElements';
 import { useAuth } from '../../contexts/AuthContext';
 
 const LoginScreen = () => {
@@ -148,103 +152,107 @@ const LoginScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <LinearGradient
-        colors={theme.colors.gradients.primary}
-        style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Welcome Back</Text>
-        <View style={styles.placeholder} />
-      </LinearGradient>
+        colors={theme.glassGradients.ocean}
+        style={styles.backgroundGradient}
+      />
+      <FloatingElements count={12} />
+      
+      <EnhancedHeader 
+        title="🔐 Welcome Back"
+        showBackButton={true}
+      />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}>
         {/* Welcome Section */}
-        <AnimatedCard style={styles.welcomeCard} elevation="xl">
-          <LinearGradient
-            colors={theme.colors.gradients.ocean}
-            style={styles.welcomeGradient}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 1}}>
+        <AnimatedCard delay={100}>
+          <GlassCard style={styles.welcomeCard} gradientColors={theme.glassGradients.aurora}>
             <Text style={styles.welcomeEmoji}>👋</Text>
             <Text style={styles.welcomeTitle}>Hello Again!</Text>
             <Text style={styles.welcomeSubtitle}>
-              Ready to discover amazing fashion deals?
+              Ready to discover amazing fashion at Samar Silk Palace?
             </Text>
-          </LinearGradient>
+          </GlassCard>
         </AnimatedCard>
 
         {/* Login Form */}
-        <AnimatedCard style={styles.formCard} elevation="lg" animationType="slide" delay={300}>
-          <Text style={styles.formTitle}>Sign In to Your Account</Text>
-          
-          {/* Show global error */}
-          {state.error && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>⚠️ {state.error}</Text>
-            </View>
-          )}
-          
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>📧 Email Address</Text>
-            <View style={[styles.inputWrapper, validationErrors.email && styles.inputError]}>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your email"
-                placeholderTextColor={theme.colors.neutral[400]}
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  // Clear validation error when user starts typing
-                  if (validationErrors.email) {
-                    setValidationErrors(prev => ({...prev, email: ''}));
-                  }
-                }}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!isSubmitting && !state.isLoading}
-              />
-            </View>
-            {validationErrors.email && (
-              <Text style={styles.validationError}>{validationErrors.email}</Text>
+        <AnimatedCard delay={200}>
+          <GlassCard style={styles.formCard} gradientColors={theme.glassGradients.sunset}>
+            <Text style={styles.formTitle}>🔑 Sign In to Your Account</Text>
+            
+            {/* Show global error */}
+            {state.error && (
+              <GlassCard style={styles.errorContainer} variant="light">
+                <Text style={styles.errorText}>⚠️ {state.error}</Text>
+              </GlassCard>
             )}
-          </View>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>📧 Email Address</Text>
+              <GlassCard 
+                style={[styles.inputWrapper, validationErrors.email && styles.inputError]} 
+                variant="light">
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  placeholderTextColor="rgba(255,255,255,0.7)"
+                  value={email}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    // Clear validation error when user starts typing
+                    if (validationErrors.email) {
+                      setValidationErrors(prev => ({...prev, email: ''}));
+                    }
+                  }}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!isSubmitting && !state.isLoading}
+                />
+              </GlassCard>
+              {validationErrors.email && (
+                <Text style={styles.validationError}>{validationErrors.email}</Text>
+              )}
+            </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>🔒 Password</Text>
-            <View style={[styles.passwordContainer, validationErrors.password && styles.inputError]}>
-              <TextInput
-                style={styles.passwordInput}
-                placeholder="Enter your password"
-                placeholderTextColor={theme.colors.neutral[400]}
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  // Clear validation error when user starts typing
-                  if (validationErrors.password) {
-                    setValidationErrors(prev => ({...prev, password: ''}));
-                  }
-                }}
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!isSubmitting && !state.isLoading}
-              />
-              <TouchableOpacity
-                style={styles.eyeButton}
-                onPress={() => setShowPassword(!showPassword)}
-                disabled={isSubmitting || state.isLoading}>
-                <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '🙈'}</Text>
-              </TouchableOpacity>
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>🔒 Password</Text>
+              <GlassCard 
+                style={[styles.passwordContainer, validationErrors.password && styles.inputError]} 
+                variant="light">
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Enter your password"
+                  placeholderTextColor="rgba(255,255,255,0.7)"
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    // Clear validation error when user starts typing
+                    if (validationErrors.password) {
+                      setValidationErrors(prev => ({...prev, password: ''}));
+                    }
+                  }}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!isSubmitting && !state.isLoading}
+                />
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() => setShowPassword(!showPassword)}
+                  disabled={isSubmitting || state.isLoading}>
+                  <GlassCard style={styles.eyeIcon} variant="light">
+                    <Text style={styles.eyeIconText}>{showPassword ? '👁️' : '🙈'}</Text>
+                  </GlassCard>
+                </TouchableOpacity>
+              </GlassCard>
+              {validationErrors.password && (
+                <Text style={styles.validationError}>{validationErrors.password}</Text>
+              )}
             </View>
-            {validationErrors.password && (
-              <Text style={styles.validationError}>{validationErrors.password}</Text>
-            )}
-          </View>
 
           <TouchableOpacity 
             onPress={handleForgotPassword}
@@ -254,68 +262,75 @@ const LoginScreen = () => {
             </Text>
           </TouchableOpacity>
 
-          <GradientButton
-            title={isSubmitting || state.isLoading ? "Signing In..." : "Sign In to AppFashion"}
-            onPress={handleLogin}
-            gradient={theme.colors.gradients.primary}
-            size="large"
-            style={styles.loginButton}
-            disabled={isSubmitting || state.isLoading}
-          />
+            <GradientButton
+              title={isSubmitting || state.isLoading ? "Signing In..." : "🚀 Sign In to Samar Silk Palace"}
+              onPress={handleLogin}
+              gradient={theme.colors.gradients.primary}
+              size="large"
+              style={styles.loginButton}
+              disabled={isSubmitting || state.isLoading}
+            />
 
-          {(isSubmitting || state.isLoading) && (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color={theme.colors.primary[500]} />
-              <Text style={styles.loadingText}>Authenticating...</Text>
-            </View>
-          )}
+            {(isSubmitting || state.isLoading) && (
+              <GlassCard style={styles.loadingContainer} variant="light">
+                <ActivityIndicator size="small" color={theme.colors.white} />
+                <Text style={styles.loadingText}>Authenticating...</Text>
+              </GlassCard>
+            )}
+          </GlassCard>
         </AnimatedCard>
 
         {/* Social Login */}
-        <AnimatedCard style={styles.socialCard} elevation="md" animationType="fade" delay={600}>
-          <Text style={styles.orText}>✨ or continue with ✨</Text>
-          
-          <View style={styles.socialButtons}>
-            <OAuthButton 
-              provider="google" 
-              onSuccess={() => navigation.navigate('Home' as never)}
-              onError={(error) => console.error('Google OAuth Error:', error)}
-              disabled={isSubmitting || state.isLoading}
-            />
+        <AnimatedCard delay={400}>
+          <GlassCard style={styles.socialCard} gradientColors={theme.glassGradients.emerald}>
+            <Text style={styles.orText}>✨ or continue with ✨</Text>
+            
+            <View style={styles.socialButtons}>
+              <OAuthButton 
+                provider="google" 
+                onSuccess={() => navigation.navigate('Home' as never)}
+                onError={(error) => console.error('Google OAuth Error:', error)}
+                disabled={isSubmitting || state.isLoading}
+              />
 
-            <OAuthButton 
-              provider="facebook" 
-              onSuccess={() => navigation.navigate('Home' as never)}
-              onError={(error) => console.error('Facebook OAuth Error:', error)}
-              disabled={isSubmitting || state.isLoading}
-            />
+              <OAuthButton 
+                provider="facebook" 
+                onSuccess={() => navigation.navigate('Home' as never)}
+                onError={(error) => console.error('Facebook OAuth Error:', error)}
+                disabled={isSubmitting || state.isLoading}
+              />
 
-            <OAuthButton 
-              provider="apple" 
-              onSuccess={() => navigation.navigate('Home' as never)}
-              onError={(error) => console.error('Apple OAuth Error:', error)}
-              disabled={true}
-            />
-          </View>
+              <OAuthButton 
+                provider="apple" 
+                onSuccess={() => navigation.navigate('Home' as never)}
+                onError={(error) => console.error('Apple OAuth Error:', error)}
+                disabled={true}
+              />
+            </View>
+          </GlassCard>
         </AnimatedCard>
 
         {/* Sign Up Link */}
-        <View style={styles.signupSection}>
-          <Text style={styles.signupText}>New to AppFashion? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.signupLink}>Create Account</Text>
-          </TouchableOpacity>
-        </View>
+        <AnimatedCard delay={500}>
+          <GlassCard style={styles.signupSection} variant="light">
+            <Text style={styles.signupText}>New to Samar Silk Palace? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+              <Text style={styles.signupLink}>✨ Create Account</Text>
+            </TouchableOpacity>
+          </GlassCard>
+        </AnimatedCard>
 
         {/* Guest Shopping */}
-        <AnimatedCard style={styles.guestCard} elevation="sm" animationType="fade" delay={900}>
-          <GradientButton
-            title="Continue as Guest 👤"
-            onPress={() => navigation.navigate('MainTabs')}
-            variant="outlined"
-            size="large"
-            style={styles.guestButton}
-          />
+        <AnimatedCard delay={600}>
+          <GlassCard style={styles.guestCard} gradientColors={theme.glassGradients.purple}>
+            <GradientButton
+              title="👤 Continue as Guest"
+              onPress={() => navigation.navigate('MainTabs')}
+              variant="outlined"
+              size="large"
+              style={styles.guestButton}
+            />
+          </GlassCard>
         </AnimatedCard>
       </ScrollView>
     </View>

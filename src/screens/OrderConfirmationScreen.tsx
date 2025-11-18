@@ -12,7 +12,13 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/navigation';
 import ScreenWrapper from '../components/ScreenWrapper';
 import EnhancedImage from '../components/EnhancedImage';
+import AnimatedCard from '../components/AnimatedCard';
+import GradientButton from '../components/GradientButton';
+import EnhancedHeader from '../components/EnhancedHeader';
+import GlassCard from '../components/GlassCard';
+import FloatingElements from '../components/FloatingElements';
 import { theme } from '../theme';
+import LinearGradient from 'react-native-linear-gradient';
 
 type OrderItem = {
   id: string;
@@ -118,7 +124,7 @@ const OrderConfirmationScreen = () => {
     navigation.navigate('MainTabs');
   };
 
-  const renderOrderItem = (item: OrderItem) => {
+  const renderOrderItem = (item: OrderItem, index: number) => {
     const itemImageUrl = typeof item.image === 'string' && item.image.startsWith('http') 
       ? item.image 
       : item.image 
@@ -126,47 +132,58 @@ const OrderConfirmationScreen = () => {
         : 'https://via.placeholder.com/60';
     
     return (
-      <View key={item.id} style={styles.orderItem}>
-        <EnhancedImage 
-          source={{uri: itemImageUrl}} 
-          style={styles.itemImage}
-          width={60}
-          height={60}
-          borderRadius={theme.borderRadius.lg}
-          placeholder={item.name}
-          fallbackIcon="📦"
-        />
-        <View style={styles.itemDetails}>
-          <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
-          {item.color && item.color !== 'Default' && (
-            <Text style={styles.itemColor}>Color: {item.color}</Text>
-          )}
-          <Text style={styles.itemPrice}>
-            {formatCurrency(item.price)} × {item.quantity}
-          </Text>
-        </View>
-        <View style={styles.itemTotalContainer}>
-          <Text style={styles.itemTotal}>
-            {formatCurrency(item.amount || (item.price * item.quantity))}
-          </Text>
-        </View>
-      </View>
+      <AnimatedCard key={item.id} delay={300 + index * 100}>
+        <GlassCard style={styles.orderItem} variant="light">
+          <EnhancedImage 
+            source={{uri: itemImageUrl}} 
+            style={styles.itemImage}
+            width={60}
+            height={60}
+            borderRadius={theme.borderRadius.lg}
+            placeholder={item.name}
+            fallbackIcon="📦"
+          />
+          <View style={styles.itemDetails}>
+            <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+            {item.color && item.color !== 'Default' && (
+              <Text style={styles.itemColor}>Color: {item.color}</Text>
+            )}
+            <Text style={styles.itemPrice}>
+              {formatCurrency(item.price)} × {item.quantity}
+            </Text>
+          </View>
+          <View style={styles.itemTotalContainer}>
+            <Text style={styles.itemTotal}>
+              {formatCurrency(item.amount || (item.price * item.quantity))}
+            </Text>
+          </View>
+        </GlassCard>
+      </AnimatedCard>
     );
   };
 
   return (
-    <ScreenWrapper 
-      scrollable={true}
-      showBackButton={false}
-      headerComponent={
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Order Confirmed</Text>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={theme.glassGradients.aurora}
+        style={styles.backgroundGradient}
+      />
+      <FloatingElements count={10} />
+      
+      <EnhancedHeader 
+        title="✅ Order Confirmed"
+        showBackButton={false}
+        rightComponent={
           <TouchableOpacity onPress={() => navigation.navigate('MainTabs')} style={styles.closeButton}>
-            <Text style={styles.closeIcon}>✕</Text>
+            <GlassCard style={styles.closeIcon} variant="light">
+              <Text style={styles.closeIconText}>✕</Text>
+            </GlassCard>
           </TouchableOpacity>
-        </View>
-      }>
-      <View style={styles.contentContainer}>
+        }
+      />
+
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <View style={styles.contentContainer}>
       {/* Success Header */}
       <View style={styles.successHeader}>
         <Text style={styles.successIcon}>✅</Text>
@@ -313,8 +330,9 @@ const OrderConfirmationScreen = () => {
           <Text style={styles.helpButtonText}>Contact Support</Text>
         </TouchableOpacity>
       </View>
-      </View>
-    </ScreenWrapper>
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 

@@ -16,6 +16,9 @@ import {useNavigation, useRoute} from '@react-navigation/native';
 import { theme } from '../theme';
 import GradientButton from '../components/GradientButton';
 import AnimatedCard from '../components/AnimatedCard';
+import EnhancedHeader from '../components/EnhancedHeader';
+import GlassCard from '../components/GlassCard';
+import FloatingElements from '../components/FloatingElements';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/navigation';
 import { apiService, ApiProduct } from '../services/api';
@@ -48,11 +51,22 @@ const ProductDetailsScreen = () => {
   const [error, setError] = useState<string | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<ApiProduct[]>([]);
 
-  // Get route parameters - expecting productSlug instead of productId
-  const { productId, productSlug } = route.params as any || {};
+  // Get route parameters - handle multiple parameter formats for backwards compatibility
+  const { productId, productSlug, product: productParam } = route.params as any || {};
   
-  // Use productSlug if available, otherwise fall back to productId
-  const slugToUse = productSlug || productId;
+  // Determine the slug to use based on available parameters
+  let slugToUse: string | undefined;
+  
+  if (productSlug) {
+    // Direct slug passed
+    slugToUse = productSlug;
+  } else if (productParam?.slug) {
+    // Product object passed (from HomeScreen)
+    slugToUse = productParam.slug;
+  } else if (productId) {
+    // ID passed - could be either numeric ID or slug string
+    slugToUse = productId;
+  }
 
   // Load product details
   const loadProductData = async () => {
@@ -60,8 +74,12 @@ const ProductDetailsScreen = () => {
       setError(null);
       
       if (!slugToUse) {
+        console.error('❌ Product slug is missing. Route params:', { productId, productSlug, product: productParam });
+        console.error('Available route params:', route.params);
         throw new Error('Product slug is required');
       }
+      
+      console.log('🔍 Loading product with slug:', slugToUse);
       
       // Load product details using slug-based API (matching your frontend)
       const productData = await apiService.getProductBySlug(slugToUse);
@@ -233,9 +251,16 @@ const ProductDetailsScreen = () => {
   if (loading && !refreshing) {
     return (
       <View style={styles.container}>
+        <LinearGradient
+          colors={theme.glassGradients.purple}
+          style={styles.backgroundGradient}
+        />
+        <FloatingElements count={8} />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary[500]} />
-          <Text style={styles.loadingText}>Loading product details...</Text>
+          <GlassCard style={styles.loadingCard}>
+            <ActivityIndicator size="large" color={theme.colors.white} />
+            <Text style={styles.loadingText}>Loading product details...</Text>
+          </GlassCard>
         </View>
       </View>
     );
@@ -263,54 +288,65 @@ const ProductDetailsScreen = () => {
     : 0;
 
   return (
-    <ScrollView 
-      style={styles.container} 
-      bounces={false}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={theme.glassGradients.purple}
+        style={styles.backgroundGradient}
+      />
+      <FloatingElements count={8} />
       
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.shareButton}
-          onPress={() => Alert.alert('Share', `Share ${product.name}`)}>
-          <Text style={styles.shareIcon}>🔗</Text>
-        </TouchableOpacity>
-      </View>
+      <EnhancedHeader 
+        title={`✨ ${product.name}`}
+        showBackButton={true}
+        rightComponent={
+          <TouchableOpacity 
+            style={styles.shareButton}
+            onPress={() => Alert.alert('Share', `Share ${product.name}`)}>
+            <GlassCard style={styles.shareIcon} variant="light">
+              <Text style={styles.shareIconText}>🔗</Text>
+            </GlassCard>
+          </TouchableOpacity>
+        }
+      />
+      
+      <ScrollView 
+        style={styles.scrollView} 
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }>
 
       {/* Error Message */}
       {error && (
         <View style={styles.errorBanner}>
-          <Text style={styles.errorBannerText}>⚠️ {error}</Text>
+          <GlassCard style={styles.errorCard} variant="light">
+            <Text style={styles.errorBannerText}>⚠️ {error}</Text>
+          </GlassCard>
         </View>
       )}
 
       {/* Product Images */}
-      <View style={styles.imageContainer}>
-        <Image source={{uri: product.images[selectedImageIndex] || product.images[0]}} style={styles.productImage} />
-        
-        {/* Badges */}
-        {product.isBestseller && (
-          <View style={styles.bestsellerBadge}>
-            <Text style={styles.bestsellerText}>🔥 BESTSELLER</Text>
-          </View>
-        )}
-        {product.isNew && (
-          <View style={styles.newBadge}>
-            <Text style={styles.newText}>✨ NEW</Text>
-          </View>
-        )}
-        {discount > 0 && (
-          <View style={styles.discountBadge}>
-            <Text style={styles.discountText}>{discount}% OFF</Text>
-          </View>
-        )}
+      <AnimatedCard delay={100}>
+        <GlassCard style={styles.imageContainer} gradientColors={theme.glassGradients.aurora}>
+          <Image source={{uri: product.images[selectedImageIndex] || product.images[0]}} style={styles.productImage} />
+          
+          {/* Badges */}
+          {product.isBestseller && (
+            <GlassCard style={styles.bestsellerBadge} variant="light">
+              <Text style={styles.bestsellerText}>🔥 BESTSELLER</Text>
+            </GlassCard>
+          )}
+          {product.isNew && (
+            <GlassCard style={styles.newBadge} variant="light">
+              <Text style={styles.newText}>✨ NEW</Text>
+            </GlassCard>
+          )}
+          {discount > 0 && (
+            <GlassCard style={styles.discountBadge} variant="light">
+              <Text style={styles.discountText}>{discount}% OFF</Text>
+            </GlassCard>
+          )}
         
         {/* Favorite Button */}
         <TouchableOpacity 
@@ -339,7 +375,8 @@ const ProductDetailsScreen = () => {
             ))}
           </View>
         )}
-      </View>
+        </GlassCard>
+      </AnimatedCard>
 
       {/* Image Thumbnails */}
       {product.images.length > 1 && (
@@ -443,7 +480,7 @@ const ProductDetailsScreen = () => {
               <TouchableOpacity
                 key={item.id}
                 style={styles.relatedProduct}
-                onPress={() => navigation.push('ProductDetails', { productId: item.slug })}>
+                onPress={() => navigation.push('ProductDetails', { productSlug: item.slug })}>
                 <Image source={{uri: item.images[0]}} style={styles.relatedImage} />
                 <Text style={styles.relatedName} numberOfLines={2}>{item.name}</Text>
                 <Text style={styles.relatedPrice}>₹{item.price}</Text>
@@ -452,7 +489,8 @@ const ProductDetailsScreen = () => {
           </ScrollView>
         </View>
       )}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 

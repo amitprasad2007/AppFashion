@@ -13,7 +13,12 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/navigation';
 import EnhancedImage from '../components/EnhancedImage';
 import BeautifulBackButton from '../components/BeautifulBackButton';
+import AnimatedCard from '../components/AnimatedCard';
+import EnhancedHeader from '../components/EnhancedHeader';
+import GlassCard from '../components/GlassCard';
+import FloatingElements from '../components/FloatingElements';
 import { theme } from '../theme';
+import LinearGradient from 'react-native-linear-gradient';
 
 type SearchScreenRouteProp = RouteProp<RootStackParamList, 'Search'>;
 
@@ -48,129 +53,168 @@ const SearchScreen = () => {
     // In a real app, you would make an API call here
   };
 
-  const renderSearchResult = ({item}: {item: SearchResult}) => (
-    <TouchableOpacity
-      style={styles.resultItem}
-      onPress={() => {
-        if (item.type === 'product') {
-          navigation.navigate('ProductDetails', {productId: item.id});
-        } else {
-          navigation.navigate('ProductList', {categoryName: item.name});
-        }
-      }}>
-      <EnhancedImage 
-        source={{uri: item.image}} 
-        style={styles.resultImage}
-        width={60}
-        height={60}
-        borderRadius={theme.borderRadius.lg}
-        placeholder={item.name}
-        fallbackIcon={item.type === 'product' ? '👗' : '📂'}
-      />
-      <View style={styles.resultInfo}>
-        <Text style={styles.resultName}>{item.name}</Text>
-        <Text style={styles.resultType}>{item.type === 'product' ? 'Product' : 'Category'}</Text>
-        {item.price && <Text style={styles.resultPrice}>{item.price}</Text>}
-      </View>
-      <Text style={styles.arrow}>→</Text>
-    </TouchableOpacity>
+  const renderSearchResult = ({item, index}: {item: SearchResult; index: number}) => (
+    <AnimatedCard delay={index * 50}>
+      <TouchableOpacity
+        style={styles.resultItemContainer}
+        onPress={() => {
+          if (item.type === 'product') {
+            navigation.navigate('ProductDetails', {productSlug: item.slug || item.id.toString()});
+          } else {
+            navigation.navigate('ProductList', {categoryName: item.name});
+          }
+        }}
+        activeOpacity={0.9}>
+        <GlassCard style={styles.resultItem} variant="light">
+          <EnhancedImage 
+            source={{uri: item.image}} 
+            style={styles.resultImage}
+            width={60}
+            height={60}
+            borderRadius={theme.borderRadius.lg}
+            placeholder={item.name}
+            fallbackIcon={item.type === 'product' ? '👗' : '📂'}
+          />
+          <View style={styles.resultInfo}>
+            <Text style={styles.resultName}>{item.name}</Text>
+            <Text style={styles.resultType}>{item.type === 'product' ? 'Product' : 'Category'}</Text>
+            {item.price && <Text style={styles.resultPrice}>{item.price}</Text>}
+          </View>
+          <View style={styles.arrowContainer}>
+            <Text style={styles.arrow}>→</Text>
+          </View>
+        </GlassCard>
+      </TouchableOpacity>
+    </AnimatedCard>
   );
 
-  const renderSearchTag = (text: string, onPress: (text: string) => void) => (
+  const renderSearchTag = (text: string, onPress: (text: string) => void, index: number) => (
     <TouchableOpacity
       key={text}
-      style={styles.searchTag}
+      style={styles.searchTagContainer}
       onPress={() => onPress(text)}>
-      <Text style={styles.searchTagText}>{text}</Text>
+      <GlassCard style={styles.searchTag} variant="light">
+        <Text style={styles.searchTagText}>{text}</Text>
+      </GlassCard>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <BeautifulBackButton
-          onPress={() => navigation.goBack()}
-          variant="glass"
-          size="md"
-        />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search products, brands, categories..."
-          value={searchQuery}
-          onChangeText={handleSearch}
-          autoFocus
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Text style={styles.clearButton}>✕</Text>
-          </TouchableOpacity>
-        )}
+      <LinearGradient
+        colors={theme.glassGradients.emerald}
+        style={styles.backgroundGradient}
+      />
+      <FloatingElements count={8} />
+      
+      <EnhancedHeader 
+        title="🔍 Search"
+        showBackButton={true}
+      />
+
+      {/* Search Input */}
+      <View style={styles.searchSection}>
+        <GlassCard style={styles.searchContainer} variant="light">
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search products, brands, categories..."
+            placeholderTextColor="rgba(255,255,255,0.7)"
+            value={searchQuery}
+            onChangeText={handleSearch}
+            autoFocus
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <GlassCard style={styles.clearButton} variant="light">
+                <Text style={styles.clearButtonText}>✕</Text>
+              </GlassCard>
+            </TouchableOpacity>
+          )}
+        </GlassCard>
       </View>
 
       {searchQuery.length === 0 ? (
         <View style={styles.emptySearch}>
           {/* Recent Searches */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Recent Searches</Text>
-            <View style={styles.tagsContainer}>
-              {recentSearches.map(search =>
-                renderSearchTag(search, handleSearch)
-              )}
-            </View>
-          </View>
+          <AnimatedCard delay={100}>
+            <GlassCard style={styles.section} gradientColors={theme.glassGradients.aurora}>
+              <Text style={styles.sectionTitle}>⏰ Recent Searches</Text>
+              <View style={styles.tagsContainer}>
+                {recentSearches.map((search, index) =>
+                  renderSearchTag(search, handleSearch, index)
+                )}
+              </View>
+            </GlassCard>
+          </AnimatedCard>
 
           {/* Popular Searches */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Popular Searches</Text>
-            <View style={styles.tagsContainer}>
-              {popularSearches.map(search =>
-                renderSearchTag(search, handleSearch)
-              )}
-            </View>
-          </View>
+          <AnimatedCard delay={200}>
+            <GlassCard style={styles.section} gradientColors={theme.glassGradients.sunset}>
+              <Text style={styles.sectionTitle}>🔥 Popular Searches</Text>
+              <View style={styles.tagsContainer}>
+                {popularSearches.map((search, index) =>
+                  renderSearchTag(search, handleSearch, index)
+                )}
+              </View>
+            </GlassCard>
+          </AnimatedCard>
 
           {/* Quick Categories */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Shop by Category</Text>
-            <View style={styles.quickCategories}>
-              <TouchableOpacity
-                style={styles.categoryButton}
-                onPress={() => navigation.navigate('ProductList', {categoryName: 'Fashion'})}>
-                <Text style={styles.categoryEmoji}>👗</Text>
-                <Text style={styles.categoryName}>Fashion</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.categoryButton}
-                onPress={() => navigation.navigate('ProductList', {categoryName: 'Electronics'})}>
-                <Text style={styles.categoryEmoji}>📱</Text>
-                <Text style={styles.categoryName}>Electronics</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.categoryButton}
-                onPress={() => navigation.navigate('ProductList', {categoryName: 'Sports'})}>
-                <Text style={styles.categoryEmoji}>⚽</Text>
-                <Text style={styles.categoryName}>Sports</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.categoryButton}
-                onPress={() => navigation.navigate('ProductList', {categoryName: 'Home'})}>
-                <Text style={styles.categoryEmoji}>🏠</Text>
-                <Text style={styles.categoryName}>Home</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          <AnimatedCard delay={300}>
+            <GlassCard style={styles.section} gradientColors={theme.glassGradients.purple}>
+              <Text style={styles.sectionTitle}>📂 Shop by Category</Text>
+              <View style={styles.quickCategories}>
+                <TouchableOpacity
+                  style={styles.categoryButtonContainer}
+                  onPress={() => navigation.navigate('ProductList', {categoryName: 'Fashion'})}>
+                  <GlassCard style={styles.categoryButton} variant="light">
+                    <Text style={styles.categoryEmoji}>👗</Text>
+                    <Text style={styles.categoryName}>Fashion</Text>
+                  </GlassCard>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.categoryButtonContainer}
+                  onPress={() => navigation.navigate('ProductList', {categoryName: 'Electronics'})}>
+                  <GlassCard style={styles.categoryButton} variant="light">
+                    <Text style={styles.categoryEmoji}>📱</Text>
+                    <Text style={styles.categoryName}>Electronics</Text>
+                  </GlassCard>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.categoryButtonContainer}
+                  onPress={() => navigation.navigate('ProductList', {categoryName: 'Sports'})}>
+                  <GlassCard style={styles.categoryButton} variant="light">
+                    <Text style={styles.categoryEmoji}>⚽</Text>
+                    <Text style={styles.categoryName}>Sports</Text>
+                  </GlassCard>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.categoryButtonContainer}
+                  onPress={() => navigation.navigate('ProductList', {categoryName: 'Home'})}>
+                  <GlassCard style={styles.categoryButton} variant="light">
+                    <Text style={styles.categoryEmoji}>🏠</Text>
+                    <Text style={styles.categoryName}>Home</Text>
+                  </GlassCard>
+                </TouchableOpacity>
+              </View>
+            </GlassCard>
+          </AnimatedCard>
         </View>
       ) : (
         <View style={styles.searchResults}>
-          <Text style={styles.resultsHeader}>
-            {filteredResults.length} results for "{searchQuery}"
-          </Text>
+          <AnimatedCard delay={50}>
+            <GlassCard style={styles.resultsHeader} variant="light">
+              <Text style={styles.resultsHeaderText}>
+                🔍 {filteredResults.length} results for "{searchQuery}"
+              </Text>
+            </GlassCard>
+          </AnimatedCard>
           <FlatList
             data={filteredResults}
             renderItem={renderSearchResult}
             keyExtractor={item => item.id}
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.resultsList}
           />
         </View>
       )}

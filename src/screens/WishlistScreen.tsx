@@ -15,8 +15,16 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/navigation';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import { ApiWishlistItem } from '../services/api';
+import ProtectedScreen from '../components/ProtectedScreen';
+import AnimatedCard from '../components/AnimatedCard';
+import GradientButton from '../components/GradientButton';
+import EnhancedHeader from '../components/EnhancedHeader';
+import GlassCard from '../components/GlassCard';
+import FloatingElements from '../components/FloatingElements';
+import { theme } from '../theme';
+import LinearGradient from 'react-native-linear-gradient';
 
-const WishlistScreen = () => {
+const WishlistScreenContent = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { 
     userData, 
@@ -121,18 +129,30 @@ const WishlistScreen = () => {
     }
   };
 
-  const renderWishlistItem = ({item}: {item: ApiWishlistItem}) => {
+  const renderWishlistItem = ({item, index}: {item: ApiWishlistItem; index: number}) => {
     const discountPercentage = item.originalPrice 
       ? Math.round(((item.originalPrice - parseFloat(item.price)) / item.originalPrice) * 100)
       : 0;
     const isRemoving = removeLoading === item.wish_id;
     const isAdding = addLoading === item.id;
 
+    const gradients = [
+      theme.glassGradients.aurora,
+      theme.glassGradients.sunset,
+      theme.glassGradients.emerald,
+      theme.glassGradients.purple,
+      theme.glassGradients.ocean,
+    ];
+    
+    const gradient = gradients[index % gradients.length];
+
     return (
-    <View style={styles.itemCard}>
-      <TouchableOpacity
-        onPress={() => navigation.navigate('ProductDetails', {productId: item.slug})}
-        style={styles.itemContent}>
+      <AnimatedCard delay={index * 100}>
+        <GlassCard style={styles.itemCard} gradientColors={gradient}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ProductDetails', {productSlug: item.slug})}
+            style={styles.itemContent}
+            activeOpacity={0.9}>
         <Image 
           source={{
             uri: Array.isArray(item.image) 
@@ -144,9 +164,9 @@ const WishlistScreen = () => {
         
         {/* Discount Badge */}
         {discountPercentage > 0 && (
-          <View style={styles.discountBadge}>
+          <GlassCard style={styles.discountBadge} variant="light">
             <Text style={styles.discountText}>{discountPercentage}% OFF</Text>
-          </View>
+          </GlassCard>
         )}
         
         <View style={styles.itemDetails}>
@@ -164,47 +184,57 @@ const WishlistScreen = () => {
             </Text>
           )}
         </View>
-      </TouchableOpacity>
-      
-      <View style={styles.itemActions}>
-        <TouchableOpacity
-          style={[styles.addToCartButton, isAdding && styles.disabledButton]}
-          onPress={() => handleAddToCart(item.id, item.name)}
-          disabled={isAdding || isRemoving}>
-          {isAdding ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.addToCartText}>Add to Cart</Text>
-          )}
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[styles.removeButton, isRemoving && styles.disabledButton]}
-          onPress={() => handleRemoveFromWishlist(item.wish_id, item.name)}
-          disabled={isRemoving || isAdding}>
-          {isRemoving ? (
-            <ActivityIndicator size="small" color="#ff6b6b" />
-          ) : (
-            <Text style={styles.removeButtonText}>Remove</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </View>
+          </TouchableOpacity>
+          
+          <View style={styles.itemActions}>
+            <TouchableOpacity
+              style={[styles.addToCartButtonContainer, isAdding && styles.disabledButton]}
+              onPress={() => handleAddToCart(item.id, item.name)}
+              disabled={isAdding || isRemoving}>
+              <GlassCard style={styles.addToCartButton} variant="light">
+                {isAdding ? (
+                  <ActivityIndicator size="small" color={theme.colors.white} />
+                ) : (
+                  <Text style={styles.addToCartText}>🛒 Add to Cart</Text>
+                )}
+              </GlassCard>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.removeButtonContainer, isRemoving && styles.disabledButton]}
+              onPress={() => handleRemoveFromWishlist(item.wish_id, item.name)}
+              disabled={isRemoving || isAdding}>
+              <GlassCard style={styles.removeButton} variant="light">
+                {isRemoving ? (
+                  <ActivityIndicator size="small" color={theme.colors.white} />
+                ) : (
+                  <Text style={styles.removeButtonText}>❌ Remove</Text>
+                )}
+              </GlassCard>
+            </TouchableOpacity>
+          </View>
+        </GlassCard>
+      </AnimatedCard>
     );
   };
 
   const EmptyWishlist = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyIcon}>💝</Text>
-      <Text style={styles.emptyTitle}>Your Wishlist is Empty</Text>
-      <Text style={styles.emptySubtitle}>
-        Save your favorite sarees and products here to shop them later
-      </Text>
-      <TouchableOpacity
-        style={styles.shopButton}
-        onPress={() => navigation.navigate('MainTabs')}>
-        <Text style={styles.shopButtonText}>Start Shopping</Text>
-      </TouchableOpacity>
+      <AnimatedCard delay={100}>
+        <GlassCard style={styles.emptyCard} gradientColors={theme.glassGradients.sunset}>
+          <Text style={styles.emptyIcon}>💝</Text>
+          <Text style={styles.emptyTitle}>Your Wishlist is Empty</Text>
+          <Text style={styles.emptySubtitle}>
+            Save your favorite sarees and products here to shop them later
+          </Text>
+          <GradientButton
+            title="🛍️ Start Shopping"
+            onPress={() => navigation.navigate('MainTabs')}
+            gradient={theme.colors.gradients.primary}
+            style={styles.shopButton}
+          />
+        </GlassCard>
+      </AnimatedCard>
     </View>
   );
 
@@ -212,17 +242,22 @@ const WishlistScreen = () => {
   if (isLoading && !wishlistItems.length) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.backButton}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>My Wishlist</Text>
-          <View style={styles.placeholder} />
-        </View>
+        <LinearGradient
+          colors={theme.glassGradients.rose}
+          style={styles.backgroundGradient}
+        />
+        <FloatingElements count={6} />
+        
+        <EnhancedHeader 
+          title="💝 My Wishlist"
+          showBackButton={true}
+        />
         
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#f43f5e" />
-          <Text style={styles.loadingText}>Loading your wishlist...</Text>
+          <GlassCard style={styles.loadingCard}>
+            <ActivityIndicator size="large" color={theme.colors.white} />
+            <Text style={styles.loadingText}>Loading your wishlist...</Text>
+          </GlassCard>
         </View>
       </View>
     );
@@ -230,21 +265,23 @@ const WishlistScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          Wishlist ({wishlistItems.length})
-        </Text>
-        <View style={styles.placeholder} />
-      </View>
+      <LinearGradient
+        colors={theme.glassGradients.rose}
+        style={styles.backgroundGradient}
+      />
+      <FloatingElements count={8} />
+      
+      <EnhancedHeader 
+        title={`💝 Wishlist (${wishlistItems.length})`}
+        showBackButton={true}
+      />
 
       {/* Error Message */}
       {profileError && (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>⚠️ {profileError}</Text>
+          <GlassCard style={styles.errorCard} variant="light">
+            <Text style={styles.errorText}>⚠️ {profileError}</Text>
+          </GlassCard>
         </View>
       )}
 
@@ -263,37 +300,41 @@ const WishlistScreen = () => {
           />
           
           {/* Move All to Cart Button */}
-          <View style={styles.bottomActions}>
-            <TouchableOpacity
-              style={styles.moveAllButton}
-              onPress={() => {
-                Alert.alert(
-                  'Move to Cart',
-                  `Move all ${wishlistItems.length} items to cart?`,
-                  [
-                    {text: 'Cancel'},
-                    {
-                      text: 'Move All',
-                      onPress: async () => {
-                        try {
-                          for (const item of wishlistItems) {
-                            await addToCart(item.id, 1);
+          <AnimatedCard delay={wishlistItems.length * 100 + 100}>
+            <View style={styles.bottomActions}>
+              <TouchableOpacity
+                style={styles.moveAllButtonContainer}
+                onPress={() => {
+                  Alert.alert(
+                    'Move to Cart',
+                    `Move all ${wishlistItems.length} items to cart?`,
+                    [
+                      {text: 'Cancel'},
+                      {
+                        text: 'Move All',
+                        onPress: async () => {
+                          try {
+                            for (const item of wishlistItems) {
+                              await addToCart(item.id, 1);
+                            }
+                            Alert.alert('Items Moved', 'All items have been moved to your cart.');
+                            navigation.navigate('Cart');
+                          } catch (error) {
+                            Alert.alert('Error', 'Failed to move some items to cart.');
                           }
-                          Alert.alert('Items Moved', 'All items have been moved to your cart.');
-                          navigation.navigate('Cart');
-                        } catch (error) {
-                          Alert.alert('Error', 'Failed to move some items to cart.');
-                        }
+                        },
                       },
-                    },
-                  ]
-                );
-              }}>
-              <Text style={styles.moveAllText}>
-                Move All Items to Cart
-              </Text>
-            </TouchableOpacity>
-          </View>
+                    ]
+                  );
+                }}>
+                <GlassCard style={styles.moveAllButton} gradientColors={theme.glassGradients.emerald}>
+                  <Text style={styles.moveAllText}>
+                    🛒 Move All Items to Cart
+                  </Text>
+                </GlassCard>
+              </TouchableOpacity>
+            </View>
+          </AnimatedCard>
         </>
       ) : (
         <EmptyWishlist />
@@ -532,5 +573,13 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 });
+
+const WishlistScreen = () => {
+  return (
+    <ProtectedScreen fallbackMessage="Please sign in to create and manage your personal wishlist of favorite items.">
+      <WishlistScreenContent />
+    </ProtectedScreen>
+  );
+};
 
 export default WishlistScreen;

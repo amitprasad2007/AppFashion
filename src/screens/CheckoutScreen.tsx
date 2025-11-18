@@ -15,11 +15,16 @@ import {useNavigation, useRoute} from '@react-navigation/native';
 import { theme } from '../theme';
 import GradientButton from '../components/GradientButton';
 import AnimatedCard from '../components/AnimatedCard';
+import EnhancedHeader from '../components/EnhancedHeader';
+import GlassCard from '../components/GlassCard';
+import FloatingElements from '../components/FloatingElements';
+import GlassInput from '../components/GlassInput';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/navigation';
 import { apiService, Cart, ShippingAddress, PaymentMethod, Order } from '../services/api';
+import ProtectedScreen from '../components/ProtectedScreen';
 
-const CheckoutScreen = () => {
+const CheckoutScreenContent = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute();
   
@@ -379,8 +384,9 @@ const CheckoutScreen = () => {
     const finalTotal = cart?.finalAmount || total || 0;
 
     return (
-      <AnimatedCard style={styles.section} elevation="md">
-        <Text style={styles.sectionTitle}>Order Summary</Text>
+      <AnimatedCard delay={100}>
+        <GlassCard style={styles.section} gradientColors={theme.glassGradients.sunset}>
+          <Text style={styles.sectionTitle}>📦 Order Summary</Text>
         
         {itemsToShow.map((item: any, index: number) => (
           <View key={item.id || index} style={styles.orderItem}>
@@ -441,23 +447,27 @@ const CheckoutScreen = () => {
             <Text style={styles.totalValue}>₹{finalTotal}</Text>
           </View>
         </View>
+        </GlassCard>
       </AnimatedCard>
     );
   };
 
   // Render address selection
   const renderAddressSelection = () => (
-    <AnimatedCard style={styles.section} elevation="md">
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Delivery Address</Text>
-        <TouchableOpacity onPress={() => setShowAddressForm(!showAddressForm)}>
-          <Text style={styles.addButton}>+ Add New</Text>
-        </TouchableOpacity>
-      </View>
+    <AnimatedCard delay={200}>
+      <GlassCard style={styles.section} gradientColors={theme.glassGradients.emerald}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>🏠 Delivery Address</Text>
+          <TouchableOpacity onPress={() => setShowAddressForm(!showAddressForm)}>
+            <GlassCard style={styles.addButtonCard} variant="light">
+              <Text style={styles.addButton}>+ Add New</Text>
+            </GlassCard>
+          </TouchableOpacity>
+        </View>
 
       {showAddressForm && (
-        <View style={styles.addressForm}>
-          <Text style={styles.formTitle}>Add New Address</Text>
+        <GlassCard style={styles.addressForm} variant="light">
+          <Text style={styles.formTitle}>📍 Add New Address</Text>
           
           <View style={styles.formRow}>
             <TextInput
@@ -546,18 +556,18 @@ const CheckoutScreen = () => {
               )}
             </TouchableOpacity>
           </View>
-        </View>
+        </GlassCard>
       )}
 
-      {addresses.map(address => (
-        <TouchableOpacity
-          key={address.id}
-          style={[
-            styles.addressCard,
-            selectedAddress?.id === address.id && styles.selectedAddress
-          ]}
-          onPress={() => setSelectedAddress(address)}>
-          <View style={styles.addressHeader}>
+      {addresses.map((address, index) => (
+        <AnimatedCard key={address.id} delay={300 + index * 50}>
+          <TouchableOpacity
+            style={styles.addressCardContainer}
+            onPress={() => setSelectedAddress(address)}>
+            <GlassCard 
+              style={[styles.addressCard, selectedAddress?.id === address.id && styles.selectedAddress]}
+              variant={selectedAddress?.id === address.id ? "base" : "light"}>
+              <View style={styles.addressHeader}>
             <Text style={styles.addressName}>{address.name}</Text>
             <Text style={styles.addressPhone}>{address.phone}</Text>
             {address.isDefault && (
@@ -576,34 +586,38 @@ const CheckoutScreen = () => {
           {address.landmark && (
             <Text style={styles.addressLandmark}>Near {address.landmark}</Text>
           )}
-        </TouchableOpacity>
+            </GlassCard>
+          </TouchableOpacity>
+        </AnimatedCard>
       ))}
 
       {addresses.length === 0 && !showAddressForm && (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyStateText}>No saved addresses</Text>
+        <GlassCard style={styles.emptyState} variant="light">
+          <Text style={styles.emptyStateText}>📍 No saved addresses</Text>
           <TouchableOpacity onPress={() => setShowAddressForm(true)}>
             <Text style={styles.addFirstAddressText}>Add your first address</Text>
           </TouchableOpacity>
-        </View>
+        </GlassCard>
       )}
+      </GlassCard>
     </AnimatedCard>
   );
 
   // Render payment methods
   const renderPaymentMethods = () => (
-    <AnimatedCard style={styles.section} elevation="md">
-      <Text style={styles.sectionTitle}>Payment Method</Text>
-      
-      {paymentMethods.map(method => (
-        <TouchableOpacity
-          key={method.id}
-          style={[
-            styles.paymentMethod,
-            selectedPayment?.id === method.id && styles.selectedPayment
-          ]}
-          onPress={() => setSelectedPayment(method)}>
-          <View style={styles.paymentMethodContent}>
+    <AnimatedCard delay={400}>
+      <GlassCard style={styles.section} gradientColors={theme.glassGradients.purple}>
+        <Text style={styles.sectionTitle}>💳 Payment Method</Text>
+        
+        {paymentMethods.map((method, index) => (
+          <AnimatedCard key={method.id} delay={450 + index * 50}>
+            <TouchableOpacity
+              style={styles.paymentMethodContainer}
+              onPress={() => setSelectedPayment(method)}>
+              <GlassCard
+                style={[styles.paymentMethod, selectedPayment?.id === method.id && styles.selectedPayment]}
+                variant={selectedPayment?.id === method.id ? "base" : "light"}>
+                <View style={styles.paymentMethodContent}>
             <Text style={styles.paymentMethodIcon}>
               {method.type === 'COD' ? '💵' : 
                method.type === 'UPI' ? '📱' :
@@ -622,39 +636,45 @@ const CheckoutScreen = () => {
               <View style={styles.radioButtonSelected} />
             )}
           </View>
-        </TouchableOpacity>
-      ))}
+              </GlassCard>
+            </TouchableOpacity>
+          </AnimatedCard>
+        ))}
+      </GlassCard>
     </AnimatedCard>
   );
 
   // Render order notes
   const renderOrderNotes = () => (
-    <AnimatedCard style={styles.section} elevation="md">
-      <Text style={styles.sectionTitle}>Order Notes (Optional)</Text>
-      <TextInput
-        style={styles.notesInput}
-        placeholder="Any special instructions for delivery..."
-        value={orderNotes}
-        onChangeText={setOrderNotes}
-        multiline
-        numberOfLines={3}
-        textAlignVertical="top"
-      />
+    <AnimatedCard delay={500}>
+      <GlassCard style={styles.section} gradientColors={theme.glassGradients.ocean}>
+        <Text style={styles.sectionTitle}>📝 Order Notes (Optional)</Text>
+        <TextInput
+          style={styles.notesInput}
+          placeholder="Any special instructions for delivery..."
+          placeholderTextColor="rgba(255,255,255,0.7)"
+          value={orderNotes}
+          onChangeText={setOrderNotes}
+          multiline
+          numberOfLines={3}
+          textAlignVertical="top"
+        />
+      </GlassCard>
     </AnimatedCard>
   );
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <LinearGradient colors={theme.colors.gradients.primary} style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Checkout</Text>
-        <View style={styles.placeholder} />
-      </LinearGradient>
+      <LinearGradient
+        colors={theme.glassGradients.aurora}
+        style={styles.backgroundGradient}
+      />
+      <FloatingElements count={8} />
+      
+      <EnhancedHeader 
+        title="💳 Checkout"
+        showBackButton={true}
+      />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {renderCartSummary()}
@@ -1045,5 +1065,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+const CheckoutScreen = () => {
+  return (
+    <ProtectedScreen fallbackMessage="Please sign in to proceed with checkout and place your order securely.">
+      <CheckoutScreenContent />
+    </ProtectedScreen>
+  );
+};
 
 export default CheckoutScreen;

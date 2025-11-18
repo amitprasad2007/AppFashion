@@ -15,8 +15,16 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/navigation';
 import {useAuth} from '../contexts/AuthContext';
 import {useUserProfile} from '../contexts/UserProfileContext';
+import ProtectedScreen from '../components/ProtectedScreen';
+import AnimatedCard from '../components/AnimatedCard';
+import GradientButton from '../components/GradientButton';
+import EnhancedHeader from '../components/EnhancedHeader';
+import GlassCard from '../components/GlassCard';
+import FloatingElements from '../components/FloatingElements';
+import { theme } from '../theme';
+import LinearGradient from 'react-native-linear-gradient';
 
-const ProfileScreen = () => {
+const ProfileScreenContent = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { state: authState, logout } = useAuth();
   const { 
@@ -110,40 +118,58 @@ const ProfileScreen = () => {
   };
 
   const renderMenuItem = ({item, index}: {item: typeof menuItems[0]; index: number}) => (
-    <TouchableOpacity
-      key={index}
-      style={styles.menuItem}
-      onPress={item.onPress}>
-      <View style={styles.menuIcon}>
-        <Text style={styles.menuIconText}>{item.icon}</Text>
-      </View>
-      <View style={styles.menuContent}>
-        <Text style={styles.menuTitle}>{item.title}</Text>
-        <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
-      </View>
-      <Text style={styles.arrow}>→</Text>
-    </TouchableOpacity>
+    <AnimatedCard key={index} delay={300 + index * 50}>
+      <TouchableOpacity
+        style={styles.menuItemContainer}
+        onPress={item.onPress}
+        activeOpacity={0.9}>
+        <GlassCard style={styles.menuItem} variant="light">
+          <View style={styles.menuIcon}>
+            <Text style={styles.menuIconText}>{item.icon}</Text>
+          </View>
+          <View style={styles.menuContent}>
+            <Text style={styles.menuTitle}>{item.title}</Text>
+            <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
+          </View>
+          <View style={styles.arrowContainer}>
+            <Text style={styles.arrow}>→</Text>
+          </View>
+        </GlassCard>
+      </TouchableOpacity>
+    </AnimatedCard>
   );
 
   if (!authState.isAuthenticated) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
-        </View>
+        <LinearGradient
+          colors={theme.glassGradients.sunset}
+          style={styles.backgroundGradient}
+        />
+        <FloatingElements count={6} />
+        
+        <EnhancedHeader 
+          title="👤 Profile"
+          showBackButton={false}
+        />
+        
         <View style={styles.loginPrompt}>
-          <Text style={styles.loginTitle}>Welcome to AppFashion</Text>
-          <Text style={styles.loginSubtitle}>Sign in to access your profile and orders</Text>
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.loginButtonText}>Sign In</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.signupButton}
-            onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.signupButtonText}>Create Account</Text>
-          </TouchableOpacity>
+          <GlassCard style={styles.loginCard} gradientColors={theme.glassGradients.aurora}>
+            <Text style={styles.loginTitle}>✨ Welcome to Samar Silk Palace</Text>
+            <Text style={styles.loginSubtitle}>Sign in to access your profile and orders</Text>
+            <GradientButton
+              title="🔐 Sign In"
+              onPress={() => navigation.navigate('Login')}
+              gradient={theme.colors.gradients.primary}
+              style={styles.loginButton}
+            />
+            <GradientButton
+              title="📝 Create Account"
+              onPress={() => navigation.navigate('Register')}
+              gradient={theme.colors.gradients.secondary}
+              style={styles.signupButton}
+            />
+          </GlassCard>
         </View>
       </View>
     );
@@ -152,12 +178,22 @@ const ProfileScreen = () => {
   if (isLoading && !userData) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
-        </View>
+        <LinearGradient
+          colors={theme.glassGradients.sunset}
+          style={styles.backgroundGradient}
+        />
+        <FloatingElements count={6} />
+        
+        <EnhancedHeader 
+          title="👤 Profile"
+          showBackButton={false}
+        />
+        
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#f43f5e" />
-          <Text style={styles.loadingText}>Loading your profile...</Text>
+          <GlassCard style={styles.loadingCard}>
+            <ActivityIndicator size="large" color={theme.colors.white} />
+            <Text style={styles.loadingText}>Loading your profile...</Text>
+          </GlassCard>
         </View>
       </View>
     );
@@ -174,109 +210,139 @@ const ProfileScreen = () => {
     }) : 'Recently';
 
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-      }>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
-        <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton}>
-          <Text style={styles.refreshText}>🔄</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Error Message */}
-      {error && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>⚠️ {error}</Text>
-          <TouchableOpacity onPress={refreshUserData} style={styles.retryButton}>
-            <Text style={styles.retryText}>Retry</Text>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={theme.glassGradients.sunset}
+        style={styles.backgroundGradient}
+      />
+      <FloatingElements count={8} />
+      
+      <EnhancedHeader 
+        title="👤 Profile"
+        showBackButton={false}
+        rightComponent={
+          <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton}>
+            <GlassCard style={styles.refreshIcon} variant="light">
+              <Text style={styles.refreshText}>🔄</Text>
+            </GlassCard>
           </TouchableOpacity>
-        </View>
-      )}
+        }
+      />
 
-      {/* User Info */}
-      <View style={styles.userSection}>
-        <View style={styles.userInfo}>
-          <Image 
-            source={{
-              uri: user?.avatar || 'https://via.placeholder.com/100/f43f5e/ffffff?text=' + (user?.name?.charAt(0) || 'U')
-            }} 
-            style={styles.avatar} 
-          />
-          <View style={styles.userDetails}>
-            <Text style={styles.userName}>{user?.name || 'User'}</Text>
-            <Text style={styles.userEmail}>{user?.email || 'No email'}</Text>
-            {user?.phone && <Text style={styles.userPhone}>📱 {user.phone}</Text>}
-            <Text style={styles.memberSince}>Member since {memberSince}</Text>
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }>
+
+        {/* Error Message */}
+        {error && (
+          <View style={styles.errorContainer}>
+            <GlassCard style={styles.errorCard} variant="light">
+              <Text style={styles.errorText}>⚠️ {error}</Text>
+              <TouchableOpacity onPress={refreshUserData} style={styles.retryButton}>
+                <Text style={styles.retryText}>Retry</Text>
+              </TouchableOpacity>
+            </GlassCard>
           </View>
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={() => navigation.navigate('EditProfile')}>
-            <Text style={styles.editButtonText}>Edit</Text>
+        )}
+
+        {/* User Info */}
+        <AnimatedCard delay={100}>
+          <GlassCard style={styles.userSection} gradientColors={theme.glassGradients.aurora}>
+            <View style={styles.userInfo}>
+              <Image 
+                source={{
+                  uri: user?.avatar || 'https://via.placeholder.com/100/f43f5e/ffffff?text=' + (user?.name?.charAt(0) || 'U')
+                }} 
+                style={styles.avatar} 
+              />
+              <View style={styles.userDetails}>
+                <Text style={styles.userName}>{user?.name || 'User'}</Text>
+                <Text style={styles.userEmail}>{user?.email || 'No email'}</Text>
+                {user?.phone && <Text style={styles.userPhone}>📱 {user.phone}</Text>}
+                <Text style={styles.memberSince}>Member since {memberSince}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.editButtonContainer}
+                onPress={() => navigation.navigate('EditProfile')}>
+                <GlassCard style={styles.editButton} variant="light">
+                  <Text style={styles.editButtonText}>✏️ Edit</Text>
+                </GlassCard>
+              </TouchableOpacity>
+            </View>
+          </GlassCard>
+        </AnimatedCard>
+
+        {/* Stats */}
+        <AnimatedCard delay={200}>
+          <GlassCard style={styles.statsSection} gradientColors={theme.glassGradients.emerald}>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{stats?.totalOrders || 0}</Text>
+              <Text style={styles.statLabel}>📦 Orders</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{stats?.wishlistCount || 0}</Text>
+              <Text style={styles.statLabel}>❤️ Wishlist</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>₹{stats?.totalSpent?.toLocaleString() || '0'}</Text>
+              <Text style={styles.statLabel}>💰 Total Spent</Text>
+            </View>
+          </GlassCard>
+        </AnimatedCard>
+
+        {/* Additional Stats Row */}
+        <AnimatedCard delay={250}>
+          <GlassCard style={styles.statsSection} gradientColors={theme.glassGradients.purple}>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{stats?.pendingOrders || 0}</Text>
+              <Text style={styles.statLabel}>⏳ Pending</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{stats?.cartItemsCount || 0}</Text>
+              <Text style={styles.statLabel}>🛒 Cart Items</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{stats?.addressCount || 0}</Text>
+              <Text style={styles.statLabel}>📍 Addresses</Text>
+            </View>
+          </GlassCard>
+        </AnimatedCard>
+
+        {/* Menu Items */}
+        <View style={styles.menuSection}>
+          {menuItems.map((item, index) => renderMenuItem({item, index}))}
+        </View>
+
+        {/* App Info */}
+        <AnimatedCard delay={650}>
+          <GlassCard style={styles.appInfo} gradientColors={theme.glassGradients.ocean}>
+            <Text style={styles.appVersion}>✨ Samar Silk Palace v1.0.0</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('MainTabs')}>
+              <Text style={styles.aboutLink}>About Us</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('MainTabs')}>
+              <Text style={styles.privacyLink}>Privacy Policy</Text>
+            </TouchableOpacity>
+          </GlassCard>
+        </AnimatedCard>
+
+        {/* Logout Button */}
+        <AnimatedCard delay={700}>
+          <TouchableOpacity style={styles.logoutButtonContainer} onPress={handleLogout}>
+            <GlassCard style={styles.logoutButton} variant="light">
+              <Text style={styles.logoutText}>🚪 Logout</Text>
+            </GlassCard>
           </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Stats */}
-      <View style={styles.statsSection}>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{stats?.totalOrders || 0}</Text>
-          <Text style={styles.statLabel}>Orders</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{stats?.wishlistCount || 0}</Text>
-          <Text style={styles.statLabel}>Wishlist</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>₹{stats?.totalSpent?.toLocaleString() || '0'}</Text>
-          <Text style={styles.statLabel}>Total Spent</Text>
-        </View>
-      </View>
-
-      {/* Additional Stats Row */}
-      <View style={styles.statsSection}>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{stats?.pendingOrders || 0}</Text>
-          <Text style={styles.statLabel}>Pending</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{stats?.cartItemsCount || 0}</Text>
-          <Text style={styles.statLabel}>Cart Items</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{stats?.addressCount || 0}</Text>
-          <Text style={styles.statLabel}>Addresses</Text>
-        </View>
-      </View>
-
-      {/* Menu Items */}
-      <View style={styles.menuSection}>
-        {menuItems.map((item, index) => renderMenuItem({item, index}))}
-      </View>
-
-      {/* App Info */}
-      <View style={styles.appInfo}> 
-        <Text style={styles.appVersion}>AppFashion v1.0.0</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('MainTabs')}>
-          <Text style={styles.aboutLink}>About Us</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('MainTabs')}>
-          <Text style={styles.privacyLink}>Privacy Policy</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Logout Button */}
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Logout</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        </AnimatedCard>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -537,5 +603,13 @@ const styles = StyleSheet.create({
     color: '#ff6b6b',
   },
 });
+
+const ProfileScreen = () => {
+  return (
+    <ProtectedScreen fallbackMessage="Please sign in to view and manage your profile, orders, and account settings.">
+      <ProfileScreenContent />
+    </ProtectedScreen>
+  );
+};
 
 export default ProfileScreen;

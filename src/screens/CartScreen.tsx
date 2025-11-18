@@ -16,12 +16,16 @@ import {useNavigation} from '@react-navigation/native';
 import { theme } from '../theme';
 import GradientButton from '../components/GradientButton';
 import AnimatedCard from '../components/AnimatedCard';
+import EnhancedHeader from '../components/EnhancedHeader';
+import GlassCard from '../components/GlassCard';
+import FloatingElements from '../components/FloatingElements';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/navigation';
 import { ApiCart, ApiCartItem } from '../services/api';
 import { useUserProfile } from '../contexts/UserProfileContext';
+import ProtectedScreen from '../components/ProtectedScreen';
 
-const CartScreen = () => {
+const CartScreenContent = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { 
     userData, 
@@ -228,12 +232,9 @@ const CartScreen = () => {
     const itemTotal = itemPrice * item.quantity;
 
     return (
-      <AnimatedCard
-        style={styles.cartItem}
-        elevation="md"
-        animationType="slide"
-        delay={index * 100}>
-        <View style={styles.itemContent}>
+      <AnimatedCard delay={index * 100}>
+        <GlassCard style={styles.cartItem} variant="base">
+          <View style={styles.itemContent}>
           <Image 
             source={{
               uri: Array.isArray(item.image) ? item.image[0] : item.image || 'https://via.placeholder.com/100'
@@ -284,6 +285,7 @@ const CartScreen = () => {
             </View>
           </View>
         </View>
+        </GlassCard>
       </AnimatedCard>
     );
   };
@@ -292,19 +294,22 @@ const CartScreen = () => {
   if (isLoading && !cart) {
     return (
       <View style={styles.container}>
-        <LinearGradient colors={theme.colors.gradients.primary} style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}>
-            <Text style={styles.backIcon}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Shopping Cart</Text>
-          <View style={styles.placeholder} />
-        </LinearGradient>
+        <LinearGradient
+          colors={theme.glassGradients.aurora}
+          style={styles.backgroundGradient}
+        />
+        <FloatingElements count={6} />
+        
+        <EnhancedHeader 
+          title="🛒 Shopping Cart"
+          showBackButton={true}
+        />
         
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary[500]} />
-          <Text style={styles.loadingText}>Loading your cart...</Text>
+          <GlassCard style={styles.loadingCard}>
+            <ActivityIndicator size="large" color={theme.colors.white} />
+            <Text style={styles.loadingText}>Loading your cart...</Text>
+          </GlassCard>
         </View>
       </View>
     );
@@ -312,44 +317,51 @@ const CartScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <LinearGradient colors={theme.colors.gradients.primary} style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          Shopping Cart {cart ? `(${cart.items.reduce((sum, item) => sum + item.quantity, 0)})` : ''}
-        </Text>
-        {cart && cart.items.length > 0 && (
-          <TouchableOpacity 
-            style={styles.clearButton}
-            onPress={clearCart}>
-            <Text style={styles.clearIcon}>🗑️</Text>
-          </TouchableOpacity>
-        )}
-      </LinearGradient>
+      <LinearGradient
+        colors={theme.glassGradients.aurora}
+        style={styles.backgroundGradient}
+      />
+      <FloatingElements count={6} />
+      
+      <EnhancedHeader 
+        title={`🛒 Shopping Cart ${cart ? `(${cart.items.reduce((sum, item) => sum + item.quantity, 0)})` : ''}`}
+        showBackButton={true}
+        rightComponent={
+          cart && cart.items.length > 0 ? (
+            <TouchableOpacity 
+              style={styles.clearButton}
+              onPress={clearCart}>
+              <GlassCard style={styles.clearIcon} variant="light">
+                <Text style={styles.clearIconText}>🗑️</Text>
+              </GlassCard>
+            </TouchableOpacity>
+          ) : null
+        }
+      />
 
       {/* Error Message */}
       {profileError && (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>⚠️ {profileError}</Text>
+          <GlassCard style={styles.errorCard} variant="light">
+            <Text style={styles.errorText}>⚠️ {profileError}</Text>
+          </GlassCard>
         </View>
       )}
 
       {/* Cart Content */}
       {!cart || cart.items.length === 0 ? (
         <View style={styles.emptyCart}>
-          <Text style={styles.emptyCartIcon}>🛒</Text>
-          <Text style={styles.emptyCartTitle}>Your cart is empty</Text>
-          <Text style={styles.emptyCartSubtitle}>Add some beautiful sarees to get started</Text>
-          <GradientButton
-            title="Continue Shopping"
-            onPress={continueShopping}
-            gradient={theme.colors.gradients.primary}
-            style={styles.continueButton}
-          />
+          <GlassCard style={styles.emptyCartCard} gradientColors={theme.glassGradients.sunset}>
+            <Text style={styles.emptyCartIcon}>🛒</Text>
+            <Text style={styles.emptyCartTitle}>Your cart is empty</Text>
+            <Text style={styles.emptyCartSubtitle}>Add some beautiful sarees to get started</Text>
+            <GradientButton
+              title="Continue Shopping"
+              onPress={continueShopping}
+              gradient={theme.colors.gradients.primary}
+              style={styles.continueButton}
+            />
+          </GlassCard>
         </View>
       ) : (
         <>
@@ -365,8 +377,8 @@ const CartScreen = () => {
             ListFooterComponent={() => (
               <View style={styles.footer}>
                 {/* Coupon Section */}
-                <View style={styles.couponSection}>
-                  <Text style={styles.sectionTitle}>Have a Coupon?</Text>
+                <GlassCard style={styles.couponSection} variant="light">
+                  <Text style={styles.sectionTitle}>💳 Have a Coupon?</Text>
                   <View style={styles.couponContainer}>
                     <TextInput
                       style={styles.couponInput}
@@ -386,11 +398,11 @@ const CartScreen = () => {
                       )}
                     </TouchableOpacity>
                   </View>
-                </View>
+                </GlassCard>
 
                 {/* Order Summary */}
-                <View style={styles.summarySection}>
-                  <Text style={styles.sectionTitle}>Order Summary</Text>
+                <GlassCard style={styles.summarySection} variant="base">
+                  <Text style={styles.sectionTitle}>📊 Order Summary</Text>
                   
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Items ({cart.items.reduce((sum, item) => sum + item.quantity, 0)})</Text>
@@ -422,7 +434,7 @@ const CartScreen = () => {
                     <Text style={styles.totalLabel}>Total</Text>
                     <Text style={styles.totalValue}>₹{cart.total}</Text>
                   </View>
-                </View>
+                </GlassCard>
 
                 {/* Checkout Button */}
                 <GradientButton
@@ -443,7 +455,10 @@ const CartScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.neutral[50],
+    backgroundColor: theme.light.background,
+  },
+  backgroundGradient: {
+    ...StyleSheet.absoluteFillObject,
   },
   header: {
     flexDirection: 'row',
@@ -468,11 +483,16 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
   },
   clearButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    padding: theme.spacing[2],
-    borderRadius: theme.borderRadius.full,
+    marginRight: theme.spacing[2],
   },
   clearIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: theme.borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  clearIconText: {
     fontSize: 18,
   },
   placeholder: {
@@ -483,63 +503,75 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: theme.spacing.xl,
+    paddingHorizontal: theme.spacing[4],
+  },
+  loadingCard: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing[8],
+    paddingHorizontal: theme.spacing[6],
   },
   loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.typography.size.sm,
-    color: theme.colors.neutral[600],
+    marginTop: theme.spacing[4],
+    fontSize: theme.typography.body.large.fontSize,
+    color: theme.colors.white,
     textAlign: 'center',
+    fontWeight: '600',
   },
   errorContainer: {
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.error?.[50] || '#fef2f2',
-    marginHorizontal: theme.spacing.md,
-    marginVertical: theme.spacing.sm,
-    borderRadius: theme.spacing.sm,
-    borderWidth: 1,
-    borderColor: theme.colors.error?.[200] || '#fecaca',
+    marginHorizontal: theme.spacing[4],
+    marginVertical: theme.spacing[2],
+  },
+  errorCard: {
+    paddingVertical: theme.spacing[4],
+    paddingHorizontal: theme.spacing[4],
   },
   errorText: {
-    color: theme.colors.error?.[700] || '#b91c1c',
-    fontSize: theme.typography.size.sm,
+    color: theme.colors.white,
+    fontSize: theme.typography.body.medium.fontSize,
     textAlign: 'center',
+    fontWeight: '500',
   },
   emptyCart: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: theme.spacing.xl,
+    paddingHorizontal: theme.spacing[4],
+  },
+  emptyCartCard: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing[10],
+    paddingHorizontal: theme.spacing[6],
   },
   emptyCartIcon: {
     fontSize: 80,
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing[6],
   },
   emptyCartTitle: {
-    fontSize: theme.typography.size.xl,
-    fontWeight: theme.typography.weight.bold,
-    color: theme.colors.neutral[800],
-    marginBottom: theme.spacing.sm,
+    fontSize: theme.typography.heading.h2.fontSize,
+    fontWeight: theme.typography.heading.h2.fontWeight as any,
+    color: theme.colors.white,
+    marginBottom: theme.spacing[2],
     textAlign: 'center',
   },
   emptyCartSubtitle: {
-    fontSize: theme.typography.size.base,
-    color: theme.colors.neutral[600],
+    fontSize: theme.typography.body.large.fontSize,
+    color: theme.colors.white,
     textAlign: 'center',
-    marginBottom: theme.spacing.xl,
+    marginBottom: theme.spacing[6],
+    opacity: 0.9,
   },
   continueButton: {
     marginTop: theme.spacing.lg,
   },
   cartList: {
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xl,
+    paddingHorizontal: theme.spacing[4],
+    paddingBottom: theme.spacing[8],
   },
   cartItem: {
-    backgroundColor: theme.colors.white,
-    marginBottom: theme.spacing.md,
-    borderRadius: theme.spacing.lg,
-    padding: theme.spacing.lg,
+    marginHorizontal: theme.spacing[4],
+    marginBottom: theme.spacing[4],
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing[4],
   },
   itemContent: {
     flexDirection: 'row',
@@ -647,19 +679,19 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   footer: {
-    marginTop: theme.spacing.lg,
+    marginTop: theme.spacing[4],
+    paddingHorizontal: theme.spacing[4],
   },
   couponSection: {
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing.lg,
-    borderRadius: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing[4],
+    padding: theme.spacing[4],
   },
   sectionTitle: {
-    fontSize: theme.typography.size.lg,
-    fontWeight: theme.typography.weight.semibold,
-    color: theme.colors.neutral[900],
-    marginBottom: theme.spacing.md,
+    fontSize: theme.typography.heading.h3.fontSize,
+    fontWeight: theme.typography.heading.h3.fontWeight as any,
+    color: theme.colors.white,
+    marginBottom: theme.spacing[4],
+    textAlign: 'center',
   },
   couponContainer: {
     flexDirection: 'row',
@@ -688,10 +720,8 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.weight.semibold,
   },
   summarySection: {
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing.lg,
-    borderRadius: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing[4],
+    padding: theme.spacing[4],
   },
   summaryRow: {
     flexDirection: 'row',
@@ -699,13 +729,14 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
   },
   summaryLabel: {
-    fontSize: theme.typography.size.base,
-    color: theme.colors.neutral[600],
+    fontSize: theme.typography.body.medium.fontSize,
+    color: theme.colors.white,
+    opacity: 0.9,
   },
   summaryValue: {
-    fontSize: theme.typography.size.base,
-    color: theme.colors.neutral[900],
-    fontWeight: theme.typography.weight.medium,
+    fontSize: theme.typography.body.medium.fontSize,
+    color: theme.colors.white,
+    fontWeight: '600',
   },
   discountLabel: {
     color: theme.colors.success?.[600] || '#059669',
@@ -733,5 +764,13 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
   },
 });
+
+const CartScreen = () => {
+  return (
+    <ProtectedScreen fallbackMessage="Please sign in to view your shopping cart and save items for later.">
+      <CartScreenContent />
+    </ProtectedScreen>
+  );
+};
 
 export default CartScreen;

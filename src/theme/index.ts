@@ -1,6 +1,7 @@
 import { colors, lightTheme, darkTheme } from './colors';
 import { typography } from './typography';
 import { spacing, borderRadius, shadows } from './spacing';
+import { glassmorphism, glassGradients, glassAnimations } from './glassmorphism';
 
 export const theme = {
   colors,
@@ -10,6 +11,9 @@ export const theme = {
   spacing,
   borderRadius,
   shadows,
+  glassmorphism,
+  glassGradients,
+  glassAnimations,
   
   // Animation durations
   animation: {
@@ -40,6 +44,6 @@ export const theme = {
   },
 };
 
-export { colors, lightTheme, darkTheme, typography, spacing, borderRadius, shadows };
+export { colors, lightTheme, darkTheme, typography, spacing, borderRadius, shadows, glassmorphism, glassGradients, glassAnimations };
 export type Theme = typeof theme;
 export type ThemeColors = typeof lightTheme;

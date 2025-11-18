@@ -15,12 +15,16 @@ import {useNavigation} from '@react-navigation/native';
 import { theme } from '../theme';
 import AnimatedCard from '../components/AnimatedCard';
 import GradientButton from '../components/GradientButton';
+import EnhancedHeader from '../components/EnhancedHeader';
+import GlassCard from '../components/GlassCard';
+import FloatingElements from '../components/FloatingElements';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/navigation';
 import { apiService, ApiOrder } from '../services/api';
 import { useUserProfile } from '../contexts/UserProfileContext';
+import ProtectedScreen from '../components/ProtectedScreen';
 
-const OrdersScreen = () => {
+const OrdersScreenContent = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   
   const { 
@@ -161,24 +165,31 @@ const OrdersScreen = () => {
     : orders.filter(order => order.status.toLowerCase() === selectedFilter.toLowerCase());
 
   // Render order item
-  const renderOrder = ({item, index}: {item: ApiOrder; index: number}) => (
-    <AnimatedCard
-      style={styles.orderCard}
-      elevation="md"
-      animationType="slide"
-      delay={index * 100}
-      onPress={() => viewOrderDetails(item.id)}>
-      
-      {/* Order Header */}
-      <View style={styles.orderHeader}>
-        <View>
-          <Text style={styles.orderNumber}>#{item.id}</Text>
-          <Text style={styles.orderDate}>{item.date}</Text>
-        </View>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-          <Text style={styles.statusText}>{formatStatus(item.status)}</Text>
-        </View>
-      </View>
+  const renderOrder = ({item, index}: {item: ApiOrder; index: number}) => {
+    const gradients = [
+      theme.glassGradients.aurora,
+      theme.glassGradients.sunset,
+      theme.glassGradients.emerald,
+      theme.glassGradients.purple,
+      theme.glassGradients.ocean,
+    ];
+    
+    const gradient = gradients[index % gradients.length];
+
+    return (
+      <AnimatedCard delay={index * 100}>
+        <TouchableOpacity onPress={() => viewOrderDetails(item.id)} activeOpacity={0.9}>
+          <GlassCard style={styles.orderCard} gradientColors={gradient}>
+            {/* Order Header */}
+            <View style={styles.orderHeader}>
+              <View>
+                <Text style={styles.orderNumber}>#{item.id}</Text>
+                <Text style={styles.orderDate}>{item.date}</Text>
+              </View>
+              <GlassCard style={styles.statusBadge} variant="light">
+                <Text style={styles.statusText}>{formatStatus(item.status)}</Text>
+              </GlassCard>
+            </View>
 
       {/* Order Items Preview */}
       <View style={styles.itemsPreview}>
@@ -233,47 +244,62 @@ const OrdersScreen = () => {
       <View style={styles.orderActions}>
         {item.status.toLowerCase() === 'shipped' || item.status.toLowerCase() === 'out for delivery' ? (
           <TouchableOpacity
-            style={styles.actionButton}
+            style={styles.actionButtonContainer}
             onPress={() => trackOrder(item.id)}>
-            <Text style={styles.actionButtonText}>Track Order</Text>
+            <GlassCard style={styles.actionButton} variant="light">
+              <Text style={styles.actionButtonText}>🚚 Track Order</Text>
+            </GlassCard>
           </TouchableOpacity>
         ) : null}
         
         {item.status.toLowerCase() === 'pending' || item.status.toLowerCase() === 'confirmed' ? (
           <TouchableOpacity
-            style={[styles.actionButton, styles.cancelButton]}
+            style={styles.actionButtonContainer}
             onPress={() => cancelOrder(item.id)}>
-            <Text style={[styles.actionButtonText, styles.cancelButtonText]}>Cancel</Text>
+            <GlassCard style={[styles.actionButton, styles.cancelButton]} variant="light">
+              <Text style={[styles.actionButtonText, styles.cancelButtonText]}>❌ Cancel</Text>
+            </GlassCard>
           </TouchableOpacity>
         ) : null}
         
         {item.status.toLowerCase() === 'delivered' ? (
           <TouchableOpacity
-            style={styles.actionButton}
+            style={styles.actionButtonContainer}
             onPress={() => Alert.alert('Reorder', 'Reorder functionality coming soon!')}>
-            <Text style={styles.actionButtonText}>Reorder</Text>
+            <GlassCard style={styles.actionButton} variant="light">
+              <Text style={styles.actionButtonText}>🔄 Reorder</Text>
+            </GlassCard>
           </TouchableOpacity>
         ) : null}
       </View>
-    </AnimatedCard>
-  );
+          </GlassCard>
+        </TouchableOpacity>
+      </AnimatedCard>
+    );
+  };
 
   // Render filter button
   const renderFilterButton = (filter: typeof statusFilters[0]) => (
     <TouchableOpacity
       key={filter.key}
-      style={[
-        styles.filterButton,
-        selectedFilter === filter.key && styles.activeFilter,
-      ]}
+      style={styles.filterButtonContainer}
       onPress={() => setSelectedFilter(filter.key as any)}>
-      <Text
-        style={[
-          styles.filterText,
-          selectedFilter === filter.key && styles.activeFilterText,
-        ]}>
-        {filter.label}
-      </Text>
+      <GlassCard 
+        style={[styles.filterButton, selectedFilter === filter.key && styles.activeFilter]}
+        variant={selectedFilter === filter.key ? 'base' : 'light'}>
+        <Text
+          style={[
+            styles.filterText,
+            selectedFilter === filter.key && styles.activeFilterText,
+          ]}>
+          {filter.label}
+        </Text>
+        {filter.count > 0 && (
+          <View style={styles.filterBadge}>
+            <Text style={styles.filterBadgeText}>{filter.count}</Text>
+          </View>
+        )}
+      </GlassCard>
     </TouchableOpacity>
   );
 
@@ -281,19 +307,22 @@ const OrdersScreen = () => {
   if (loading && !refreshing && orders.length === 0) {
     return (
       <View style={styles.container}>
-        <LinearGradient colors={theme.colors.gradients.primary} style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}>
-            <Text style={styles.backIcon}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>My Orders</Text>
-          <View style={styles.placeholder} />
-        </LinearGradient>
+        <LinearGradient
+          colors={theme.glassGradients.rose}
+          style={styles.backgroundGradient}
+        />
+        <FloatingElements count={6} />
+        
+        <EnhancedHeader 
+          title="📋 My Orders"
+          showBackButton={true}
+        />
         
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary[500]} />
-          <Text style={styles.loadingText}>Loading your orders...</Text>
+          <GlassCard style={styles.loadingCard}>
+            <ActivityIndicator size="large" color={theme.colors.white} />
+            <Text style={styles.loadingText}>Loading your orders...</Text>
+          </GlassCard>
         </View>
       </View>
     );
@@ -301,21 +330,23 @@ const OrdersScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <LinearGradient colors={theme.colors.gradients.primary} style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Orders</Text>
-        <View style={styles.placeholder} />
-      </LinearGradient>
+      <LinearGradient
+        colors={theme.glassGradients.rose}
+        style={styles.backgroundGradient}
+      />
+      <FloatingElements count={6} />
+      
+      <EnhancedHeader 
+        title="📋 My Orders"
+        showBackButton={true}
+      />
 
       {/* Error Message */}
       {error && (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>⚠️ {error}</Text>
+          <GlassCard style={styles.errorCard} variant="light">
+            <Text style={styles.errorText}>⚠️ {error}</Text>
+          </GlassCard>
         </View>
       )}
 
@@ -334,24 +365,26 @@ const OrdersScreen = () => {
       {/* Orders List */}
       {filteredOrders.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>📦</Text>
-          <Text style={styles.emptyTitle}>
-            {selectedFilter === 'ALL' ? 'No orders yet' : `No ${formatStatus(selectedFilter).toLowerCase()} orders`}
-          </Text>
-          <Text style={styles.emptySubtitle}>
-            {selectedFilter === 'ALL' 
-              ? 'Start shopping to see your orders here' 
-              : 'Try changing the filter or check back later'
-            }
-          </Text>
-          {selectedFilter === 'ALL' && (
-            <GradientButton
-              title="Start Shopping"
-              onPress={() => navigation.navigate('MainTabs' as any)}
-              gradient={theme.colors.gradients.primary}
-              style={styles.shopButton}
-            />
-          )}
+          <GlassCard style={styles.emptyCard} gradientColors={theme.glassGradients.sunset}>
+            <Text style={styles.emptyIcon}>📦</Text>
+            <Text style={styles.emptyTitle}>
+              {selectedFilter === 'ALL' ? 'No orders yet' : `No ${formatStatus(selectedFilter).toLowerCase()} orders`}
+            </Text>
+            <Text style={styles.emptySubtitle}>
+              {selectedFilter === 'ALL' 
+                ? 'Start shopping to see your orders here' 
+                : 'Try changing the filter or check back later'
+              }
+            </Text>
+            {selectedFilter === 'ALL' && (
+              <GradientButton
+                title="🛍️ Start Shopping"
+                onPress={() => navigation.navigate('MainTabs' as any)}
+                gradient={theme.colors.gradients.primary}
+                style={styles.shopButton}
+              />
+            )}
+          </GlassCard>
         </View>
       ) : (
         <FlatList
@@ -597,5 +630,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
+
+const OrdersScreen = () => {
+  return (
+    <ProtectedScreen fallbackMessage="Please sign in to view your order history and track current orders.">
+      <OrdersScreenContent />
+    </ProtectedScreen>
+  );
+};
 
 export default OrdersScreen;

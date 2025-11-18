@@ -14,6 +14,13 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../types/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { theme } from '../../theme';
+import AnimatedCard from '../../components/AnimatedCard';
+import GradientButton from '../../components/GradientButton';
+import EnhancedHeader from '../../components/EnhancedHeader';
+import GlassCard from '../../components/GlassCard';
+import GlassInput from '../../components/GlassInput';
+import FloatingElements from '../../components/FloatingElements';
+import LinearGradient from 'react-native-linear-gradient';
 
 const RegisterScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -148,171 +155,201 @@ const RegisterScreen = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Sign Up</Text>
-        <View style={styles.placeholder} />
-      </View>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={theme.glassGradients.rose}
+        style={styles.backgroundGradient}
+      />
+      <FloatingElements count={12} />
+      
+      <EnhancedHeader 
+        title="✨ Create Account"
+        showBackButton={true}
+      />
 
-      {/* Welcome Section */}
-      <View style={styles.welcomeSection}>
-        <Text style={styles.welcomeTitle}>Create Account</Text>
-        <Text style={styles.welcomeSubtitle}>
-          Join AppFashion and start your shopping journey
-        </Text>
-      </View>
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}>
 
-      {/* Registration Form */}
-      <View style={styles.formSection}>
-        <View style={styles.nameContainer}>
-          <View style={styles.nameInput}>
-            <Text style={styles.inputLabel}>First Name</Text>
-            <View style={[styles.inputWrapper, validationErrors.firstName && styles.inputError]}>
-              <TextInput
-                style={styles.input}
-                placeholder="First name"
-                value={firstName}
-                onChangeText={(text) => {
-                  setFirstName(text);
-                  if (validationErrors.firstName) {
-                    setValidationErrors(prev => ({...prev, firstName: ''}));
-                  }
-                }}
-                autoCapitalize="words"
-                editable={!isSubmitting && !state.isLoading}
-              />
+        {/* Welcome Section */}
+        <AnimatedCard delay={100}>
+          <GlassCard style={styles.welcomeSection} gradientColors={theme.glassGradients.aurora}>
+            <Text style={styles.welcomeTitle}>🎉 Join Samar Silk Palace</Text>
+            <Text style={styles.welcomeSubtitle}>
+              Start your beautiful fashion journey with us
+            </Text>
+          </GlassCard>
+        </AnimatedCard>
+
+        {/* Registration Form */}
+        <AnimatedCard delay={200}>
+          <GlassCard style={styles.formSection} gradientColors={theme.glassGradients.sunset}>
+            <View style={styles.nameContainer}>
+              <View style={styles.nameInput}>
+                <Text style={styles.inputLabel}>👤 First Name</Text>
+                <GlassCard 
+                  style={[styles.inputWrapper, validationErrors.firstName && styles.inputError]} 
+                  variant="light">
+                  <TextInput
+                    style={styles.input}
+                    placeholder="First name"
+                    placeholderTextColor="rgba(255,255,255,0.7)"
+                    value={firstName}
+                    onChangeText={(text) => {
+                      setFirstName(text);
+                      if (validationErrors.firstName) {
+                        setValidationErrors(prev => ({...prev, firstName: ''}));
+                      }
+                    }}
+                    autoCapitalize="words"
+                    editable={!isSubmitting && !state.isLoading}
+                  />
+                </GlassCard>
+                {validationErrors.firstName && (
+                  <Text style={styles.validationError}>{validationErrors.firstName}</Text>
+                )}
+              </View>
+              <View style={styles.nameInput}>
+                <Text style={styles.inputLabel}>👤 Last Name</Text>
+                <GlassCard 
+                  style={[styles.inputWrapper, validationErrors.lastName && styles.inputError]} 
+                  variant="light">
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Last name"
+                    placeholderTextColor="rgba(255,255,255,0.7)"
+                    value={lastName}
+                    onChangeText={(text) => {
+                      setLastName(text);
+                      if (validationErrors.lastName) {
+                        setValidationErrors(prev => ({...prev, lastName: ''}));
+                      }
+                    }}
+                    autoCapitalize="words"
+                    editable={!isSubmitting && !state.isLoading}
+                  />
+                </GlassCard>
+                {validationErrors.lastName && (
+                  <Text style={styles.validationError}>{validationErrors.lastName}</Text>
+                )}
+              </View>
             </View>
-            {validationErrors.firstName && (
-              <Text style={styles.validationError}>{validationErrors.firstName}</Text>
-            )}
-          </View>
-          <View style={styles.nameInput}>
-            <Text style={styles.inputLabel}>Last Name</Text>
-            <View style={[styles.inputWrapper, validationErrors.lastName && styles.inputError]}>
-              <TextInput
-                style={styles.input}
-                placeholder="Last name"
-                value={lastName}
-                onChangeText={(text) => {
-                  setLastName(text);
-                  if (validationErrors.lastName) {
-                    setValidationErrors(prev => ({...prev, lastName: ''}));
-                  }
-                }}
-                autoCapitalize="words"
-                editable={!isSubmitting && !state.isLoading}
-              />
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>📧 Email Address</Text>
+              <GlassCard 
+                style={[styles.inputWrapper, validationErrors.email && styles.inputError]} 
+                variant="light">
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  placeholderTextColor="rgba(255,255,255,0.7)"
+                  value={email}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    if (validationErrors.email) {
+                      setValidationErrors(prev => ({...prev, email: ''}));
+                    }
+                  }}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!isSubmitting && !state.isLoading}
+                />
+              </GlassCard>
+              {validationErrors.email && (
+                <Text style={styles.validationError}>{validationErrors.email}</Text>
+              )}
             </View>
-            {validationErrors.lastName && (
-              <Text style={styles.validationError}>{validationErrors.lastName}</Text>
-            )}
-          </View>
-        </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Email Address</Text>
-          <View style={[styles.inputWrapper, validationErrors.email && styles.inputError]}>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your email"
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                if (validationErrors.email) {
-                  setValidationErrors(prev => ({...prev, email: ''}));
-                }
-              }}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!isSubmitting && !state.isLoading}
-            />
-          </View>
-          {validationErrors.email && (
-            <Text style={styles.validationError}>{validationErrors.email}</Text>
-          )}
-        </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>📱 Phone (Optional)</Text>
+              <GlassCard style={styles.inputWrapper} variant="light">
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your phone number"
+                  placeholderTextColor="rgba(255,255,255,0.7)"
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                  editable={!isSubmitting && !state.isLoading}
+                />
+              </GlassCard>
+            </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Phone (Optional)</Text>
-          <View style={styles.inputWrapper}>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your phone number"
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
-              editable={!isSubmitting && !state.isLoading}
-            />
-          </View>
-        </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>🔒 Password</Text>
+              <GlassCard 
+                style={[styles.passwordContainer, validationErrors.password && styles.inputError]} 
+                variant="light">
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Enter your password"
+                  placeholderTextColor="rgba(255,255,255,0.7)"
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    if (validationErrors.password) {
+                      setValidationErrors(prev => ({...prev, password: ''}));
+                    }
+                  }}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!isSubmitting && !state.isLoading}
+                />
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() => setShowPassword(!showPassword)}
+                  disabled={isSubmitting || state.isLoading}>
+                  <GlassCard style={styles.eyeIcon} variant="light">
+                    <Text style={styles.eyeIconText}>{showPassword ? '👁️' : '🙈'}</Text>
+                  </GlassCard>
+                </TouchableOpacity>
+              </GlassCard>
+              {validationErrors.password && (
+                <Text style={styles.validationError}>{validationErrors.password}</Text>
+              )}
+              <Text style={styles.passwordHint}>
+                Password must be at least 6 characters long
+              </Text>
+            </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Password</Text>
-          <View style={[styles.passwordContainer, validationErrors.password && styles.inputError]}>
-            <TextInput
-              style={styles.passwordInput}
-              placeholder="Enter your password"
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                if (validationErrors.password) {
-                  setValidationErrors(prev => ({...prev, password: ''}));
-                }
-              }}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!isSubmitting && !state.isLoading}
-            />
-            <TouchableOpacity
-              style={styles.eyeButton}
-              onPress={() => setShowPassword(!showPassword)}
-              disabled={isSubmitting || state.isLoading}>
-              <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '🙈'}</Text>
-            </TouchableOpacity>
-          </View>
-          {validationErrors.password && (
-            <Text style={styles.validationError}>{validationErrors.password}</Text>
-          )}
-          <Text style={styles.passwordHint}>
-            Password must be at least 6 characters long
-          </Text>
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Confirm Password</Text>
-          <View style={[styles.passwordContainer, validationErrors.confirmPassword && styles.inputError]}>
-            <TextInput
-              style={styles.passwordInput}
-              placeholder="Confirm your password"
-              value={confirmPassword}
-              onChangeText={(text) => {
-                setConfirmPassword(text);
-                if (validationErrors.confirmPassword) {
-                  setValidationErrors(prev => ({...prev, confirmPassword: ''}));
-                }
-              }}
-              secureTextEntry={!showConfirmPassword}
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!isSubmitting && !state.isLoading}
-            />
-            <TouchableOpacity
-              style={styles.eyeButton}
-              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-              disabled={isSubmitting || state.isLoading}>
-              <Text style={styles.eyeIcon}>{showConfirmPassword ? '👁️' : '🙈'}</Text>
-            </TouchableOpacity>
-          </View>
-          {validationErrors.confirmPassword && (
-            <Text style={styles.validationError}>{validationErrors.confirmPassword}</Text>
-          )}
-        </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>🔒 Confirm Password</Text>
+              <GlassCard 
+                style={[styles.passwordContainer, validationErrors.confirmPassword && styles.inputError]} 
+                variant="light">
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Confirm your password"
+                  placeholderTextColor="rgba(255,255,255,0.7)"
+                  value={confirmPassword}
+                  onChangeText={(text) => {
+                    setConfirmPassword(text);
+                    if (validationErrors.confirmPassword) {
+                      setValidationErrors(prev => ({...prev, confirmPassword: ''}));
+                    }
+                  }}
+                  secureTextEntry={!showConfirmPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!isSubmitting && !state.isLoading}
+                />
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  disabled={isSubmitting || state.isLoading}>
+                  <GlassCard style={styles.eyeIcon} variant="light">
+                    <Text style={styles.eyeIconText}>{showConfirmPassword ? '👁️' : '🙈'}</Text>
+                  </GlassCard>
+                </TouchableOpacity>
+              </GlassCard>
+              {validationErrors.confirmPassword && (
+                <Text style={styles.validationError}>{validationErrors.confirmPassword}</Text>
+              )}
+            </View>
 
         {/* Terms and Conditions */}
         <View style={styles.termsContainer}>
@@ -340,69 +377,81 @@ const RegisterScreen = () => {
           <Text style={styles.validationError}>{validationErrors.agreeToTerms}</Text>
         )}
 
-        {/* Show global error */}
-        {state.error && (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>⚠️ {state.error}</Text>
-          </View>
-        )}
+            {/* Show global error */}
+            {state.error && (
+              <GlassCard style={styles.errorContainer} variant="light">
+                <Text style={styles.errorText}>⚠️ {state.error}</Text>
+              </GlassCard>
+            )}
 
-        <TouchableOpacity 
-          style={[styles.registerButton, (isSubmitting || state.isLoading) && styles.disabledButton]} 
-          onPress={handleRegister}
-          disabled={isSubmitting || state.isLoading}>
-          <Text style={styles.registerButtonText}>
-            {isSubmitting || state.isLoading ? 'Creating Account...' : 'Create Account'}
-          </Text>
-        </TouchableOpacity>
+            <GradientButton
+              title={isSubmitting || state.isLoading ? 'Creating Account...' : '🚀 Create Account'}
+              onPress={handleRegister}
+              gradient={theme.colors.gradients.primary}
+              size="large"
+              style={styles.registerButton}
+              disabled={isSubmitting || state.isLoading}
+            />
 
         {(isSubmitting || state.isLoading) && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color={theme.colors.primary[500]} />
+          <GlassCard style={styles.loadingContainer} variant="light">
+            <ActivityIndicator size="small" color={theme.colors.white} />
             <Text style={styles.loadingText}>Registering...</Text>
-          </View>
+          </GlassCard>
         )}
-      </View>
+          </GlassCard>
+        </AnimatedCard>
 
-      {/* Social Registration */}
-      <View style={styles.socialSection}>
-        <Text style={styles.orText}>or sign up with</Text>
-        
-        <View style={styles.socialButtons}>
-          <TouchableOpacity 
-            style={[styles.socialButton, (isSubmitting || state.isLoading) && styles.disabledButton]}
-            onPress={() => handleSocialLogin('google')}
-            disabled={isSubmitting || state.isLoading}>
-            <Text style={styles.socialIcon}>📧</Text>
-            <Text style={styles.socialText}>Google</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.socialButton, (isSubmitting || state.isLoading) && styles.disabledButton]}
-            onPress={() => handleSocialLogin('facebook')}
-            disabled={isSubmitting || state.isLoading}>
-            <Text style={styles.socialIcon}>📘</Text>
-            <Text style={styles.socialText}>Facebook</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.socialButton, (isSubmitting || state.isLoading) && styles.disabledButton]}
-            onPress={() => handleSocialLogin('apple')}
-            disabled={isSubmitting || state.isLoading}>
-            <Text style={styles.socialIcon}>🍎</Text>
-            <Text style={styles.socialText}>Apple</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+        {/* Social Registration */}
+        <AnimatedCard delay={400}>
+          <GlassCard style={styles.socialSection} gradientColors={theme.glassGradients.emerald}>
+            <Text style={styles.orText}>✨ or sign up with ✨</Text>
+            
+            <View style={styles.socialButtons}>
+              <TouchableOpacity 
+                style={[styles.socialButtonContainer, (isSubmitting || state.isLoading) && styles.disabledButton]}
+                onPress={() => handleSocialLogin('google')}
+                disabled={isSubmitting || state.isLoading}>
+                <GlassCard style={styles.socialButton} variant="light">
+                  <Text style={styles.socialIcon}>📧</Text>
+                  <Text style={styles.socialText}>Google</Text>
+                </GlassCard>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.socialButtonContainer, (isSubmitting || state.isLoading) && styles.disabledButton]}
+                onPress={() => handleSocialLogin('facebook')}
+                disabled={isSubmitting || state.isLoading}>
+                <GlassCard style={styles.socialButton} variant="light">
+                  <Text style={styles.socialIcon}>📘</Text>
+                  <Text style={styles.socialText}>Facebook</Text>
+                </GlassCard>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.socialButtonContainer, (isSubmitting || state.isLoading) && styles.disabledButton]}
+                onPress={() => handleSocialLogin('apple')}
+                disabled={isSubmitting || state.isLoading}>
+                <GlassCard style={styles.socialButton} variant="light">
+                  <Text style={styles.socialIcon}>🍎</Text>
+                  <Text style={styles.socialText}>Apple</Text>
+                </GlassCard>
+              </TouchableOpacity>
+            </View>
+          </GlassCard>
+        </AnimatedCard>
 
-      {/* Sign In Link */}
-      <View style={styles.signinSection}>
-        <Text style={styles.signinText}>Already have an account? </Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.signinLink}>Sign In</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+        {/* Sign In Link */}
+        <AnimatedCard delay={500}>
+          <GlassCard style={styles.signinSection} variant="light">
+            <Text style={styles.signinText}>Already have an account? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.signinLink}>🔐 Sign In</Text>
+            </TouchableOpacity>
+          </GlassCard>
+        </AnimatedCard>
+      </ScrollView>
+    </View>
   );
 };
 

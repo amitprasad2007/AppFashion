@@ -13,8 +13,13 @@ import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/navigation';
 import AppHeader from '../components/AppHeader';
+import EnhancedHeader from '../components/EnhancedHeader';
+import GlassCard from '../components/GlassCard';
+import FloatingElements from '../components/FloatingElements';
+import AnimatedCard from '../components/AnimatedCard';
 import { apiService, ApiCategory } from '../services/api';
 import { theme } from '../theme';
+import LinearGradient from 'react-native-linear-gradient';
 
 type Category = {
   id: string;
@@ -121,51 +126,82 @@ const CategoriesScreen = () => {
     loadCategories();
   };
 
-  const renderCategory = ({item}: {item: ApiCategory}) => (
-    <TouchableOpacity
-      style={styles.categoryCard}
-      onPress={() => navigation.navigate('ProductList', {categoryId: String(item.id), categoryName: item.name})}>
-      <Image source={{uri: item.image}} style={styles.categoryImage} />
-      <View style={styles.categoryInfo}>
-        <Text style={styles.categoryName}>{item.name}</Text>
-        <Text style={styles.categorySubtitle}>{item.description || 'Explore this category'}</Text>
-        <Text style={styles.itemCount}>
-          {(item as any).itemCount ? `${(item as any).itemCount} items` : 'Available items'}
-        </Text>
-        {(item as any).subcategories && (item as any).subcategories.length > 0 && (
-          <View style={styles.subcategoriesContainer}>
-            {(item as any).subcategories.slice(0, 4).map((sub: string, index: number) => (
-              <Text key={index} style={styles.subcategory}>
-                {sub}{index < Math.min((item as any).subcategories.length, 4) - 1 ? ' • ' : ''}
+  const renderCategory = ({item, index}: {item: ApiCategory; index: number}) => {
+    const gradients = [
+      theme.glassGradients.aurora,
+      theme.glassGradients.sunset,
+      theme.glassGradients.emerald,
+      theme.glassGradients.purple,
+      theme.glassGradients.rose,
+      theme.glassGradients.ocean,
+    ];
+    
+    const gradient = gradients[index % gradients.length];
+
+    return (
+      <AnimatedCard delay={index * 100}>
+        <TouchableOpacity
+          style={styles.categoryCard}
+          onPress={() => navigation.navigate('ProductList', {categoryId: String(item.id), categoryName: item.name})}
+          activeOpacity={0.9}>
+          <GlassCard style={styles.categoryGlassCard} gradientColors={gradient}>
+            <Image source={{uri: item.image}} style={styles.categoryImage} />
+            <View style={styles.categoryInfo}>
+              <Text style={styles.categoryName}>{item.name}</Text>
+              <Text style={styles.categorySubtitle}>{item.description || 'Explore this category'}</Text>
+              <Text style={styles.itemCount}>
+                {(item as any).itemCount ? `${(item as any).itemCount} items` : 'Available items'}
               </Text>
-            ))}
-            {(item as any).subcategories.length > 4 && (
-              <Text style={styles.subcategory}> +{(item as any).subcategories.length - 4} more</Text>
-            )}
-          </View>
-        )}
-      </View>
-      <Text style={styles.arrow}>→</Text>
-    </TouchableOpacity>
-  );
+              {(item as any).subcategories && (item as any).subcategories.length > 0 && (
+                <View style={styles.subcategoriesContainer}>
+                  {(item as any).subcategories.slice(0, 4).map((sub: string, index: number) => (
+                    <Text key={index} style={styles.subcategory}>
+                      {sub}{index < Math.min((item as any).subcategories.length, 4) - 1 ? ' • ' : ''}
+                    </Text>
+                  ))}
+                  {(item as any).subcategories.length > 4 && (
+                    <Text style={styles.subcategory}> +{(item as any).subcategories.length - 4} more</Text>
+                  )}
+                </View>
+              )}
+            </View>
+            <View style={styles.arrowContainer}>
+              <Text style={styles.arrow}>→</Text>
+            </View>
+          </GlassCard>
+        </TouchableOpacity>
+      </AnimatedCard>
+    );
+  };
 
   // Show loading spinner on initial load
   if (loading && !refreshing) {
     return (
       <View style={styles.container}>
-        <AppHeader 
-          title="Categories"
+        <LinearGradient
+          colors={theme.glassGradients.ocean}
+          style={styles.backgroundGradient}
+        />
+        <FloatingElements count={6} />
+        
+        <EnhancedHeader 
+          title="📂 Categories"
+          showBackButton={true}
           rightComponent={
             <TouchableOpacity 
               style={styles.searchButton}
               onPress={() => navigation.navigate('Search')}>
-              <Text style={styles.searchIcon}>🔍</Text>
+              <GlassCard style={styles.searchIcon} variant="light">
+                <Text style={styles.searchIconText}>🔍</Text>
+              </GlassCard>
             </TouchableOpacity>
           }
         />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary[500]} />
-          <Text style={styles.loadingText}>Loading categories...</Text>
+          <GlassCard style={styles.loadingCard}>
+            <ActivityIndicator size="large" color={theme.colors.white} />
+            <Text style={styles.loadingText}>Loading categories...</Text>
+          </GlassCard>
         </View>
       </View>
     );
@@ -173,20 +209,31 @@ const CategoriesScreen = () => {
 
   return (
     <View style={styles.container}>
-      <AppHeader 
-        title={`Categories ${categories.length > 0 ? `(${categories.length})` : ''}`}
+      <LinearGradient
+        colors={theme.glassGradients.ocean}
+        style={styles.backgroundGradient}
+      />
+      <FloatingElements count={6} />
+      
+      <EnhancedHeader 
+        title={`📂 Categories ${categories.length > 0 ? `(${categories.length})` : ''}`}
+        showBackButton={true}
         rightComponent={
           <TouchableOpacity 
             style={styles.searchButton}
             onPress={() => navigation.navigate('Search')}>
-            <Text style={styles.searchIcon}>🔍</Text>
+            <GlassCard style={styles.searchIcon} variant="light">
+              <Text style={styles.searchIconText}>🔍</Text>
+            </GlassCard>
           </TouchableOpacity>
         }
       />
 
       {error && (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>⚠️ {error}</Text>
+          <GlassCard style={styles.errorCard} variant="light">
+            <Text style={styles.errorText}>⚠️ {error}</Text>
+          </GlassCard>
         </View>
       )}
 
@@ -204,8 +251,10 @@ const CategoriesScreen = () => {
         />
       ) : (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>📦 No categories available</Text>
-          <Text style={styles.emptySubtext}>Pull down to refresh</Text>
+          <GlassCard style={styles.emptyCard} gradientColors={theme.glassGradients.sunset}>
+            <Text style={styles.emptyText}>📦 No categories available</Text>
+            <Text style={styles.emptySubtext}>Pull down to refresh</Text>
+          </GlassCard>
         </View>
       )}
     </View>

@@ -16,6 +16,10 @@ import {useNavigation, useRoute} from '@react-navigation/native';
 import { theme } from '../theme';
 import AnimatedCard from '../components/AnimatedCard';
 import GradientButton from '../components/GradientButton';
+import EnhancedHeader from '../components/EnhancedHeader';
+import GlassCard from '../components/GlassCard';
+import FloatingElements from '../components/FloatingElements';
+import GlassInput from '../components/GlassInput';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {Product, RootStackParamList} from '../types/navigation';
 import { apiService, ApiProduct, ApiCategory } from '../services/api';
@@ -155,122 +159,143 @@ const ProductListScreen = () => {
     return matchesSearch && matchesFilter;
   });
 
-  const renderProduct = ({item, index}: {item: ApiProduct; index: number}) => (
-    <AnimatedCard
-      style={styles.productCard}
-      onPress={() => navigation.navigate('ProductDetails', {productId: item.id.toString()})}>
-      elevation="lg"
-      animationType="slide"
-      delay={index * 100}
-      <Image source={{uri: item.images[0]}} style={styles.productImage} />
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.6)']}
-        style={styles.productOverlay}>
-        <TouchableOpacity style={styles.wishlistBtn}>
-          <Text style={styles.wishlistIcon}>🤍</Text>
-        </TouchableOpacity>
-        {item.isBestseller && (
-          <View style={styles.bestsellerBadge}>
-            <Text style={styles.bestsellerText}>🔥 BESTSELLER</Text>
-          </View>
-        )}
-        {item.isNew && (
-          <View style={styles.newBadge}>
-            <Text style={styles.newText}>✨ NEW</Text>
-          </View>
-        )}
-      </LinearGradient>
-      <View style={styles.productInfo}>
-        <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
-        <Text style={styles.productCategory} numberOfLines={1}>
-          {typeof item.category === 'string' ? item.category : (item.category as any)?.title || 'Unknown'}
-        </Text>
-        <View style={styles.priceRatingRow}>
-          <View style={styles.priceContainer}>
-            <Text style={styles.productPrice}>₹{item.price}</Text>
-            {item.originalPrice && item.originalPrice > item.price && (
-              <>
-                <Text style={styles.originalPrice}>₹{item.originalPrice}</Text>
-                <View style={styles.discountBadge}>
-                  <Text style={styles.discountText}>
-                    {Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)}% OFF
-                  </Text>
+  const renderProduct = ({item, index}: {item: ApiProduct; index: number}) => {
+    const gradients = [
+      theme.glassGradients.aurora,
+      theme.glassGradients.sunset,
+      theme.glassGradients.emerald,
+      theme.glassGradients.purple,
+      theme.glassGradients.rose,
+      theme.glassGradients.ocean,
+    ];
+    
+    const gradient = gradients[index % gradients.length];
+
+    return (
+      <AnimatedCard delay={index * 100}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('ProductDetails', {productSlug: item.slug || item.id.toString()})}
+          activeOpacity={0.9}>
+          <GlassCard style={styles.productCard} gradientColors={gradient}>
+            <Image source={{uri: item.images[0]}} style={styles.productImage} />
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.3)']}
+              style={styles.productOverlay}>
+              <TouchableOpacity style={styles.wishlistBtn}>
+                <GlassCard style={styles.wishlistIcon} variant="light">
+                  <Text style={styles.wishlistIconText}>🤍</Text>
+                </GlassCard>
+              </TouchableOpacity>
+              {item.isBestseller && (
+                <GlassCard style={styles.bestsellerBadge} variant="light">
+                  <Text style={styles.bestsellerText}>🔥 BESTSELLER</Text>
+                </GlassCard>
+              )}
+              {item.isNew && (
+                <GlassCard style={styles.newBadge} variant="light">
+                  <Text style={styles.newText}>✨ NEW</Text>
+                </GlassCard>
+              )}
+            </LinearGradient>
+            <View style={styles.productInfo}>
+              <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
+              <Text style={styles.productCategory} numberOfLines={1}>
+                {typeof item.category === 'string' ? item.category : (item.category as any)?.title || 'Unknown'}
+              </Text>
+              <View style={styles.priceRatingRow}>
+                <View style={styles.priceContainer}>
+                  <Text style={styles.productPrice}>₹{item.price}</Text>
+                  {item.originalPrice && item.originalPrice > item.price && (
+                    <>
+                      <Text style={styles.originalPrice}>₹{item.originalPrice}</Text>
+                      <GlassCard style={styles.discountBadge} variant="light">
+                        <Text style={styles.discountText}>
+                          {Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)}% OFF
+                        </Text>
+                      </GlassCard>
+                    </>
+                  )}
                 </View>
-              </>
-            )}
-          </View>
-          <View style={styles.ratingBadge}>
-            <Text style={styles.rating}>⭐ {item.rating || 4.5}</Text>
-            <Text style={styles.reviewCount}>({item.reviewCount || 0})</Text>
-          </View>
-        </View>
-        <GradientButton
-          title="Add to Cart"
-          onPress={() => handleAddToCartFromList(item)}
-          gradient={theme.colors.gradients.primary}
-          size="small"
-          style={styles.addToCartBtn}
-        />
-      </View>
-    </AnimatedCard>
-  );
+                <GlassCard style={styles.ratingBadge} variant="light">
+                  <Text style={styles.rating}>⭐ {item.rating || 4.5}</Text>
+                  <Text style={styles.reviewCount}>({item.reviewCount || 0})</Text>
+                </GlassCard>
+              </View>
+              <GradientButton
+                title="Add to Cart"
+                onPress={() => handleAddToCartFromList(item)}
+                gradient={theme.colors.gradients.primary}
+                size="small"
+                style={styles.addToCartBtn}
+              />
+            </View>
+          </GlassCard>
+        </TouchableOpacity>
+      </AnimatedCard>
+    );
+  };
 
   const renderFilter = ({item, index}: {item: string; index: number}) => (
-    <TouchableOpacity
-      key={index}
-      style={[
-        styles.filterButton,
-        selectedFilter === item && styles.activeFilter,
-      ]}
-      onPress={() => setSelectedFilter(item)}>
-      <Text
-        style={[
-          styles.filterText,
-          selectedFilter === item && styles.activeFilterText,
-        ]}>
-        {item.charAt(0).toUpperCase() + item.slice(1)}
-      </Text>
-    </TouchableOpacity>
+    <AnimatedCard key={index} delay={index * 50}>
+      <TouchableOpacity
+        style={styles.filterButtonContainer}
+        onPress={() => setSelectedFilter(item)}>
+        <GlassCard 
+          style={[styles.filterButton, selectedFilter === item && styles.activeFilter]} 
+          variant={selectedFilter === item ? 'base' : 'light'}>
+          <Text
+            style={[
+              styles.filterText,
+              selectedFilter === item && styles.activeFilterText,
+            ]}>
+            {item.charAt(0).toUpperCase() + item.slice(1)}
+          </Text>
+        </GlassCard>
+      </TouchableOpacity>
+    </AnimatedCard>
   );
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <LinearGradient
-        colors={theme.colors.gradients.primary}
-        style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {categoryName ? categoryName : type ? `${type.charAt(0).toUpperCase() + type.slice(1)} Products` : 'All Products'}
-        </Text>
-        <TouchableOpacity 
-          style={styles.cartButton}
-          onPress={() => navigation.navigate('Cart')}>
-          <Text style={styles.cartIcon}>🛒</Text>
-          <View style={styles.cartBadge}>
-            <Text style={styles.cartBadgeText}>3</Text>
-          </View>
-        </TouchableOpacity>
-      </LinearGradient>
+        colors={theme.glassGradients.emerald}
+        style={styles.backgroundGradient}
+      />
+      <FloatingElements count={8} />
+      
+      <EnhancedHeader 
+        title={`🛍️ ${categoryName ? categoryName : type ? `${type.charAt(0).toUpperCase() + type.slice(1)} Products` : 'All Products'}`}
+        showBackButton={true}
+        rightComponent={
+          <TouchableOpacity 
+            style={styles.cartButton}
+            onPress={() => navigation.navigate('Cart')}>
+            <GlassCard style={styles.cartIcon} variant="light">
+              <Text style={styles.cartIconText}>🛒</Text>
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>3</Text>
+              </View>
+            </GlassCard>
+          </TouchableOpacity>
+        }
+      />
 
       {/* Search */}
       <View style={styles.searchContainer}>
-        <View style={styles.searchInputContainer}>
+        <GlassCard style={styles.searchInputContainer} variant="light">
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
             placeholder="Search amazing products..."
-            placeholderTextColor={theme.colors.neutral[400]}
+            placeholderTextColor="rgba(255,255,255,0.7)"
             value={searchQuery}
             onChangeText={handleSearch}
           />
-        </View>
-        <TouchableOpacity style={styles.filterIcon}>
-          <Text style={styles.filterIconText}>🎛️</Text>
+        </GlassCard>
+        <TouchableOpacity style={styles.filterIconContainer}>
+          <GlassCard style={styles.filterIcon} variant="light">
+            <Text style={styles.filterIconText}>🎛️</Text>
+          </GlassCard>
         </TouchableOpacity>
       </View>
 
@@ -282,15 +307,19 @@ const ProductListScreen = () => {
       {/* Error Message */}
       {error && (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>⚠️ {error}</Text>
+          <GlassCard style={styles.errorCard} variant="light">
+            <Text style={styles.errorText}>⚠️ {error}</Text>
+          </GlassCard>
         </View>
       )}
 
       {/* Products List */}
       {loading && !refreshing ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary[500]} />
-          <Text style={styles.loadingText}>Loading amazing products...</Text>
+          <GlassCard style={styles.loadingCard}>
+            <ActivityIndicator size="large" color={theme.colors.white} />
+            <Text style={styles.loadingText}>Loading amazing products...</Text>
+          </GlassCard>
         </View>
       ) : filteredProducts.length > 0 ? (
         <FlatList
@@ -305,21 +334,25 @@ const ProductListScreen = () => {
           }
           ListHeaderComponent={() => (
             <View style={styles.resultsHeader}>
-              <Text style={styles.resultsText}>
-                {searchQuery ? `Found ${filteredProducts.length} results for "${searchQuery}"` : 
-                 `Showing ${filteredProducts.length} products`}
-              </Text>
+              <GlassCard style={styles.resultsCard} variant="light">
+                <Text style={styles.resultsText}>
+                  {searchQuery ? `🔍 Found ${filteredProducts.length} results for "${searchQuery}"` : 
+                   `📦 Showing ${filteredProducts.length} products`}
+                </Text>
+              </GlassCard>
             </View>
           )}
         />
       ) : (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>
-            {searchQuery ? `No products found for "${searchQuery}"` : '📦 No products available'}
-          </Text>
-          <Text style={styles.emptySubtext}>
-            {searchQuery ? 'Try adjusting your search terms' : 'Pull down to refresh'}
-          </Text>
+          <GlassCard style={styles.emptyCard} gradientColors={theme.glassGradients.sunset}>
+            <Text style={styles.emptyText}>
+              {searchQuery ? `🔍 No products found for "${searchQuery}"` : '📦 No products available'}
+            </Text>
+            <Text style={styles.emptySubtext}>
+              {searchQuery ? 'Try adjusting your search terms' : 'Pull down to refresh'}
+            </Text>
+          </GlassCard>
         </View>
       )}
     </View>
