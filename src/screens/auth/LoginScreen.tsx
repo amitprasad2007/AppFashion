@@ -283,7 +283,11 @@ const LoginScreen = () => {
         {/* Social Login */}
         <AnimatedCard delay={400}>
           <GlassCard style={styles.socialCard} gradientColors={theme.glassGradients.emerald}>
-            <Text style={styles.orText}>✨ or continue with ✨</Text>
+            <View style={styles.dividerContainer}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.orText}>or continue with</Text>
+              <View style={styles.dividerLine} />
+            </View>
             
             <View style={styles.socialButtons}>
               <OAuthButton 
@@ -291,6 +295,7 @@ const LoginScreen = () => {
                 onSuccess={() => navigation.navigate('Home' as never)}
                 onError={(error) => console.error('Google OAuth Error:', error)}
                 disabled={isSubmitting || state.isLoading}
+                style={styles.socialButton}
               />
 
               <OAuthButton 
@@ -298,6 +303,7 @@ const LoginScreen = () => {
                 onSuccess={() => navigation.navigate('Home' as never)}
                 onError={(error) => console.error('Facebook OAuth Error:', error)}
                 disabled={isSubmitting || state.isLoading}
+                style={styles.socialButton}
               />
 
               <OAuthButton 
@@ -305,6 +311,7 @@ const LoginScreen = () => {
                 onSuccess={() => navigation.navigate('Home' as never)}
                 onError={(error) => console.error('Apple OAuth Error:', error)}
                 disabled={true}
+                style={styles.socialButton}
               />
             </View>
           </GlassCard>
@@ -504,29 +511,44 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.medium,
   },
   socialCard: {
-    margin: theme.spacing[5],
-    padding: theme.spacing[5],
+    marginHorizontal: theme.spacing[5],
+    marginBottom: theme.spacing[5],
+    overflow: 'hidden',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: theme.spacing[6],
+    paddingHorizontal: theme.spacing[2],
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   orText: {
+    textAlign: 'center',
     fontSize: theme.typography.fontSize.base,
-    color: theme.colors.neutral[600],
-    marginBottom: theme.spacing[5],
     fontWeight: theme.typography.fontWeight.medium,
+    color: theme.colors.white,
+    marginHorizontal: theme.spacing[4],
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: {width: 0, height: 1},
+    textShadowRadius: 2,
   },
   socialButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
     gap: theme.spacing[3],
   },
   socialButton: {
-    flex: 1,
-    alignItems: 'center',
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing[3],
-    borderRadius: theme.borderRadius.base,
-    ...theme.shadows.sm,
+    marginBottom: 0,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
   },
   socialGradient: {
     width: 48,

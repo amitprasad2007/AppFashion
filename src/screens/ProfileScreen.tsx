@@ -120,7 +120,7 @@ const ProfileScreenContent = () => {
   const renderMenuItem = ({item, index}: {item: typeof menuItems[0]; index: number}) => (
     <AnimatedCard key={index} delay={300 + index * 50}>
       <TouchableOpacity
-        style={styles.menuItemContainer}
+        style={styles.menuItem}
         onPress={item.onPress}
         activeOpacity={0.9}>
         <GlassCard style={styles.menuItem} variant="light">
@@ -131,7 +131,7 @@ const ProfileScreenContent = () => {
             <Text style={styles.menuTitle}>{item.title}</Text>
             <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
           </View>
-          <View style={styles.arrowContainer}>
+          <View style={styles.menuItem}>
             <Text style={styles.arrow}>→</Text>
           </View>
         </GlassCard>
@@ -144,7 +144,8 @@ const ProfileScreenContent = () => {
       <View style={styles.container}>
         <LinearGradient
           colors={theme.glassGradients.sunset}
-          style={styles.backgroundGradient}
+        style={styles.backgroundGradient as ViewStyle}
+
         />
         <FloatingElements count={6} />
         
@@ -154,7 +155,7 @@ const ProfileScreenContent = () => {
         />
         
         <View style={styles.loginPrompt}>
-          <GlassCard style={styles.loginCard} gradientColors={theme.glassGradients.aurora}>
+          <GlassCard gradientColors={theme.glassGradients.aurora}>
             <Text style={styles.loginTitle}>✨ Welcome to Samar Silk Palace</Text>
             <Text style={styles.loginSubtitle}>Sign in to access your profile and orders</Text>
             <GradientButton
@@ -190,7 +191,7 @@ const ProfileScreenContent = () => {
         />
         
         <View style={styles.loadingContainer}>
-          <GlassCard style={styles.loadingCard}>
+          <GlassCard>
             <ActivityIndicator size="large" color={theme.colors.white} />
             <Text style={styles.loadingText}>Loading your profile...</Text>
           </GlassCard>
@@ -213,7 +214,7 @@ const ProfileScreenContent = () => {
     <View style={styles.container}>
       <LinearGradient
         colors={theme.glassGradients.sunset}
-        style={styles.backgroundGradient}
+        style={styles.backgroundGradient as any}
       />
       <FloatingElements count={8} />
       
@@ -222,7 +223,7 @@ const ProfileScreenContent = () => {
         showBackButton={false}
         rightComponent={
           <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton}>
-            <GlassCard style={styles.refreshIcon} variant="light">
+            <GlassCard style={styles.refreshButton} variant="light">
               <Text style={styles.refreshText}>🔄</Text>
             </GlassCard>
           </TouchableOpacity>
@@ -230,7 +231,7 @@ const ProfileScreenContent = () => {
       />
 
       <ScrollView 
-        style={styles.scrollView}
+        contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
@@ -239,7 +240,7 @@ const ProfileScreenContent = () => {
         {/* Error Message */}
         {error && (
           <View style={styles.errorContainer}>
-            <GlassCard style={styles.errorCard} variant="light">
+            <GlassCard style={styles.errorContainer} variant="light">
               <Text style={styles.errorText}>⚠️ {error}</Text>
               <TouchableOpacity onPress={refreshUserData} style={styles.retryButton}>
                 <Text style={styles.retryText}>Retry</Text>
@@ -265,7 +266,7 @@ const ProfileScreenContent = () => {
                 <Text style={styles.memberSince}>Member since {memberSince}</Text>
               </View>
               <TouchableOpacity
-                style={styles.editButtonContainer}
+                style={styles.editButton}
                 onPress={() => navigation.navigate('EditProfile')}>
                 <GlassCard style={styles.editButton} variant="light">
                   <Text style={styles.editButtonText}>✏️ Edit</Text>
@@ -335,7 +336,7 @@ const ProfileScreenContent = () => {
 
         {/* Logout Button */}
         <AnimatedCard delay={700}>
-          <TouchableOpacity style={styles.logoutButtonContainer} onPress={handleLogout}>
+          <TouchableOpacity onPress={handleLogout}>
             <GlassCard style={styles.logoutButton} variant="light">
               <Text style={styles.logoutText}>🚪 Logout</Text>
             </GlassCard>

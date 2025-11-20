@@ -16,6 +16,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { theme } from '../../theme';
 import AnimatedCard from '../../components/AnimatedCard';
 import GradientButton from '../../components/GradientButton';
+import OAuthButton from '../../components/OAuth/OAuthButton';
 import EnhancedHeader from '../../components/EnhancedHeader';
 import GlassCard from '../../components/GlassCard';
 import GlassInput from '../../components/GlassInput';
@@ -405,38 +406,36 @@ const RegisterScreen = () => {
         {/* Social Registration */}
         <AnimatedCard delay={400}>
           <GlassCard style={styles.socialSection} gradientColors={theme.glassGradients.emerald}>
-            <Text style={styles.orText}>✨ or sign up with ✨</Text>
+            <View style={styles.dividerContainer}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.orText}>or sign up with</Text>
+              <View style={styles.dividerLine} />
+            </View>
             
             <View style={styles.socialButtons}>
-              <TouchableOpacity 
-                style={[styles.socialButtonContainer, (isSubmitting || state.isLoading) && styles.disabledButton]}
-                onPress={() => handleSocialLogin('google')}
-                disabled={isSubmitting || state.isLoading}>
-                <GlassCard style={styles.socialButton} variant="light">
-                  <Text style={styles.socialIcon}>📧</Text>
-                  <Text style={styles.socialText}>Google</Text>
-                </GlassCard>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.socialButtonContainer, (isSubmitting || state.isLoading) && styles.disabledButton]}
-                onPress={() => handleSocialLogin('facebook')}
-                disabled={isSubmitting || state.isLoading}>
-                <GlassCard style={styles.socialButton} variant="light">
-                  <Text style={styles.socialIcon}>📘</Text>
-                  <Text style={styles.socialText}>Facebook</Text>
-                </GlassCard>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.socialButtonContainer, (isSubmitting || state.isLoading) && styles.disabledButton]}
-                onPress={() => handleSocialLogin('apple')}
-                disabled={isSubmitting || state.isLoading}>
-                <GlassCard style={styles.socialButton} variant="light">
-                  <Text style={styles.socialIcon}>🍎</Text>
-                  <Text style={styles.socialText}>Apple</Text>
-                </GlassCard>
-              </TouchableOpacity>
+              <OAuthButton 
+                provider="google" 
+                onSuccess={() => navigation.navigate('MainTabs')}
+                onError={(error) => console.error('Google OAuth Error:', error)}
+                disabled={isSubmitting || state.isLoading}
+                style={styles.socialButton}
+              />
+
+              <OAuthButton 
+                provider="facebook" 
+                onSuccess={() => navigation.navigate('MainTabs')}
+                onError={(error) => console.error('Facebook OAuth Error:', error)}
+                disabled={isSubmitting || state.isLoading}
+                style={styles.socialButton}
+              />
+
+              <OAuthButton 
+                provider="apple" 
+                onSuccess={() => navigation.navigate('MainTabs')}
+                onError={(error) => console.error('Apple OAuth Error:', error)}
+                disabled={true}
+                style={styles.socialButton}
+              />
             </View>
           </GlassCard>
         </AnimatedCard>
@@ -625,29 +624,44 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   socialSection: {
-    padding: 20,
+    marginHorizontal: theme.spacing[5],
+    marginBottom: theme.spacing[5],
+    overflow: 'hidden',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: theme.spacing[6],
+    paddingHorizontal: theme.spacing[2],
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   orText: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 20,
+    textAlign: 'center',
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.medium,
+    color: theme.colors.white,
+    marginHorizontal: theme.spacing[4],
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: {width: 0, height: 1},
+    textShadowRadius: 2,
   },
   socialButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
+    gap: theme.spacing[3],
   },
   socialButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 12,
-    borderRadius: 8,
-    marginHorizontal: 5,
+    marginBottom: 0,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
   },
   socialIcon: {
     fontSize: 18,

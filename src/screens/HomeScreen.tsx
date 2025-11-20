@@ -125,9 +125,9 @@ const HomeScreen = () => {
 
     return (
       <AnimatedCard delay={index * 100}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.categoryCard}
-          onPress={() => navigation.navigate('Categories')}
+          onPress={() => navigation.navigate('Categories', {})}
           activeOpacity={0.9}
         >
           <ImageBackground
@@ -141,7 +141,7 @@ const HomeScreen = () => {
             />
             <GlassCard style={styles.categoryContent} variant="light">
               <Text style={styles.categoryName}>{item.name}</Text>
-              <Text style={styles.categoryCount}>{item.count || 0} Items</Text>
+              <Text style={styles.categoryCount}>{String(item.count || 0) + ' Items'}</Text>
               <View style={styles.categoryIcon}>
                 <Text style={styles.categoryIconText}>→</Text>
               </View>
@@ -322,7 +322,7 @@ const HomeScreen = () => {
             <Text style={styles.ctaSubtitle}>Explore our complete collection</Text>
             <GradientButton
               title="Browse All Products"
-              onPress={() => navigation.navigate('ProductList')}
+              onPress={() => navigation.navigate('ProductList', {})}
               style={styles.ctaButton}
             />
           </GlassCard>
@@ -377,13 +377,15 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     marginBottom: theme.spacing[6],
+    paddingHorizontal: theme.spacing[2],
   },
   section: {
     marginBottom: theme.spacing[8],
+    paddingHorizontal: theme.spacing[2],
   },
   sectionHeader: {
-    marginHorizontal: theme.spacing[4],
-    marginBottom: theme.spacing[4],
+    marginHorizontal: theme.spacing[2],
+    marginBottom: theme.spacing[6],
     alignItems: 'center',
   },
   sectionTitle: {
@@ -400,14 +402,21 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   categoriesList: {
-    paddingHorizontal: theme.spacing[4],
+    paddingHorizontal: theme.spacing[2],
+    paddingVertical: theme.spacing[2],
   },
   categoryCard: {
-    width: 150,
-    height: 120,
+    width: 140,
+    height: 130,
     marginRight: theme.spacing[4],
+    marginVertical: theme.spacing[2],
     borderRadius: theme.borderRadius.xl,
     overflow: 'hidden',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   categoryBackground: {
     flex: 1,
@@ -417,34 +426,40 @@ const styles = StyleSheet.create({
   },
   categoryOverlay: {
     ...StyleSheet.absoluteFillObject,
-    opacity: 0.8,
+    opacity: 0.7,
   },
   categoryContent: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    margin: theme.spacing[2],
+    padding: theme.spacing[3],
   },
   categoryName: {
-    fontSize: theme.typography.heading.h4.fontSize,
-    fontWeight: '600',
+    fontSize: theme.typography.body.medium.fontSize,
+    fontWeight: '700',
     color: theme.colors.white,
     textAlign: 'center',
     marginBottom: theme.spacing[1],
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   categoryCount: {
     fontSize: theme.typography.caption.fontSize,
     color: theme.colors.white,
     opacity: 0.9,
     marginBottom: theme.spacing[2],
+    fontWeight: '500',
   },
   categoryIcon: {
-    width: 30,
-    height: 30,
-    backgroundColor: 'rgba(255,255,255,0.3)',
+    width: 32,
+    height: 32,
+    backgroundColor: 'rgba(255,255,255,0.25)',
     borderRadius: theme.borderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.4)',
   },
   categoryIconText: {
     color: theme.colors.white,
@@ -452,11 +467,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   productsList: {
-    paddingHorizontal: theme.spacing[4],
+    paddingHorizontal: theme.spacing[2],
+    paddingVertical: theme.spacing[2],
   },
   productCard: {
-    width: 200,
+    width: 180,
     marginRight: theme.spacing[4],
+    marginVertical: theme.spacing[2],
+    borderRadius: theme.borderRadius.xl,
+    overflow: 'hidden',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   productGlassCard: {
     overflow: 'hidden',
@@ -464,7 +488,7 @@ const styles = StyleSheet.create({
   },
   productImage: {
     width: '100%',
-    height: 160,
+    height: 140,
   },
   productImageStyle: {
     borderTopLeftRadius: theme.borderRadius.xl,
@@ -475,11 +499,11 @@ const styles = StyleSheet.create({
   },
   discountBadge: {
     position: 'absolute',
-    top: theme.spacing[2],
-    right: theme.spacing[2],
+    top: theme.spacing[3],
+    right: theme.spacing[3],
   },
   discountBadgeGradient: {
-    paddingHorizontal: theme.spacing[2],
+    paddingHorizontal: theme.spacing[3],
     paddingVertical: theme.spacing[1],
     borderRadius: theme.borderRadius.sm,
   },
@@ -490,17 +514,20 @@ const styles = StyleSheet.create({
   },
   productContent: {
     padding: theme.spacing[4],
+    backgroundColor: theme.light.background,
   },
   productName: {
     fontSize: theme.typography.body.medium.fontSize,
     fontWeight: '600',
     color: theme.light.onSurface,
     marginBottom: theme.spacing[1],
+    lineHeight: 20,
   },
   productCategory: {
     fontSize: theme.typography.caption.fontSize,
     color: theme.light.tertiary,
     marginBottom: theme.spacing[2],
+    fontWeight: '500',
   },
   productPricing: {
     flexDirection: 'row',
@@ -517,6 +544,7 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.body.small.fontSize,
     color: theme.light.tertiary,
     textDecorationLine: 'line-through',
+    fontWeight: '500',
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -525,6 +553,7 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: theme.typography.caption.fontSize,
     color: theme.light.onSurface,
+    fontWeight: '500',
   },
   ctaSection: {
     marginHorizontal: theme.spacing[4],

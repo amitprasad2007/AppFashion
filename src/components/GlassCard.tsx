@@ -3,13 +3,14 @@ import {
   View,
   StyleSheet,
   ViewStyle,
+  TextStyle,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { theme } from '../theme';
 
 interface GlassCardProps {
   children: React.ReactNode;
-  style?: ViewStyle;
+  style?: ViewStyle | TextStyle | (ViewStyle | TextStyle | undefined | null | false)[];
   variant?: 'light' | 'dark' | 'primary' | 'secondary' | 'base';
   gradientColors?: string[];
   borderRadius?: number;

@@ -24,20 +24,26 @@ const OAuthButton: React.FC<OAuthButtonProps> = ({
   const providerConfig = {
     google: {
       name: 'Google',
-      emoji: '📧',
-      colors: ['#db4437', '#cc3928'],
+      emoji: '🔍',
+      colors: ['#4285f4', '#34a853'],
+      backgroundColor: '#ffffff',
+      textColor: '#1f1f1f',
       testId: 'google-signin-button',
     },
     facebook: {
       name: 'Facebook',
-      emoji: '📘',
-      colors: ['#3b5998', '#2d4373'],
+      emoji: '👥',
+      colors: ['#1877f2', '#0d47a1'],
+      backgroundColor: '#1877f2',
+      textColor: '#ffffff',
       testId: 'facebook-signin-button',
     },
     apple: {
       name: 'Apple',
       emoji: '🍎',
       colors: ['#000000', '#333333'],
+      backgroundColor: '#000000',
+      textColor: '#ffffff',
       testId: 'apple-signin-button',
     },
   };
@@ -110,23 +116,48 @@ const OAuthButton: React.FC<OAuthButtonProps> = ({
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
-          paddingVertical: 14,
-          paddingHorizontal: 20,
-          borderRadius: 25,
-          minHeight: 50,
+          paddingVertical: 16,
+          paddingHorizontal: 24,
+          borderRadius: 28,
+          minHeight: 56,
+          shadowColor: '#000',
+          shadowOffset: {
+            width: 0,
+            height: 2,
+          },
+          shadowOpacity: 0.25,
+          shadowRadius: 3.84,
+          elevation: 5,
         }}
       >
         {isLoading ? (
-          <ActivityIndicator color="white" size="small" />
+          <ActivityIndicator color={config.textColor} size="small" />
         ) : (
-          <Text style={{ fontSize: 20, marginRight: 8 }}>{config.emoji}</Text>
+          <View style={{
+            width: 24,
+            height: 24,
+            borderRadius: 12,
+            backgroundColor: provider === 'google' ? '#ffffff' : 'transparent',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginRight: 12,
+          }}>
+            <Text style={{ 
+              fontSize: provider === 'google' ? 16 : 20, 
+              color: provider === 'google' ? '#4285f4' : config.textColor
+            }}>
+              {config.emoji}
+            </Text>
+          </View>
         )}
         <Text
           style={{
-            color: 'white',
+            color: config.textColor,
             fontSize: 16,
             fontWeight: '600',
             marginLeft: isLoading ? 8 : 0,
+            flex: 1,
+            textAlign: 'center',
           }}
         >
           {isLoading

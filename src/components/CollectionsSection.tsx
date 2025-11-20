@@ -102,18 +102,18 @@ const CollectionsSection: React.FC<CollectionsSectionProps> = ({
                       style={styles.typeBadge}
                     >
                       <Text style={styles.typeText}>
-                        {item.collection_type?.name || 'Collection'}
+                        {String(item.collection_type?.name || 'Collection')}
                       </Text>
                     </LinearGradient>
                   </View>
                   
-                  <Text style={styles.collectionName} numberOfLines={2}>
-                    {item.name || 'Untitled Collection'}
-                  </Text>
-                  
-                  <Text style={styles.collectionDescription} numberOfLines={3}>
-                    {item.description || 'A beautiful collection of premium items'}
-                  </Text>
+                <Text style={styles.collectionName} numberOfLines={2}>
+                  {String(item.name || 'Untitled Collection')}
+                </Text>
+
+                <Text style={styles.collectionDescription} numberOfLines={3}>
+                  {String(item.description || 'A beautiful collection of premium items')}
+                </Text>
                 </View>
 
                 <View style={styles.actionContainer}>
@@ -183,10 +183,11 @@ const CollectionsSection: React.FC<CollectionsSectionProps> = ({
 const styles = StyleSheet.create({
   container: {
     marginVertical: theme.spacing[6],
+    paddingHorizontal: theme.spacing[2],
   },
   sectionHeader: {
-    marginBottom: theme.spacing[4],
-    paddingHorizontal: theme.spacing[4],
+    marginBottom: theme.spacing[6],
+    paddingHorizontal: theme.spacing[2],
   },
   headerCard: {
     marginBottom: theme.spacing[2],
@@ -213,14 +214,21 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   listContent: {
-    paddingHorizontal: theme.spacing[4],
+    paddingHorizontal: theme.spacing[2],
+    paddingVertical: theme.spacing[2],
   },
   collectionCard: {
-    width: CARD_WIDTH,
+    width: CARD_WIDTH * 0.85,
     height: 280,
     marginRight: theme.spacing[4],
+    marginVertical: theme.spacing[2],
     borderRadius: theme.borderRadius['2xl'],
     overflow: 'hidden',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
   },
   imageBackground: {
     flex: 1,

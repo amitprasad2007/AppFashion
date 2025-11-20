@@ -57,7 +57,7 @@ const GradientButton: React.FC<GradientButtonProps> = ({
         disabled={disabled}
         activeOpacity={0.8}>
         <View style={styles.content}>
-          {icon && <View style={styles.icon}>{icon}</View>}
+          {icon && <View style={styles.icon}><Text>{icon}</Text></View>}
           <Text style={textStyles}>{title}</Text>
         </View>
       </TouchableOpacity>
@@ -76,7 +76,7 @@ const GradientButton: React.FC<GradientButtonProps> = ({
         start={{x: 0, y: 0}}
         end={{x: 1, y: 0}}>
         <View style={styles.content}>
-          {icon && <View style={styles.icon}>{icon}</View>}
+          {icon && <View style={styles.icon}><Text>{icon}</Text></View>}
           <Text style={textStyles}>{title}</Text>
         </View>
       </LinearGradient>

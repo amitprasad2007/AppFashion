@@ -25,6 +25,7 @@ type SearchScreenRouteProp = RouteProp<RootStackParamList, 'Search'>;
 type SearchResult = {
   id: string;
   name: string;
+  slug?: string;
   type: 'category' | 'product';
   image: string;
   price?: string;
@@ -56,7 +57,7 @@ const SearchScreen = () => {
   const renderSearchResult = ({item, index}: {item: SearchResult; index: number}) => (
     <AnimatedCard delay={index * 50}>
       <TouchableOpacity
-        style={styles.resultItemContainer}
+        style={styles.resultItem}
         onPress={() => {
           if (item.type === 'product') {
             navigation.navigate('ProductDetails', {productSlug: item.slug || item.id.toString()});
@@ -80,7 +81,7 @@ const SearchScreen = () => {
             <Text style={styles.resultType}>{item.type === 'product' ? 'Product' : 'Category'}</Text>
             {item.price && <Text style={styles.resultPrice}>{item.price}</Text>}
           </View>
-          <View style={styles.arrowContainer}>
+          <View style={styles.arrow}>
             <Text style={styles.arrow}>→</Text>
           </View>
         </GlassCard>
@@ -91,7 +92,7 @@ const SearchScreen = () => {
   const renderSearchTag = (text: string, onPress: (text: string) => void, index: number) => (
     <TouchableOpacity
       key={text}
-      style={styles.searchTagContainer}
+      style={styles.searchTag}
       onPress={() => onPress(text)}>
       <GlassCard style={styles.searchTag} variant="light">
         <Text style={styles.searchTagText}>{text}</Text>
@@ -103,7 +104,7 @@ const SearchScreen = () => {
     <View style={styles.container}>
       <LinearGradient
         colors={theme.glassGradients.emerald}
-        style={styles.backgroundGradient}
+        style={StyleSheet.absoluteFillObject}
       />
       <FloatingElements count={8} />
       
@@ -113,8 +114,8 @@ const SearchScreen = () => {
       />
 
       {/* Search Input */}
-      <View style={styles.searchSection}>
-        <GlassCard style={styles.searchContainer} variant="light">
+      <View>
+        <GlassCard style={styles.searchInput} variant="light">
           <TextInput
             style={styles.searchInput}
             placeholder="Search products, brands, categories..."
@@ -126,7 +127,7 @@ const SearchScreen = () => {
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
               <GlassCard style={styles.clearButton} variant="light">
-                <Text style={styles.clearButtonText}>✕</Text>
+                <Text style={styles.clearButton}>✕</Text>
               </GlassCard>
             </TouchableOpacity>
           )}
@@ -165,7 +166,7 @@ const SearchScreen = () => {
               <Text style={styles.sectionTitle}>📂 Shop by Category</Text>
               <View style={styles.quickCategories}>
                 <TouchableOpacity
-                  style={styles.categoryButtonContainer}
+                  style={{ marginBottom: 15 }}
                   onPress={() => navigation.navigate('ProductList', {categoryName: 'Fashion'})}>
                   <GlassCard style={styles.categoryButton} variant="light">
                     <Text style={styles.categoryEmoji}>👗</Text>
@@ -173,7 +174,7 @@ const SearchScreen = () => {
                   </GlassCard>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.categoryButtonContainer}
+                  style={{ marginBottom: 15 }}
                   onPress={() => navigation.navigate('ProductList', {categoryName: 'Electronics'})}>
                   <GlassCard style={styles.categoryButton} variant="light">
                     <Text style={styles.categoryEmoji}>📱</Text>
@@ -181,7 +182,7 @@ const SearchScreen = () => {
                   </GlassCard>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.categoryButtonContainer}
+                  style={{ marginBottom: 15 }}
                   onPress={() => navigation.navigate('ProductList', {categoryName: 'Sports'})}>
                   <GlassCard style={styles.categoryButton} variant="light">
                     <Text style={styles.categoryEmoji}>⚽</Text>
@@ -189,7 +190,7 @@ const SearchScreen = () => {
                   </GlassCard>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.categoryButtonContainer}
+                  style={{ marginBottom: 15 }}
                   onPress={() => navigation.navigate('ProductList', {categoryName: 'Home'})}>
                   <GlassCard style={styles.categoryButton} variant="light">
                     <Text style={styles.categoryEmoji}>🏠</Text>
@@ -204,7 +205,7 @@ const SearchScreen = () => {
         <View style={styles.searchResults}>
           <AnimatedCard delay={50}>
             <GlassCard style={styles.resultsHeader} variant="light">
-              <Text style={styles.resultsHeaderText}>
+              <Text style={styles.resultsHeader}>
                 🔍 {filteredResults.length} results for "{searchQuery}"
               </Text>
             </GlassCard>
@@ -214,7 +215,7 @@ const SearchScreen = () => {
             renderItem={renderSearchResult}
             keyExtractor={item => item.id}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.resultsList}
+            contentContainerStyle={{ paddingBottom: 20 }}
           />
         </View>
       )}
