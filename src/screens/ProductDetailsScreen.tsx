@@ -298,6 +298,7 @@ const ProductDetailsScreen = () => {
       <EnhancedHeader 
         title={`✨ ${product.name}`}
         showBackButton={true}
+        onBackPress={() => navigation.goBack()}
         rightComponent={
           <TouchableOpacity 
             style={styles.shareButton}

@@ -234,15 +234,7 @@ const HomeScreen = () => {
 
       <EnhancedHeader
         title="✨ Samar Silk Palace"
-        rightComponent={
-          <TouchableOpacity style={styles.searchButton}>
-            <GlassCard style={styles.searchIcon} variant="light">
-              <Text style={styles.searchIconText}>🔍</Text>
-            </GlassCard>
-          </TouchableOpacity>
-        }
       />
-
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}

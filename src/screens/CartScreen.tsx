@@ -303,6 +303,7 @@ const CartScreenContent = () => {
         <EnhancedHeader 
           title="🛒 Shopping Cart"
           showBackButton={true}
+          onBackPress={() => navigation.goBack()}
         />
         
         <View style={styles.loadingContainer}>
@@ -326,6 +327,7 @@ const CartScreenContent = () => {
       <EnhancedHeader 
         title={`🛒 Shopping Cart ${cart ? `(${cart.items.reduce((sum, item) => sum + item.quantity, 0)})` : ''}`}
         showBackButton={true}
+        onBackPress={() => navigation.goBack()}
         rightComponent={
           cart && cart.items.length > 0 ? (
             <TouchableOpacity 

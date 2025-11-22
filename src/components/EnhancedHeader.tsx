@@ -46,9 +46,9 @@ const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
                   style={styles.backButton}
                   activeOpacity={0.7}
                 >
-                  <GlassCard style={styles.iconContainer} variant="light">
+                  <View style={styles.iconContainer}>
                     <Text style={styles.backIcon}>←</Text>
-                  </GlassCard>
+                  </View>
                 </TouchableOpacity>
               ) : (
                 <View style={styles.placeholder} />
@@ -74,7 +74,7 @@ const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: StatusBar.currentHeight || 0,
+    paddingTop: StatusBar.currentHeight || theme.spacing[12],
   },
   safeArea: {
     paddingBottom: theme.spacing[2],
@@ -95,13 +95,16 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 40,
     height: 40,
-    borderRadius: theme.borderRadius.full,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 1)',
   },
   backIcon: {
     fontSize: 20,
-    color: theme.colors.white,
+    color: '#333333',
     fontWeight: 'bold',
   },
   titleContainer: {
@@ -110,8 +113,8 @@ const styles = StyleSheet.create({
     marginHorizontal: theme.spacing[4],
   },
   title: {
-    fontSize: theme.typography.heading.h2.fontSize,
-    fontWeight: theme.typography.heading.h2.fontWeight as any,
+    fontSize: theme.typography.heading.h3.fontSize,
+    fontWeight: theme.typography.heading.h3.fontWeight as any,
     color: theme.colors.white,
     textAlign: 'center',
     textShadowColor: 'rgba(0,0,0,0.3)',

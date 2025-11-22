@@ -674,6 +674,7 @@ const CheckoutScreenContent = () => {
       <EnhancedHeader 
         title="💳 Checkout"
         showBackButton={true}
+        onBackPress={() => navigation.goBack()}
       />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>

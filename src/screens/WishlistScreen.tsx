@@ -251,6 +251,7 @@ const WishlistScreenContent = () => {
         <EnhancedHeader 
           title="💝 My Wishlist"
           showBackButton={true}
+          onBackPress={() => navigation.goBack()}
         />
         
         <View style={styles.loadingContainer}>
@@ -274,6 +275,7 @@ const WishlistScreenContent = () => {
       <EnhancedHeader 
         title={`💝 Wishlist (${wishlistItems.length})`}
         showBackButton={true}
+        onBackPress={() => navigation.goBack()}
       />
 
       {/* Error Message */}

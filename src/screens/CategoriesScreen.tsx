@@ -187,13 +187,12 @@ const CategoriesScreen = () => {
         <EnhancedHeader 
           title="📂 Categories"
           showBackButton={true}
+          onBackPress={() => navigation.goBack()}
           rightComponent={
             <TouchableOpacity 
               style={styles.searchButton}
               onPress={() => navigation.navigate('Search')}>
-              <GlassCard style={styles.searchIcon} variant="light">
-                <Text style={styles.searchIconText}>🔍</Text>
-              </GlassCard>
+              <Text style={styles.searchIconText}>🔍</Text>
             </TouchableOpacity>
           }
         />
@@ -218,13 +217,12 @@ const CategoriesScreen = () => {
       <EnhancedHeader 
         title={`📂 Categories ${categories.length > 0 ? `(${categories.length})` : ''}`}
         showBackButton={true}
+        onBackPress={() => navigation.goBack()}
         rightComponent={
           <TouchableOpacity 
             style={styles.searchButton}
             onPress={() => navigation.navigate('Search')}>
-            <GlassCard style={styles.searchIcon} variant="light">
-              <Text style={styles.searchIconText}>🔍</Text>
-            </GlassCard>
+            <Text style={styles.searchIconText}>🔍</Text>
           </TouchableOpacity>
         }
       />
@@ -310,15 +308,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   searchButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 1)',
   },
-  searchIcon: {
-    fontSize: 20,
+  searchIconText: {
+    fontSize: 18,
+    color: '#333333',
+    fontWeight: 'bold',
   },
   categoriesList: {
     padding: theme.spacing[4],

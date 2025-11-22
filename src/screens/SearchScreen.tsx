@@ -111,6 +111,7 @@ const SearchScreen = () => {
       <EnhancedHeader 
         title="🔍 Search"
         showBackButton={true}
+        onBackPress={() => navigation.goBack()}
       />
 
       {/* Search Input */}

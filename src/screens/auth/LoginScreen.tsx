@@ -161,6 +161,7 @@ const LoginScreen = () => {
       <EnhancedHeader 
         title="🔐 Welcome Back"
         showBackButton={true}
+        onBackPress={() => navigation.goBack()}
       />
 
       <ScrollView 

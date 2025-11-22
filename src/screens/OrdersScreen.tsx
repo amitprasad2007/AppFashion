@@ -316,6 +316,7 @@ const OrdersScreenContent = () => {
         <EnhancedHeader 
           title="📋 My Orders"
           showBackButton={true}
+          onBackPress={() => navigation.goBack()}
         />
         
         <View style={styles.loadingContainer}>

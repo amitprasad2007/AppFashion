@@ -266,6 +266,7 @@ const ProductListScreen = () => {
       <EnhancedHeader 
         title={`🛍️ ${categoryName ? categoryName : type ? `${type.charAt(0).toUpperCase() + type.slice(1)} Products` : 'All Products'}`}
         showBackButton={true}
+        onBackPress={() => navigation.goBack()}
         rightComponent={
           <TouchableOpacity 
             style={styles.cartButton}

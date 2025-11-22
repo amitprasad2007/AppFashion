@@ -166,6 +166,7 @@ const RegisterScreen = () => {
       <EnhancedHeader 
         title="✨ Create Account"
         showBackButton={true}
+        onBackPress={() => navigation.goBack()}
       />
 
       <ScrollView 
