@@ -37,14 +37,14 @@ const CollectionsSection: React.FC<CollectionsSectionProps> = ({
       setLoading(true);
       const featuredCollections = await apiService.getFeaturedCollections();
       const allCollections = await apiService.getAllCollections();
-      
+
       // Combine and deduplicate collections
       const combinedCollections = [...featuredCollections, ...allCollections];
       const uniqueCollections = combinedCollections.filter(
         (collection, index, self) =>
           index === self.findIndex((c) => c.id === collection.id)
       );
-      
+
       setCollections(uniqueCollections.slice(0, 6)); // Show max 6 collections
     } catch (error) {
       console.error('Error loading collections:', error);
@@ -102,18 +102,18 @@ const CollectionsSection: React.FC<CollectionsSectionProps> = ({
                       style={styles.typeBadge}
                     >
                       <Text style={styles.typeText}>
-                        {String(item.collection_type?.name || 'Collection')}
+                        {item.collection_type?.name ? item.collection_type.name : 'Collection'}
                       </Text>
                     </LinearGradient>
                   </View>
-                  
-                <Text style={styles.collectionName} numberOfLines={2}>
-                  {String(item.name || 'Untitled Collection')}
-                </Text>
 
-                <Text style={styles.collectionDescription} numberOfLines={3}>
-                  {String(item.description || 'A beautiful collection of premium items')}
-                </Text>
+                  <Text style={styles.collectionName} numberOfLines={2}>
+                    {item.name ? item.name : 'Untitled Collection'}
+                  </Text>
+
+                  <Text style={styles.collectionDescription} numberOfLines={3}>
+                    {item.description ? item.description : 'A beautiful collection of premium items'}
+                  </Text>
                 </View>
 
                 <View style={styles.actionContainer}>
@@ -128,7 +128,7 @@ const CollectionsSection: React.FC<CollectionsSectionProps> = ({
             </GlassCard>
           </ImageBackground>
         </TouchableOpacity>
-      </AnimatedCard>
+      </AnimatedCard >
     );
   };
 

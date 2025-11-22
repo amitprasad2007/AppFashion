@@ -120,7 +120,7 @@ const HomeScreen = () => {
       theme.glassGradients.purple,
       theme.glassGradients.rose,
     ];
-    
+
     const gradient = gradients[index % gradients.length];
 
     return (
@@ -141,7 +141,7 @@ const HomeScreen = () => {
             />
             <GlassCard style={styles.categoryContent} variant="light">
               <Text style={styles.categoryName}>{item.name}</Text>
-              <Text style={styles.categoryCount}>{String(item.count || 0) + ' Items'}</Text>
+              <Text style={styles.categoryCount}>{item.count ? `${item.count} Items` : '0 Items'}</Text>
               <View style={styles.categoryIcon}>
                 <Text style={styles.categoryIconText}>→</Text>
               </View>
@@ -153,8 +153,8 @@ const HomeScreen = () => {
   };
 
   const renderProductCard = ({ item, index }: { item: ApiProduct; index: number }) => {
-    const imageUrl = item.images && item.images.length > 0 
-      ? item.images[0] 
+    const imageUrl = item.images && item.images.length > 0
+      ? item.images[0]
       : `https://picsum.photos/300/300?random=${item.id}`;
 
     return (
@@ -174,7 +174,7 @@ const HomeScreen = () => {
                 colors={['transparent', 'rgba(0,0,0,0.8)']}
                 style={styles.productImageOverlay}
               />
-              
+
               {item.discountPercentage > 0 && (
                 <View style={styles.discountBadge}>
                   <LinearGradient
@@ -186,18 +186,18 @@ const HomeScreen = () => {
                 </View>
               )}
             </ImageBackground>
-            
+
             <View style={styles.productContent}>
               <Text style={styles.productName} numberOfLines={2}>{item.name || 'Product Name'}</Text>
               <Text style={styles.productCategory}>{item.category?.title || 'Category'}</Text>
-              
+
               <View style={styles.productPricing}>
                 <Text style={styles.productPrice}>₹{item.price || 0}</Text>
                 {(item.originalPrice || 0) > (item.price || 0) && (
                   <Text style={styles.productOriginalPrice}>₹{item.originalPrice}</Text>
                 )}
               </View>
-              
+
               {item.rating && (
                 <View style={styles.ratingContainer}>
                   <Text style={styles.ratingText}>⭐ {item.rating || 4.5}</Text>
@@ -231,8 +231,8 @@ const HomeScreen = () => {
         style={styles.backgroundGradient}
       />
       <FloatingElements count={8} />
-      
-      <EnhancedHeader 
+
+      <EnhancedHeader
         title="✨ Samar Silk Palace"
         rightComponent={
           <TouchableOpacity style={styles.searchButton}>
@@ -270,7 +270,7 @@ const HomeScreen = () => {
             <Text style={styles.sectionTitle}>🛍️ Shop by Category</Text>
             <Text style={styles.sectionSubtitle}>Explore our curated categories</Text>
           </GlassCard>
-          
+
           <FlatList
             data={categories}
             renderItem={renderCategoryCard}
@@ -287,7 +287,7 @@ const HomeScreen = () => {
             <Text style={styles.sectionTitle}>⭐ Featured Products</Text>
             <Text style={styles.sectionSubtitle}>Handpicked just for you</Text>
           </GlassCard>
-          
+
           <FlatList
             data={featuredProducts}
             renderItem={renderProductCard}
@@ -304,7 +304,7 @@ const HomeScreen = () => {
             <Text style={styles.sectionTitle}>🔥 Bestsellers</Text>
             <Text style={styles.sectionSubtitle}>What everyone's buying</Text>
           </GlassCard>
-          
+
           <FlatList
             data={bestsellerProducts}
             renderItem={renderProductCard}
