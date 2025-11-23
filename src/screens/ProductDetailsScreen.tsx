@@ -327,41 +327,40 @@ const ProductDetailsScreen = () => {
         </View>
       )}
 
-      {/* Product Images */}
-      <AnimatedCard delay={100}>
-        <GlassCard style={styles.imageContainer} gradientColors={theme.glassGradients.aurora}>
-          <Image source={{uri: product.images[selectedImageIndex] || product.images[0]}} style={styles.productImage} />
-          
-          {/* Badges */}
+      {/* Clean Product Image */}
+      <View style={styles.imageSection}>
+        <Image 
+          source={{uri: product.images[selectedImageIndex] || product.images[0]}} 
+          style={styles.productImage} 
+        />
+        
+        {/* Simple Badges */}
+        <View style={styles.badgeContainer}>
           {product.isBestseller && (
-            <GlassCard style={styles.bestsellerBadge} variant="light">
-              <Text style={styles.bestsellerText}>🔥 BESTSELLER</Text>
-            </GlassCard>
-          )}
-          {product.isNew && (
-            <GlassCard style={styles.newBadge} variant="light">
-              <Text style={styles.newText}>✨ NEW</Text>
-            </GlassCard>
+            <View style={styles.bestsellerBadge}>
+              <Text style={styles.badgeText}>Bestseller</Text>
+            </View>
           )}
           {discount > 0 && (
-            <GlassCard style={styles.discountBadge} variant="light">
-              <Text style={styles.discountText}>{discount}% OFF</Text>
-            </GlassCard>
+            <View style={styles.discountBadge}>
+              <Text style={styles.badgeText}>{discount}% OFF</Text>
+            </View>
           )}
+        </View>
         
-        {/* Favorite Button */}
+        {/* Wishlist Button */}
         <TouchableOpacity 
-          style={[styles.favoriteButton, togglingWishlist && styles.disabledButton]}
+          style={styles.wishlistButton}
           onPress={handleWishlistToggle}
           disabled={togglingWishlist}>
           {togglingWishlist ? (
-            <ActivityIndicator size="small" color="#f43f5e" />
+            <ActivityIndicator size="small" color="#ff6b6b" />
           ) : (
-            <Text style={styles.favoriteIcon}>{isFavorite ? '❤️' : '🤍'}</Text>
+            <Text style={styles.heartIcon}>{isFavorite ? '❤️' : '🤍'}</Text>
           )}
         </TouchableOpacity>
-
-        {/* Image Pagination */}
+        
+        {/* Image Indicators */}
         {product.images.length > 1 && (
           <View style={styles.imageIndicators}>
             {product.images.map((_, index) => (
@@ -376,73 +375,78 @@ const ProductDetailsScreen = () => {
             ))}
           </View>
         )}
-        </GlassCard>
-      </AnimatedCard>
+      </View>
 
-      {/* Image Thumbnails */}
+      {/* Thumbnail Gallery */}
       {product.images.length > 1 && (
-        <View style={styles.thumbnailContainer}>
-          {product.images.map((image, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[
-                styles.thumbnail,
-                selectedImageIndex === index && styles.activeThumbnail,
-              ]}
-              onPress={() => setSelectedImageIndex(index)}>
-              <Image source={{uri: image}} style={styles.thumbnailImage} />
-            </TouchableOpacity>
-          ))}
+        <View style={styles.thumbnailSection}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.thumbnailContainer}>
+            {product.images.map((image, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.thumbnail,
+                  selectedImageIndex === index && styles.activeThumbnail,
+                ]}
+                onPress={() => setSelectedImageIndex(index)}>
+                <Image source={{uri: image}} style={styles.thumbnailImage} />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
       )}
 
-      {/* Product Info */}
-      <View style={styles.productInfo}>
-        <View style={styles.categoryBadge}>
-          <Text style={styles.categoryText}>{product.category?.title || 'Category'}</Text>
+      {/* Clean Product Info */}
+      <View style={styles.productInfoSection}>
+        {/* Category Tag */}
+        <View style={styles.categoryTag}>
+          <Text style={styles.categoryText}>{product.category?.title || 'Premium Collection'}</Text>
         </View>
         
+        {/* Product Name */}
         <Text style={styles.productName}>{product.name}</Text>
         
-        {/* Rating and Reviews */}
-        <View style={styles.ratingContainer}>
+        {/* Rating */}
+        <View style={styles.ratingSection}>
           <View style={styles.ratingBadge}>
             <Text style={styles.ratingText}>⭐ {product.rating || 4.5}</Text>
           </View>
-          <Text style={styles.reviewCount}>({product.reviewCount || 0} reviews)</Text>
+          <Text style={styles.reviewText}>({product.reviewCount || 0} reviews)</Text>
         </View>
 
-        {/* Price */}
-        <View style={styles.priceContainer}>
-          <Text style={styles.currentPrice}>₹{product.price}</Text>
+        {/* Price Section */}
+        <View style={styles.priceSection}>
+          <Text style={styles.currentPrice}>₹{product.price?.toLocaleString()}</Text>
           {product.originalPrice && product.originalPrice > product.price && (
-            <Text style={styles.originalPrice}>₹{product.originalPrice}</Text>
+            <Text style={styles.originalPrice}>₹{product.originalPrice?.toLocaleString()}</Text>
           )}
           {discount > 0 && (
-            <View style={styles.savingsBadge}>
-              <Text style={styles.savingsText}>You save ₹{product.originalPrice! - product.price}!</Text>
+            <View style={styles.savingsTag}>
+              <Text style={styles.savingsText}>Save ₹{((product.originalPrice || 0) - product.price).toLocaleString()}</Text>
             </View>
           )}
         </View>
 
-        {/* Product Description */}
-        <View style={styles.descriptionContainer}>
-          <Text style={styles.sectionTitle}>Product Description</Text>
+        {/* Description */}
+        <View style={styles.descriptionSection}>
+          <Text style={styles.sectionTitle}>About this product</Text>
           <Text style={styles.description}>
-            {product.description || 'Beautiful handcrafted product with premium quality materials. Perfect for special occasions and daily wear.'}
+            {product.description || 'Premium quality product crafted with finest materials and attention to detail. Perfect for special occasions and daily elegance.'}
           </Text>
         </View>
 
         {/* Quantity Selector */}
-        <View style={styles.quantityContainer}>
+        <View style={styles.quantitySection}>
           <Text style={styles.sectionTitle}>Quantity</Text>
           <View style={styles.quantitySelector}>
             <TouchableOpacity
               style={styles.quantityButton}
               onPress={() => quantity > 1 && setQuantity(quantity - 1)}>
-              <Text style={styles.quantityButtonText}>-</Text>
+              <Text style={styles.quantityButtonText}>−</Text>
             </TouchableOpacity>
-            <Text style={styles.quantityText}>{quantity}</Text>
+            <View style={styles.quantityDisplay}>
+              <Text style={styles.quantityText}>{quantity}</Text>
+            </View>
             <TouchableOpacity
               style={styles.quantityButton}
               onPress={() => setQuantity(quantity + 1)}>
@@ -460,15 +464,18 @@ const ProductDetailsScreen = () => {
             {addingToCart ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={styles.addToCartText}>Add to Cart</Text>
+              <>
+                <Text style={styles.addToCartText}>🛒 Add to Cart</Text>
+                <Text style={styles.cartSubText}>₹{(product.price * quantity).toLocaleString()}</Text>
+              </>
             )}
           </TouchableOpacity>
-          <GradientButton
-            title="Buy Now"
-            onPress={handleBuyNow}
-            gradient={theme.colors.gradients.primary}
-            style={styles.buyNowButton}
-          />
+          
+          <TouchableOpacity 
+            style={styles.buyNowButton} 
+            onPress={handleBuyNow}>
+            <Text style={styles.buyNowText}>⚡ Buy Now</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -574,28 +581,60 @@ const styles = StyleSheet.create({
   shareIcon: {
     fontSize: 18,
   },
-  imageContainer: {
+  // Image Section
+  imageSection: {
     position: 'relative',
     height: 400,
+    backgroundColor: '#f8f9fa',
+    marginBottom: 16,
   },
   productImage: {
     width: width,
     height: 400,
     resizeMode: 'cover',
   },
-  bestsellerBadge: {
+  badgeContainer: {
     position: 'absolute',
-    top: 20,
-    left: 20,
-    backgroundColor: theme.colors.error?.[500] || '#ef4444',
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.spacing.sm,
+    top: 16,
+    left: 16,
+    flexDirection: 'row',
+    gap: 8,
   },
-  bestsellerText: {
-    fontSize: theme.typography.size.xs,
-    color: theme.colors.white,
-    fontWeight: theme.typography.weight.bold,
+  bestsellerBadge: {
+    backgroundColor: '#ff6b6b',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  discountBadge: {
+    backgroundColor: '#22c55e',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  wishlistButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  heartIcon: {
+    fontSize: 20,
   },
   newBadge: {
     position: 'absolute',
@@ -657,29 +696,50 @@ const styles = StyleSheet.create({
   activeIndicator: {
     backgroundColor: theme.colors.white,
   },
+  // Thumbnail Section
+  thumbnailSection: {
+    paddingHorizontal: 16,
+    marginBottom: 20,
+  },
   thumbnailContainer: {
-    flexDirection: 'row',
-    padding: theme.spacing.md,
-    gap: theme.spacing.sm,
+    gap: 12,
   },
   thumbnail: {
-    width: 60,
-    height: 60,
-    borderRadius: theme.spacing.sm,
+    width: 70,
+    height: 70,
+    borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: '#e5e7eb',
   },
   activeThumbnail: {
-    borderColor: theme.colors.primary[500],
+    borderColor: '#8b5cf6',
+    borderWidth: 3,
   },
   thumbnailImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
   },
-  productInfo: {
-    padding: theme.spacing.lg,
+  // Product Info Section
+  productInfoSection: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 20,
+  },
+  categoryTag: {
+    backgroundColor: '#f3f4f6',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  categoryText: {
+    fontSize: 14,
+    color: '#6b7280',
+    fontWeight: '500',
   },
   categoryBadge: {
     backgroundColor: theme.colors.primary[100],
@@ -695,11 +755,59 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.weight.medium,
   },
   productName: {
-    fontSize: theme.typography.size.xl,
-    fontWeight: theme.typography.weight.bold,
-    color: theme.colors.neutral[900],
-    marginBottom: theme.spacing.sm,
-    lineHeight: 28,
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1f2937',
+    marginBottom: 16,
+    lineHeight: 32,
+  },
+  ratingSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    gap: 8,
+  },
+  ratingBadge: {
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  ratingText: {
+    fontSize: 14,
+    color: '#d97706',
+    fontWeight: '600',
+  },
+  reviewText: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  priceSection: {
+    marginBottom: 24,
+  },
+  currentPrice: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  originalPrice: {
+    fontSize: 18,
+    color: '#9ca3af',
+    textDecorationLine: 'line-through',
+    marginBottom: 8,
+  },
+  savingsTag: {
+    backgroundColor: '#dcfce7',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  savingsText: {
+    fontSize: 14,
+    color: '#059669',
+    fontWeight: '600',
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -749,19 +857,57 @@ const styles = StyleSheet.create({
     color: theme.colors.success?.[700] || '#15803d',
     fontWeight: theme.typography.weight.medium,
   },
-  descriptionContainer: {
-    marginBottom: theme.spacing.lg,
+  descriptionSection: {
+    marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: theme.typography.size.lg,
-    fontWeight: theme.typography.weight.semibold,
-    color: theme.colors.neutral[900],
-    marginBottom: theme.spacing.sm,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 8,
   },
   description: {
-    fontSize: theme.typography.size.base,
-    color: theme.colors.neutral[600],
+    fontSize: 16,
+    color: '#4b5563',
     lineHeight: 24,
+  },
+  quantitySection: {
+    marginBottom: 16,
+  },
+  quantitySelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  quantityButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f3f4f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  quantityButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  quantityDisplay: {
+    backgroundColor: '#f9fafb',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    minWidth: 50,
+    alignItems: 'center',
+  },
+  quantityText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
   },
   quantityContainer: {
     marginBottom: theme.spacing.xl,
@@ -793,24 +939,44 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: 'row',
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
+    gap: 12,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#f3f4f6',
+    marginTop: 20,
   },
   addToCartButton: {
     flex: 1,
-    backgroundColor: theme.colors.neutral[100],
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.spacing.lg,
+    backgroundColor: '#374151',
+    paddingVertical: 16,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
   addToCartText: {
-    fontSize: theme.typography.size.base,
-    fontWeight: theme.typography.weight.semibold,
-    color: theme.colors.neutral[700],
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  cartSubText: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: 2,
   },
   buyNowButton: {
     flex: 1,
+    backgroundColor: '#8b5cf6',
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buyNowText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
   relatedContainer: {
     padding: theme.spacing.lg,
