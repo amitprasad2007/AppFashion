@@ -112,6 +112,21 @@ const ProductListScreen = () => {
     loadData();
   }, [categoryId, type]);
 
+  // Set correct filter when categoryId is provided
+  useEffect(() => {
+    if (categoryId && categories.length > 0) {
+      // Find the category slug or name from the categoryId
+      const category = categories.find(cat => cat.id === Number(categoryId));
+      if (category) {
+        const categorySlug = (category.slug || category.name).toLowerCase().replace(/\s+/g, '-');
+        setSelectedFilter(categorySlug);
+        console.log(`🎯 AUTO-SELECTED CATEGORY FILTER: "${categorySlug}" for category ID: ${categoryId}`);
+      }
+    } else if (!categoryId) {
+      setSelectedFilter('all');
+    }
+  }, [categoryId, categories]);
+
   // Refresh function
   const onRefresh = () => {
     setRefreshing(true);
@@ -143,20 +158,19 @@ const ProductListScreen = () => {
     // Just update the search query - filtering happens in filteredProducts
   };
 
+  // Simple search filtering only (since products are now fetched by category)
   const filteredProducts = products.filter(product => {
-    // Search filtering - check if search query matches product name, category, or description
-    const matchesSearch = searchQuery.trim() === '' || 
+    // Only apply search filtering, category filtering is now done server-side
+    return searchQuery.trim() === '' || 
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (typeof product.category === 'string' && product.category.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    // Category filtering
-    const matchesFilter = selectedFilter === 'all' || 
-      (typeof product.category === 'string' && product.category.toLowerCase().includes(selectedFilter.toLowerCase())) ||
-      (categories.find(cat => cat.id === Number(product.category))?.slug === selectedFilter) ||
-      (categories.find(cat => cat.name.toLowerCase().replace(/\s+/g, '-') === selectedFilter)?.id === Number(product.category));
-    
-    return matchesSearch && matchesFilter;
   });
+
+  console.log(`📊 CURRENT STATE:`);
+  console.log(`  Selected Filter: "${selectedFilter}"`);
+  console.log(`  Total Products: ${products.length}`);
+  console.log(`  Filtered Products (after search): ${filteredProducts.length}`);
+  console.log(`  Search Query: "${searchQuery}"`);
 
   const renderProduct = ({item, index}: {item: ApiProduct; index: number}) => {
     return (
@@ -196,11 +210,72 @@ const ProductListScreen = () => {
     );
   };
 
+  // Function to load products by category
+  const loadProductsByCategory = async (filterKey: string) => {
+    try {
+      setLoading(true);
+      console.log(`🔄 LOADING PRODUCTS FOR CATEGORY: "${filterKey}"`);
+      
+      let productsData: ApiProduct[] = [];
+      
+      if (filterKey === 'all') {
+        // Load all products (featured + bestsellers like initial load)
+        const [featured, bestsellers] = await Promise.all([
+          apiService.getFeaturedProducts(),
+          apiService.getBestsellerProducts()
+        ]);
+        productsData = [...featured, ...bestsellers];
+        
+        console.log(`📦 LOADED ALL PRODUCTS: ${productsData.length} (Featured: ${featured.length}, Bestsellers: ${bestsellers.length})`);
+      } else {
+        // Find the category by filter key
+        const selectedCategory = categories.find(cat => {
+          const catSlug = (cat.slug || cat.name).toLowerCase().replace(/\s+/g, '-');
+          return catSlug === filterKey;
+        });
+        
+        if (selectedCategory) {
+          console.log(`🎯 FOUND CATEGORY: "${selectedCategory.name}" (ID: ${selectedCategory.id})`);
+          
+          // Load products for specific category
+          productsData = await apiService.getProducts({ 
+            categoryId: selectedCategory.id, 
+            type: 'category' 
+          });
+          
+          console.log(`📦 LOADED CATEGORY PRODUCTS: ${productsData.length} for "${selectedCategory.name}"`);
+        } else {
+          console.log(`❌ CATEGORY NOT FOUND for filter: "${filterKey}"`);
+          // If category not found, load all products
+          const [featured, bestsellers] = await Promise.all([
+            apiService.getFeaturedProducts(),
+            apiService.getBestsellerProducts()
+          ]);
+          productsData = [...featured, ...bestsellers];
+        }
+      }
+      
+      setProducts(productsData);
+      
+    } catch (error) {
+      console.error('❌ Error loading products by category:', error);
+      
+      // Fallback to current products on error
+      console.log('🔄 KEEPING CURRENT PRODUCTS ON ERROR');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderFilter = ({item, index}: {item: string; index: number}) => (
     <TouchableOpacity
       key={index}
       style={[styles.filterButton, selectedFilter === item && styles.activeFilter]}
-      onPress={() => setSelectedFilter(item)}>
+      onPress={() => {
+        console.log(`🔄 FILTER SELECTED: "${item}"`);
+        setSelectedFilter(item);
+        loadProductsByCategory(item);
+      }}>
       <Text
         style={[
           styles.filterText,

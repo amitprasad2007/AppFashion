@@ -126,6 +126,18 @@ const CategoriesScreen = () => {
     loadCategories();
   };
 
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = (itemId: string) => {
+    const newExpanded = new Set(expandedItems);
+    if (newExpanded.has(itemId)) {
+      newExpanded.delete(itemId);
+    } else {
+      newExpanded.add(itemId);
+    }
+    setExpandedItems(newExpanded);
+  };
+
   const renderCategory = ({item, index}: {item: ApiCategory; index: number}) => {
     const gradients = [
       theme.glassGradients.aurora,
@@ -137,40 +149,52 @@ const CategoriesScreen = () => {
     ];
     
     const gradient = gradients[index % gradients.length];
+    const isExpanded = expandedItems.has(String(item.id));
+    const description = item.description || 'Explore this amazing category with a wide variety of products. Discover the latest trends and find exactly what you\'re looking for in our carefully curated collection.';
+    const shouldShowReadMore = description.length > 120;
 
     return (
-      <AnimatedCard delay={index * 100}>
-        <TouchableOpacity
-          style={styles.categoryCard}
-          onPress={() => navigation.navigate('ProductList', {categoryId: String(item.id), categoryName: item.name})}
-          activeOpacity={0.9}>
-          <GlassCard style={styles.categoryGlassCard} gradientColors={gradient}>
-            <Image source={{uri: item.image}} style={styles.categoryImage} />
-            <View style={styles.categoryInfo}>
-              <Text style={styles.categoryName}>{item.name}</Text>
-              <Text style={styles.categorySubtitle}>{item.description || 'Explore this category'}</Text>
-              <Text style={styles.itemCount}>
-                {(item as any).itemCount ? `${(item as any).itemCount} items` : 'Available items'}
+      <TouchableOpacity
+        onPress={() => navigation.navigate('ProductList', {categoryId: String(item.id), categoryName: item.name})}
+        activeOpacity={0.9}>
+        <GlassCard style={styles.categoryCard} gradientColors={gradient}>
+          <Image source={{uri: item.image}} style={styles.categoryImage} />
+          <View style={styles.categoryInfo}>
+            <Text style={styles.categoryName}>{item.name}</Text>
+            <View style={styles.descriptionContainer}>
+              <Text style={styles.categorySubtitle} numberOfLines={isExpanded ? undefined : 3}>
+                {description}
               </Text>
-              {(item as any).subcategories && (item as any).subcategories.length > 0 && (
-                <View style={styles.subcategoriesContainer}>
-                  {(item as any).subcategories.slice(0, 4).map((sub: string, index: number) => (
-                    <Text key={index} style={styles.subcategory}>
-                      {sub}{index < Math.min((item as any).subcategories.length, 4) - 1 ? ' • ' : ''}
-                    </Text>
-                  ))}
-                  {(item as any).subcategories.length > 4 && (
-                    <Text style={styles.subcategory}> +{(item as any).subcategories.length - 4} more</Text>
-                  )}
-                </View>
+              {shouldShowReadMore && (
+                <TouchableOpacity 
+                  onPress={() => toggleExpanded(String(item.id))}
+                  style={styles.readMoreButton}
+                >
+                  <Text style={styles.readMoreText}>
+                    {isExpanded ? 'Read Less' : 'Read More'}
+                  </Text>
+                </TouchableOpacity>
               )}
             </View>
-            <View style={styles.arrowContainer}>
-              <Text style={styles.arrow}>→</Text>
-            </View>
-          </GlassCard>
-        </TouchableOpacity>
-      </AnimatedCard>
+            <Text style={styles.itemCount}>
+              {(item as any).itemCount ? `${(item as any).itemCount} items` : 'Available items'}
+            </Text>
+            {(item as any).subcategories && (item as any).subcategories.length > 0 && (
+              <View style={styles.subcategoriesContainer}>
+                {(item as any).subcategories.slice(0, 3).map((sub: string, index: number) => (
+                  <Text key={index} style={styles.subcategory}>
+                    {sub}{index < Math.min((item as any).subcategories.length, 3) - 1 ? ' • ' : ''}
+                  </Text>
+                ))}
+                {(item as any).subcategories.length > 3 && (
+                  <Text style={styles.subcategory}> +{(item as any).subcategories.length - 3}</Text>
+                )}
+              </View>
+            )}
+          </View>
+          <Text style={styles.arrow}>→</Text>
+        </GlassCard>
+      </TouchableOpacity>
     );
   };
 
@@ -327,44 +351,72 @@ const styles = StyleSheet.create({
   },
   categoryCard: {
     flexDirection: 'row',
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing[4],
-    marginBottom: theme.spacing[3],
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: theme.colors.neutral[100],
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing[5],
+    marginBottom: theme.spacing[4],
+    marginHorizontal: theme.spacing[1],
+    alignItems: 'flex-start',
+    overflow: 'hidden',
+    minHeight: 160,
   },
   categoryImage: {
-    width: 80,
-    height: 80,
-    borderRadius: theme.borderRadius.lg,
+    width: 130,
+    height: 160,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   categoryInfo: {
     flex: 1,
-    marginLeft: theme.spacing[4],
+    marginLeft: theme.spacing[5],
+    paddingVertical: theme.spacing[2],
   },
   categoryName: {
-    fontSize: theme.typography.fontSize.lg,
+    fontSize: theme.typography.fontSize.xl,
     fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.neutral[800],
-    marginBottom: theme.spacing[1],
+    color: theme.colors.white,
+    marginBottom: theme.spacing[2],
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  descriptionContainer: {
+    marginBottom: theme.spacing[2],
   },
   categorySubtitle: {
     fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.neutral[600],
-    marginBottom: theme.spacing[1],
+    color: theme.colors.white,
+    fontWeight: '500',
+    opacity: 0.9,
+    lineHeight: 20,
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+    minHeight: 60,
+  },
+  readMoreButton: {
+    marginTop: theme.spacing[1],
+    alignSelf: 'flex-start',
+  },
+  readMoreText: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.white,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+    opacity: 0.8,
   },
   itemCount: {
     fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.primary[500],
-    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.white,
+    fontWeight: '600',
     marginBottom: theme.spacing[2],
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: theme.spacing[2],
+    paddingVertical: theme.spacing[1],
+    borderRadius: theme.borderRadius.full,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   subcategoriesContainer: {
     flexDirection: 'row',
@@ -372,12 +424,24 @@ const styles = StyleSheet.create({
   },
   subcategory: {
     fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.neutral[500],
+    color: theme.colors.white,
+    fontWeight: '500',
+    opacity: 0.8,
   },
   arrow: {
-    fontSize: 20,
-    color: theme.colors.neutral[400],
-    marginLeft: theme.spacing[3],
+    fontSize: 24,
+    color: theme.colors.white,
+    marginLeft: theme.spacing[4],
+    fontWeight: 'bold',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    width: 40,
+    height: 40,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    borderRadius: 20,
+    lineHeight: 40,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
 });
 
