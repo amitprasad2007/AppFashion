@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  ScrollView,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {useNavigation, useRoute} from '@react-navigation/native';
@@ -60,8 +61,11 @@ const ProductListScreen = () => {
       let productsData: ApiProduct[] = [];
       
       if (categoryId) {
+        //console.log(categoryId);
+        const searchType = 'category';
         // Load products for specific category
-        productsData = await apiService.getProducts({ categoryId });
+        productsData = await apiService.getProducts({ categoryId, type: searchType });
+        
       } else if (type) {
         // Load products by type (featured, bestseller, etc.)
         productsData = await apiService.getProducts({ type: type as any });
@@ -134,125 +138,77 @@ const ProductListScreen = () => {
   };
 
   // Search functionality
-  const handleSearch = async (query: string) => {
+  const handleSearch = (query: string) => {
     setSearchQuery(query);
-    if (query.trim().length > 2) {
-      try {
-        const searchResults = await apiService.searchProducts(query, {
-          category: selectedFilter !== 'all' ? selectedFilter : undefined
-        });
-        setProducts(searchResults);
-      } catch (error) {
-        console.error('Search error:', error);
-      }
-    } else if (query.trim().length === 0) {
-      // Reload original data when search is cleared
-      loadData();
-    }
+    // Just update the search query - filtering happens in filteredProducts
   };
 
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = selectedFilter === 'all' || 
+    // Search filtering - check if search query matches product name, category, or description
+    const matchesSearch = searchQuery.trim() === '' || 
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (categories.find(cat => cat.id === Number(product.category))?.slug === selectedFilter);
+      (typeof product.category === 'string' && product.category.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    // Category filtering
+    const matchesFilter = selectedFilter === 'all' || 
+      (typeof product.category === 'string' && product.category.toLowerCase().includes(selectedFilter.toLowerCase())) ||
+      (categories.find(cat => cat.id === Number(product.category))?.slug === selectedFilter) ||
+      (categories.find(cat => cat.name.toLowerCase().replace(/\s+/g, '-') === selectedFilter)?.id === Number(product.category));
+    
     return matchesSearch && matchesFilter;
   });
 
   const renderProduct = ({item, index}: {item: ApiProduct; index: number}) => {
-    const gradients = [
-      theme.glassGradients.aurora,
-      theme.glassGradients.sunset,
-      theme.glassGradients.emerald,
-      theme.glassGradients.purple,
-      theme.glassGradients.rose,
-      theme.glassGradients.ocean,
-    ];
-    
-    const gradient = gradients[index % gradients.length];
-
     return (
-      <AnimatedCard delay={index * 100}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('ProductDetails', {productSlug: item.slug || item.id.toString()})}
-          activeOpacity={0.9}>
-          <GlassCard style={styles.productCard} gradientColors={gradient}>
-            <Image source={{uri: item.images[0]}} style={styles.productImage} />
-            <LinearGradient
-              colors={['transparent', 'rgba(0,0,0,0.3)']}
-              style={styles.productOverlay}>
-              <TouchableOpacity style={styles.wishlistBtn}>
-                <GlassCard style={styles.wishlistIcon} variant="light">
-                  <Text style={styles.wishlistIconText}>🤍</Text>
-                </GlassCard>
-              </TouchableOpacity>
-              {item.isBestseller && (
-                <GlassCard style={styles.bestsellerBadge} variant="light">
-                  <Text style={styles.bestsellerText}>🔥 BESTSELLER</Text>
-                </GlassCard>
-              )}
-              {item.isNew && (
-                <GlassCard style={styles.newBadge} variant="light">
-                  <Text style={styles.newText}>✨ NEW</Text>
-                </GlassCard>
-              )}
-            </LinearGradient>
-            <View style={styles.productInfo}>
-              <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
-              <Text style={styles.productCategory} numberOfLines={1}>
-                {typeof item.category === 'string' ? item.category : (item.category as any)?.title || 'Unknown'}
-              </Text>
-              <View style={styles.priceRatingRow}>
-                <View style={styles.priceContainer}>
-                  <Text style={styles.productPrice}>₹{item.price}</Text>
-                  {item.originalPrice && item.originalPrice > item.price && (
-                    <>
-                      <Text style={styles.originalPrice}>₹{item.originalPrice}</Text>
-                      <GlassCard style={styles.discountBadge} variant="light">
-                        <Text style={styles.discountText}>
-                          {Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)}% OFF
-                        </Text>
-                      </GlassCard>
-                    </>
-                  )}
-                </View>
-                <GlassCard style={styles.ratingBadge} variant="light">
-                  <Text style={styles.rating}>⭐ {item.rating || 4.5}</Text>
-                  <Text style={styles.reviewCount}>({item.reviewCount || 0})</Text>
-                </GlassCard>
-              </View>
-              <GradientButton
-                title="Add to Cart"
-                onPress={() => handleAddToCartFromList(item)}
-                gradient={theme.colors.gradients.primary}
-                size="small"
-                style={styles.addToCartBtn}
-              />
+      <TouchableOpacity
+        onPress={() => navigation.navigate('ProductDetails', {productSlug: item.slug || item.id.toString()})}
+        style={styles.productCard}
+        activeOpacity={0.8}>
+        
+        <View style={styles.imageContainer}>
+          <Image source={{uri: item.images[0]}} style={styles.productImage} />
+          {item.isBestseller && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>Bestseller</Text>
             </View>
-          </GlassCard>
-        </TouchableOpacity>
-      </AnimatedCard>
+          )}
+        </View>
+        
+        <View style={styles.productInfo}>
+          <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
+          <Text style={styles.productCategory}>
+            {typeof item.category === 'string' ? item.category : (item.category as any)?.title || 'Category'}
+          </Text>
+          
+          <View style={styles.priceRow}>
+            <Text style={styles.price}>₹{item.price}</Text>
+            {item.originalPrice && item.originalPrice > item.price && (
+              <Text style={styles.originalPrice}>₹{item.originalPrice}</Text>
+            )}
+          </View>
+          
+          <View style={styles.ratingRow}>
+            <Text style={styles.rating}>★ {item.rating || 4.5}</Text>
+            <Text style={styles.reviewCount}>({item.reviewCount || 0} reviews)</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
     );
   };
 
   const renderFilter = ({item, index}: {item: string; index: number}) => (
-    <AnimatedCard key={index} delay={index * 50}>
-      <TouchableOpacity
-        style={styles.filterButtonContainer}
-        onPress={() => setSelectedFilter(item)}>
-        <GlassCard 
-          style={[styles.filterButton, selectedFilter === item && styles.activeFilter]} 
-          variant={selectedFilter === item ? 'base' : 'light'}>
-          <Text
-            style={[
-              styles.filterText,
-              selectedFilter === item && styles.activeFilterText,
-            ]}>
-            {item.charAt(0).toUpperCase() + item.slice(1)}
-          </Text>
-        </GlassCard>
-      </TouchableOpacity>
-    </AnimatedCard>
+    <TouchableOpacity
+      key={index}
+      style={[styles.filterButton, selectedFilter === item && styles.activeFilter]}
+      onPress={() => setSelectedFilter(item)}>
+      <Text
+        style={[
+          styles.filterText,
+          selectedFilter === item && styles.activeFilterText,
+        ]}>
+        {item.charAt(0).toUpperCase() + item.slice(1)}
+      </Text>
+    </TouchableOpacity>
   );
 
   return (
@@ -271,39 +227,50 @@ const ProductListScreen = () => {
           <TouchableOpacity 
             style={styles.cartButton}
             onPress={() => navigation.navigate('Cart')}>
-            <GlassCard style={styles.cartIcon} variant="light">
+            <View style={styles.cartIcon}>
               <Text style={styles.cartIconText}>🛒</Text>
               <View style={styles.cartBadge}>
                 <Text style={styles.cartBadgeText}>3</Text>
               </View>
-            </GlassCard>
+            </View>
           </TouchableOpacity>
         }
       />
 
       {/* Search */}
       <View style={styles.searchContainer}>
-        <GlassCard style={styles.searchInputContainer} variant="light">
+        <View style={styles.searchInputContainer}>
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
             placeholder="Search amazing products..."
-            placeholderTextColor="rgba(255,255,255,0.7)"
+            placeholderTextColor="rgba(0,0,0,0.5)"
             value={searchQuery}
             onChangeText={handleSearch}
           />
-        </GlassCard>
-        <TouchableOpacity style={styles.filterIconContainer}>
-          <GlassCard style={styles.filterIcon} variant="light">
+        </View>
+        <TouchableOpacity 
+          style={styles.filterIconContainer}
+          onPress={() => {
+            // Toggle between 'all' and first category filter
+            const nextFilter = selectedFilter === 'all' ? filters[1] || 'all' : 'all';
+            setSelectedFilter(nextFilter);
+          }}>
+          <View style={styles.filterIcon}>
             <Text style={styles.filterIconText}>🎛️</Text>
-          </GlassCard>
-        </TouchableOpacity>
+          </View>
+        </TouchableOpacity> 
       </View>
 
       {/* Filters */}
-      <View style={styles.filtersContainer}>
+      <ScrollView 
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filtersContainer}
+        style={styles.filtersScrollView}>
         {filters.map((filter, index) => renderFilter({item: filter, index}))}
-      </View>
+      </ScrollView>
+   
 
       {/* Error Message */}
       {error && (
@@ -388,14 +355,25 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
   },
   cartButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
     padding: theme.spacing[2],
     borderRadius: theme.borderRadius.full,
     position: 'relative',
   },
   cartIcon: {
-    fontSize: 20,
-    color: theme.colors.white,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  cartIconText: {
+    fontSize: 18,
+    color: '#333333',
+    fontWeight: 'bold',
   },
   cartBadge: {
     position: 'absolute',
@@ -423,15 +401,17 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.white,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: theme.borderRadius.xl,
     paddingHorizontal: theme.spacing[4],
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 1)',
     ...theme.shadows.sm,
   },
   searchIcon: {
     fontSize: 18,
     marginRight: theme.spacing[2],
-    color: theme.colors.neutral[400],
+    color: theme.colors.neutral[600],
   },
   searchInput: {
     flex: 1,
@@ -439,110 +419,155 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.base,
     color: theme.colors.neutral[800],
   },
+  filterIconContainer: {
+    marginLeft: theme.spacing[2],
+  },
   filterIcon: {
     backgroundColor: theme.colors.white,
     padding: theme.spacing[3],
     borderRadius: theme.borderRadius.base,
     ...theme.shadows.sm,
+  
   },
   filterIconText: {
     fontSize: 18,
+    color: '#333333',
+  },
+  filtersScrollView: {
+    paddingBottom: theme.spacing[6],
   },
   filtersContainer: {
     flexDirection: 'row',
-    paddingHorizontal: theme.spacing[5],
-    paddingBottom: theme.spacing[4],
+    paddingHorizontal: theme.spacing[4],
+    paddingVertical: theme.spacing[2],
     gap: theme.spacing[2],
   },
   filterButton: {
-    paddingHorizontal: theme.spacing[4],
+    paddingHorizontal: theme.spacing[5],
     paddingVertical: theme.spacing[2],
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.white,
-    ...theme.shadows.sm,
+    borderRadius: 25,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 0,
+    minHeight: 44,
+    minWidth: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+    marginHorizontal: 4,
   },
   activeFilter: {
-    backgroundColor: theme.colors.primary[500],
+    backgroundColor: '#6366f1',
+    shadowColor: '#6366f1',
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
   },
   filterText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.neutral[600],
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    textAlign: 'center',
+    letterSpacing: 0.5,
   },
   activeFilterText: {
-    color: theme.colors.white,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   productsList: {
-    paddingHorizontal: theme.spacing[5],
-    paddingBottom: theme.spacing[10],
+    padding: 16,
   },
   productCard: {
     flex: 1,
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.borderRadius.xl,
-    margin: theme.spacing[2],
-    overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    margin: 6,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  imageContainer: {
     position: 'relative',
   },
   productImage: {
     width: '100%',
     height: 160,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    resizeMode: 'cover',
   },
-  productOverlay: {
+  badge: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 160,
-    justifyContent: 'flex-end',
-    alignItems: 'flex-end',
-    padding: theme.spacing[3],
+    top: 8,
+    left: 8,
+    backgroundColor: '#FF6B6B',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  wishlistBtn: {
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    borderRadius: theme.borderRadius.full,
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  wishlistIcon: {
-    fontSize: 16,
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   productInfo: {
-    padding: theme.spacing[3],
+    padding: 12,
   },
   productName: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.neutral[800],
-    marginBottom: theme.spacing[2],
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 4,
     lineHeight: 18,
   },
-  priceRatingRow: {
+  productCategory: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 8,
+  },
+  priceRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing[3],
+    marginBottom: 6,
+    gap: 6,
   },
-  productPrice: {
-    fontSize: theme.typography.fontSize.lg,
-    color: theme.colors.primary[500],
-    fontWeight: theme.typography.fontWeight.bold,
+  price: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#059669',
   },
-  ratingBadge: {
-    backgroundColor: theme.colors.success[100],
-    paddingHorizontal: theme.spacing[2],
-    paddingVertical: theme.spacing[1],
-    borderRadius: theme.borderRadius.base,
+  originalPrice: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    textDecorationLine: 'line-through',
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   rating: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.success[700],
-    fontWeight: theme.typography.fontWeight.medium,
+    fontSize: 12,
+    color: '#F59E0B',
+    fontWeight: '500',
   },
-  addToCartBtn: {
-    alignSelf: 'stretch',
+  reviewCount: {
+    fontSize: 12,
+    color: '#6B7280',
   },
   
   // Loading and error states
@@ -624,32 +649,24 @@ const styles = StyleSheet.create({
     marginLeft: theme.spacing.xs,
   },
   bestsellerBadge: {
-    position: 'absolute',
-    top: theme.spacing.sm,
-    left: theme.spacing.sm,
-    backgroundColor: theme.colors.error?.[500] || '#ef4444',
-    paddingHorizontal: theme.spacing.xs,
-    paddingVertical: 2,
-    borderRadius: theme.spacing.xs,
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: theme.borderRadius.full,
   },
   bestsellerText: {
-    fontSize: theme.typography.size.xs,
-    color: theme.colors.white,
-    fontWeight: theme.typography.weight.bold,
+    fontSize: 14,
   },
   newBadge: {
-    position: 'absolute',
-    top: theme.spacing.sm,
-    left: theme.spacing.sm,
-    backgroundColor: theme.colors.primary[500],
-    paddingHorizontal: theme.spacing.xs,
-    paddingVertical: 2,
-    borderRadius: theme.spacing.xs,
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: theme.borderRadius.full,
   },
   newText: {
-    fontSize: theme.typography.size.xs,
-    color: theme.colors.white,
-    fontWeight: theme.typography.weight.bold,
+    fontSize: 14,
   },
   resultsHeader: {
     padding: theme.spacing.md,

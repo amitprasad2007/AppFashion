@@ -528,6 +528,113 @@ class ApiService {
     }
   }
 
+  async getCategoryProducts(categoryId:number): Promise<ApiProduct[]> {
+    try {
+      const response = await this.fetchApi<ApiProduct[]>(`/products/${categoryId}`);
+      
+      // Handle both direct array and wrapped response
+      if (Array.isArray(response)) {
+        return response;
+      } else if (response && (response as any).data) {
+        return (response as any).data;
+      } else {
+        console.warn('Unexpected bestseller products API response structure:', response);
+        return [];
+      }
+    } catch (error) {
+      console.error('Error fetching bestseller products:', error);
+      console.log('🔄 Using mock data for bestseller products');
+      
+      // Return mock data as fallback
+      return [
+        {
+          id: 1,
+          name: 'Elegant Saree Collection',
+          slug: 'elegant-saree-collection',
+          price: 2499,
+          originalPrice: 3124,
+          discountPercentage: 20,
+          rating: 4.8,
+          description: 'Beautiful traditional saree with modern touch',
+          category: {
+            id: 1,
+            title: 'Traditional Wear',
+            slug: 'traditional-wear',
+            summary: 'Traditional sarees',
+            photo: 'https://via.placeholder.com/200x200/ff6b6b/ffffff?text=Traditional',
+            is_parent: 1,
+          },
+          sku: 'SKU-001',
+          images: ['https://via.placeholder.com/300x400/ff6b6b/ffffff?text=Saree+1'],
+          colors: [],
+          defaultVariantId: 1,
+          variants: [],
+          sizes: 'One Size',
+          stock: 10,
+          specifications: [],
+          isBestseller: true,
+          inStock: true,
+        },
+        {
+          id: 2,
+          name: 'Designer Silk Saree',
+          slug: 'designer-silk-saree',
+          price: 3999,
+          originalPrice: 4705,
+          discountPercentage: 15,
+          rating: 4.9,
+          description: 'Premium silk saree for special occasions',
+          category: {
+            id: 2,
+            title: 'Silk Sarees',
+            slug: 'silk-sarees',
+            summary: 'Premium silk collections',
+            photo: 'https://via.placeholder.com/200x200/4ecdc4/ffffff?text=Silk',
+            is_parent: 1,
+          },
+          sku: 'SKU-002',
+          images: ['https://via.placeholder.com/300x400/4ecdc4/ffffff?text=Saree+2'],
+          colors: [],
+          defaultVariantId: 1,
+          variants: [],
+          sizes: 'One Size',
+          stock: 8,
+          specifications: [],
+          isBestseller: true,
+          inStock: true,
+        },
+        {
+          id: 3,
+          name: 'Cotton Comfort Saree',
+          slug: 'cotton-comfort-saree',
+          price: 1299,
+          originalPrice: 1443,
+          discountPercentage: 10,
+          rating: 4.6,
+          description: 'Comfortable cotton saree for daily wear',
+          category: {
+            id: 3,
+            title: 'Cotton Sarees',
+            slug: 'cotton-sarees',
+            summary: 'Comfortable cotton wear',
+            photo: 'https://via.placeholder.com/200x200/45b7d1/ffffff?text=Cotton',
+            is_parent: 1,
+          },
+          sku: 'SKU-003',
+          images: ['https://via.placeholder.com/300x400/45b7d1/ffffff?text=Saree+3'],
+          colors: [],
+          defaultVariantId: 1,
+          variants: [],
+          sizes: 'One Size',
+          stock: 15,
+          specifications: [],
+          isBestseller: true,
+          inStock: true,
+        },
+      ];
+    }
+  }
+
   async getBestsellerProducts(): Promise<ApiProduct[]> {
     try {
       const response = await this.fetchApi<ApiProduct[]>('/bestseller-products');
@@ -657,7 +764,7 @@ class ApiService {
   // Enhanced product methods using your actual endpoints
   async getProducts(params: {
     categoryId?: string | number;
-    type?: 'featured' | 'bestseller' | 'recommended' | 'all';
+    type?: 'featured' | 'bestseller' | 'recommended' | 'all'|'category';
     limit?: number;
     page?: number;
     search?: string;
@@ -669,6 +776,9 @@ class ApiService {
       }
       if (params.type === 'bestseller') {
         return await this.getBestsellerProducts();
+      }
+      if (params.type === 'category') {
+        return await this.getCategoryProducts(params.categoryId as number);
       }
       if (params.type === 'recommended') {
         return await this.getRecommendedProducts();
