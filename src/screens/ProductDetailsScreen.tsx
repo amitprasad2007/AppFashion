@@ -303,9 +303,9 @@ const ProductDetailsScreen = () => {
           <TouchableOpacity 
             style={styles.shareButton}
             onPress={() => Alert.alert('Share', `Share ${product.name}`)}>
-            <GlassCard style={styles.shareIcon} variant="light">
+            <View style={styles.shareIcon}>
               <Text style={styles.shareIconText}>🔗</Text>
-            </GlassCard>
+            </View>
           </TouchableOpacity>
         }
       />
