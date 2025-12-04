@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { theme } from '../theme';
 import GradientButton from '../components/GradientButton';
 import AnimatedCard from '../components/AnimatedCard';
@@ -19,15 +19,16 @@ import EnhancedHeader from '../components/EnhancedHeader';
 import GlassCard from '../components/GlassCard';
 import FloatingElements from '../components/FloatingElements';
 import GlassInput from '../components/GlassInput';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RootStackParamList} from '../types/navigation';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../types/navigation';
 import { apiService, Cart, ShippingAddress, PaymentMethod, Order } from '../services/api';
 import ProtectedScreen from '../components/ProtectedScreen';
+import razorpayService from '../services/razorpayService';
 
 const CheckoutScreenContent = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute();
-  
+
   // Get cart data from route params (handle both cart and individual item checkout)
   const params = route.params as any;
   const cart = params?.cart;
@@ -65,17 +66,32 @@ const CheckoutScreenContent = () => {
   // Load addresses and payment methods
   useEffect(() => {
     loadCheckoutData();
+    initializeRazorpay();
   }, []);
+
+  // Initialize Razorpay with configuration
+  const initializeRazorpay = () => {
+    try {
+      // TODO: Replace with your actual Razorpay credentials
+      razorpayService.initialize({
+        key_id: 'rzp_test_your_key_id', // Replace with your Razorpay Test/Live Key ID
+        key_secret: 'your_key_secret', // This should be kept on server only
+      });
+      console.log('🔧 Razorpay initialized successfully');
+    } catch (error) {
+      console.error('❌ Failed to initialize Razorpay:', error);
+    }
+  };
 
   const loadCheckoutData = async () => {
     try {
       setLoading(true);
-      
+
       const [addressesData, paymentMethodsData] = await Promise.all([
         apiService.getAddresses(),
         apiService.getPaymentMethods()
       ]);
-      
+
       // Transform ApiAddress to ShippingAddress format
       const transformedAddresses: ShippingAddress[] = addressesData.map(apiAddr => ({
         id: apiAddr.id.toString(),
@@ -90,34 +106,38 @@ const CheckoutScreenContent = () => {
         landmark: '', // ApiAddress doesn't have landmark
         isDefault: apiAddr.isDefault,
       }));
-      
+
       setAddresses(transformedAddresses);
-      setPaymentMethods(paymentMethodsData);
-      
+      console.log('💳 Payment Methods Data:', paymentMethodsData);
+      console.log('💳 Payment Methods Array Check:', Array.isArray(paymentMethodsData));
+
+      const finalPaymentMethods = Array.isArray(paymentMethodsData) ? paymentMethodsData : [];
+      setPaymentMethods(finalPaymentMethods);
+      console.log('💳 Final Payment Methods Set:', finalPaymentMethods);
+
       // Auto-select default address and first payment method
       const defaultAddress = addressesData.find(addr => addr.isDefault) || addressesData[0];
       if (defaultAddress) {
         setSelectedAddress(transformedAddresses.find(addr => addr.id === defaultAddress.id.toString()) || null);
       }
-      
+
       if (paymentMethodsData.length > 0) {
         setSelectedPayment(paymentMethodsData[0]);
       }
-      
+
     } catch (error) {
       console.error('Error loading checkout data:', error);
-      
+
       // Fallback payment methods
-      setPaymentMethods([
+      const fallbackPaymentMethods: PaymentMethod[] = [
         { id: 'cod', type: 'COD', name: 'Cash on Delivery' },
         { id: 'upi', type: 'UPI', name: 'UPI Payment' },
         { id: 'card', type: 'CARD', name: 'Credit/Debit Card' },
         { id: 'netbanking', type: 'NETBANKING', name: 'Net Banking' },
-      ]);
-      
-      if (paymentMethods.length === 0) {
-        setSelectedPayment({ id: 'cod', type: 'COD', name: 'Cash on Delivery' });
-      }
+      ];
+
+      setPaymentMethods(fallbackPaymentMethods);
+      setSelectedPayment(fallbackPaymentMethods[0]);
     } finally {
       setLoading(false);
     }
@@ -126,8 +146,8 @@ const CheckoutScreenContent = () => {
   // Save new address
   const saveAddress = async () => {
     try {
-      if (!newAddress.name || !newAddress.phone || !newAddress.addressLine1 || 
-          !newAddress.city || !newAddress.state || !newAddress.pincode) {
+      if (!newAddress.name || !newAddress.phone || !newAddress.addressLine1 ||
+        !newAddress.city || !newAddress.state || !newAddress.pincode) {
         Alert.alert('Error', 'Please fill in all required fields');
         return;
       }
@@ -170,7 +190,7 @@ const CheckoutScreenContent = () => {
         isDefault: savedAddress.address?.isDefault || false,
       });
       setShowAddressForm(false);
-      
+
     } catch (error) {
       console.error('Error saving address:', error);
       Alert.alert('Error', 'Failed to save address. Please try again.');
@@ -179,26 +199,26 @@ const CheckoutScreenContent = () => {
     }
   };
 
-  // Place order
+  // Place order (enhanced with Razorpay support)
   const placeOrder = async () => {
     try {
       if (!selectedAddress) {
         Alert.alert('Error', 'Please select a delivery address');
         return;
       }
-      
+
       if (!selectedPayment) {
         Alert.alert('Error', 'Please select a payment method');
         return;
       }
 
       setLoading(true);
-      
+
       // Determine the items to process
       const items = cart?.items || cartItems || [];
-      
+
       // Calculate totals
-      const itemsCount = cart?.totalItems || 
+      const itemsCount = cart?.totalItems ||
         (cartItems ? cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0) : 0);
       const itemsTotal = cart?.totalAmount || subtotal || 0;
       const discountAmount = cart?.discount || discount || 0;
@@ -217,8 +237,37 @@ const CheckoutScreenContent = () => {
         return;
       }
 
-      // Check if this is COD payment
+      // Handle different payment methods
       if (selectedPayment.type === 'COD' || selectedPayment.id === 'cod') {
+        // Handle Cash on Delivery
+        await handleCODPayment(items, selectedAddress, finalTotal, itemsCount, itemsTotal, discountAmount, shippingAmount, taxAmount);
+      } else if (['UPI', 'CARD', 'NETBANKING', 'WALLET'].includes(selectedPayment.type)) {
+        // Handle Razorpay payments
+        await handleRazorpayPayment(items, selectedAddress, finalTotal, itemsCount, itemsTotal, discountAmount, shippingAmount, taxAmount);
+      } else {
+        throw new Error(`Unsupported payment method: ${selectedPayment.type}`);
+      }
+
+    } catch (error) {
+      console.error('Error placing order:', error);
+      Alert.alert('Error', 'Failed to place order. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle Cash on Delivery payment
+  const handleCODPayment = async (
+    items: any[],
+    address: ShippingAddress,
+    finalTotal: number,
+    itemsCount: number,
+    itemsTotal: number,
+    discountAmount: number,
+    shippingAmount: number,
+    taxAmount: number
+  ) => {
+    try {
         // Validate cart items before processing
         if (!items || items.length === 0) {
           throw new Error('No items found in cart');
@@ -230,10 +279,10 @@ const CheckoutScreenContent = () => {
             // Handle different item structures from cart vs direct items
             const itemData = item.product || item;
             const itemImage = Array.isArray(itemData.images) ? itemData.images[0] :
-                             Array.isArray(itemData.image) ? itemData.image[0] :
-                             typeof itemData.image === 'string' ? itemData.image :
-                             itemData.images?.[0] || '';
-            
+              Array.isArray(itemData.image) ? itemData.image[0] :
+                typeof itemData.image === 'string' ? itemData.image :
+                  itemData.images?.[0] || '';
+
             // Ensure all required fields are present
             const cartId = item.cart_id || item.id || Math.floor(Math.random() * 1000000);
             const productId = itemData.id || item.id;
@@ -250,7 +299,7 @@ const CheckoutScreenContent = () => {
               });
               throw new Error(`Missing required product data for item: ${productName || 'Unknown'}`);
             }
-            
+
             return {
               cart_id: cartId,
               id: productId,
@@ -287,7 +336,7 @@ const CheckoutScreenContent = () => {
         try {
           const serverCart = await apiService.getCart();
           console.log('📦 Server cart items:', serverCart.items.length);
-          
+
           if (serverCart.items.length === 0) {
             console.log('⚠️ Server cart is empty, attempting to sync items...');
             // Try to add current items to server cart
@@ -305,30 +354,30 @@ const CheckoutScreenContent = () => {
         }
 
         const response = await apiService.checkoutCOD(codOrderData);
-        
+
         console.log('📡 COD Checkout Response:', response);
-        
+
         if (response.success) {
           const orderDetails = response.order;
           const orderId = response.order_id || orderDetails?.order_id;
           const orderNumber = response.order_number || orderDetails?.order_id;
-          
+
           // Clear cart after successful order (optional)
           try {
             await apiService.clearCart();
           } catch (clearError) {
             console.warn('Could not clear cart after order:', clearError);
           }
-          
+
           // Show success message with order details
           Alert.alert(
-            'Order Placed Successfully! 🎉', 
+            'Order Placed Successfully! 🎉',
             `Your order has been placed successfully!\n\nOrder ID: ${orderId}\nPayment: Cash on Delivery\nStatus: ${orderDetails?.status || 'Pending'}\nTotal: ₹${orderDetails?.total_amount || finalTotal}`,
-            [{ 
-              text: 'View Order', 
+            [{
+              text: 'View Order',
               onPress: () => {
                 // Navigate to order confirmation with detailed order info
-                navigation.navigate('OrderConfirmation', { 
+                navigation.navigate('OrderConfirmation', {
                   orderId: orderId,
                   orderNumber: orderNumber,
                   orderTotal: orderDetails?.total_amount || finalTotal,
@@ -344,28 +393,131 @@ const CheckoutScreenContent = () => {
         } else {
           throw new Error(response.message || 'Order placement failed');
         }
-      } else {
-        // Use the legacy order placement for other payment methods
-        const orderData = {
-          shippingAddress: selectedAddress,
-          paymentMethod: selectedPayment,
-          notes: orderNotes.trim() || undefined,
-        };
-        
-        const order = await apiService.placeOrder(orderData);
-        
-        // Navigate to order confirmation
-        navigation.navigate('OrderConfirmation', { 
-          orderId: order.id,
-          orderNumber: order.orderNumber 
-        });
-      }
-      
     } catch (error) {
-      console.error('Error placing order:', error);
-      Alert.alert('Error', 'Failed to place order. Please try again.');
-    } finally {
-      setLoading(false);
+      console.error('❌ COD payment failed:', error);
+      throw error;
+    }
+  };
+
+  // Handle Razorpay payment
+  const handleRazorpayPayment = async (
+    items: any[],
+    address: ShippingAddress,
+    finalTotal: number,
+    itemsCount: number,
+    itemsTotal: number,
+    discountAmount: number,
+    shippingAmount: number,
+    taxAmount: number
+  ) => {
+    try {
+      console.log('💳 Processing Razorpay payment...');
+
+      // Check if user is authenticated
+      const authToken = apiService.getAuthToken();
+      if (!authToken) {
+        Alert.alert('Authentication Required', 'Please login to place an order.');
+        return;
+      }
+
+      // Prepare order data for Razorpay
+      const orderDescription = `Order for ${itemsCount} item${itemsCount > 1 ? 's' : ''} from Samar Silk Palace`;
+      const customerName = address.name || 'Customer';
+      const customerEmail = address.email || 'customer@example.com';
+      const customerPhone = address.phone || '';
+
+      // Use Razorpay service to process payment
+      const paymentResult = await razorpayService.processPayment(selectedPayment!, {
+        amount: finalTotal,
+        orderId: `order_${Date.now()}`,
+        customerName,
+        customerEmail,
+        customerPhone,
+        description: orderDescription,
+        shippingAddress: address
+      });
+
+      if (paymentResult.success && paymentResult.paymentData) {
+        console.log('✅ Razorpay payment successful:', paymentResult);
+
+        // Prepare order data for backend
+        const orderData = {
+          items: items.map((item: any) => {
+            const itemData = item.product || item;
+            const itemImage = Array.isArray(itemData.images) ? itemData.images[0] :
+              Array.isArray(itemData.image) ? itemData.image[0] :
+                typeof itemData.image === 'string' ? itemData.image :
+                  itemData.images?.[0] || '';
+
+            return {
+              cart_id: item.cart_id || item.id || Math.floor(Math.random() * 1000000),
+              id: itemData.id || item.id,
+              name: itemData.name || item.name,
+              price: (itemData.price || item.price || 0).toString(),
+              quantity: item.quantity || 1,
+              image: itemImage,
+              color: item.selectedColor || item.color || itemData.color || 'Default',
+              slug: itemData.slug || item.slug || `product-${itemData.id}`,
+            };
+          }),
+          address_id: parseInt(address.id || '1'),
+          payment_method: selectedPayment!.type.toLowerCase(),
+          payment_data: paymentResult.paymentData,
+          subtotal: Number(itemsTotal) || 0,
+          shippingcost: Number(shippingAmount) || 0,
+          tax: Number(taxAmount) || 0,
+          total: Number(finalTotal) || 0,
+          totalquantity: Number(itemsCount) || 0,
+          coupon_code: null,
+        };
+
+        // Submit order to backend with payment data
+        const response = await apiService.checkoutWithRazorpay(orderData);
+
+        if (response.success) {
+          console.log('📡 Razorpay Order Response:', response);
+
+          // Clear cart after successful order
+          try {
+            await apiService.clearCart();
+          } catch (clearError) {
+            console.warn('Could not clear cart after order:', clearError);
+          }
+
+          // Show success message
+          Alert.alert(
+            'Payment Successful! 🎉',
+            `Your order has been placed and payment completed successfully!\n\nOrder ID: ${response.order_id}\nPayment: ${selectedPayment!.name}\nAmount: ₹${finalTotal}`,
+            [{
+              text: 'View Order',
+              onPress: () => {
+                navigation.navigate('OrderConfirmation', {
+                  orderId: response.order_id,
+                  orderNumber: response.order_number,
+                  orderTotal: finalTotal,
+                  paymentMethod: selectedPayment!.name,
+                  paymentStatus: 'paid',
+                  orderStatus: 'confirmed',
+                  orderItems: items,
+                  paymentData: paymentResult.paymentData,
+                  orderDetails: response.order
+                });
+              }
+            }]
+          );
+        } else {
+          throw new Error(response.message || 'Order creation failed after payment');
+        }
+      } else {
+        throw new Error(paymentResult.message || 'Payment failed');
+      }
+    } catch (error) {
+      console.error('❌ Razorpay payment failed:', error);
+      Alert.alert(
+        'Payment Failed',
+        `Payment could not be completed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+      throw error;
     }
   };
 
@@ -374,9 +526,9 @@ const CheckoutScreenContent = () => {
     // Determine the items to display
     const items = cart?.items || cartItems || [];
     const itemsToShow = items.slice(0, 3);
-    
+
     // Calculate totals
-    const itemsCount = cart?.totalItems || 
+    const itemsCount = cart?.totalItems ||
       (cartItems ? cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0) : 0);
     const itemsTotal = cart?.totalAmount || subtotal || 0;
     const discountAmount = cart?.discount || discount || 0;
@@ -387,66 +539,66 @@ const CheckoutScreenContent = () => {
       <AnimatedCard delay={100}>
         <GlassCard style={styles.section} gradientColors={theme.glassGradients.sunset}>
           <Text style={styles.sectionTitle}>📦 Order Summary</Text>
-        
-        {itemsToShow.map((item: any, index: number) => (
-          <View key={item.id || index} style={styles.orderItem}>
-            <Image 
-              source={{
-                uri: item.product?.images?.[0] || 
-                     (Array.isArray(item.image) ? item.image[0] : item.image) || 
-                     item.images?.[0] || 
-                     'https://via.placeholder.com/50'
-              }} 
-              style={styles.orderItemImage} 
-            />
-            <View style={styles.orderItemDetails}>
-              <Text style={styles.orderItemName} numberOfLines={2}>
-                {item.product?.name || item.name}
-              </Text>
-              <Text style={styles.orderItemInfo}>
-                Qty: {item.quantity} • ₹{item.product?.price || item.price}
-              </Text>
-              {item.selectedSize && (
-                <Text style={styles.orderItemOption}>Size: {item.selectedSize}</Text>
-              )}
-            </View>
-            <Text style={styles.orderItemPrice}>
-              ₹{item.subtotal || (parseFloat(item.price) * item.quantity)}
-            </Text>
-          </View>
-        ))}
-        
-        {items.length > 3 && (
-          <Text style={styles.moreItems}>
-            +{items.length - 3} more item{items.length > 4 ? 's' : ''}
-          </Text>
-        )}
 
-        <View style={styles.orderSummary}>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Items ({itemsCount})</Text>
-            <Text style={styles.summaryValue}>₹{itemsTotal}</Text>
-          </View>
-          
-          {discountAmount > 0 && (
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, styles.discountLabel]}>Discount</Text>
-              <Text style={[styles.summaryValue, styles.discountValue]}>-₹{discountAmount}</Text>
+          {itemsToShow.map((item: any, index: number) => (
+            <View key={item.id || index} style={styles.orderItem}>
+              <Image
+                source={{
+                  uri: item.product?.images?.[0] ||
+                    (Array.isArray(item.image) ? item.image[0] : item.image) ||
+                    item.images?.[0] ||
+                    'https://via.placeholder.com/50'
+                }}
+                style={styles.orderItemImage}
+              />
+              <View style={styles.orderItemDetails}>
+                <Text style={styles.orderItemName} numberOfLines={2}>
+                  {item.product?.name || item.name}
+                </Text>
+                <Text style={styles.orderItemInfo}>
+                  Qty: {item.quantity} • ₹{item.product?.price || item.price}
+                </Text>
+                {item.selectedSize && (
+                  <Text style={styles.orderItemOption}>Size: {item.selectedSize}</Text>
+                )}
+              </View>
+              <Text style={styles.orderItemPrice}>
+                ₹{item.subtotal || (parseFloat(item.price) * item.quantity)}
+              </Text>
             </View>
-          )}
-          
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Delivery</Text>
-            <Text style={styles.summaryValue}>
-              {shippingAmount > 0 ? `₹${shippingAmount}` : 'FREE'}
+          ))}
+
+          {items.length > 3 && (
+            <Text style={styles.moreItems}>
+              +{items.length - 3} more item{items.length > 4 ? 's' : ''}
             </Text>
+          )}
+
+          <View style={styles.orderSummary}>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Items ({itemsCount})</Text>
+              <Text style={styles.summaryValue}>₹{itemsTotal}</Text>
+            </View>
+
+            {discountAmount > 0 && (
+              <View style={styles.summaryRow}>
+                <Text style={[styles.summaryLabel, styles.discountLabel]}>Discount</Text>
+                <Text style={[styles.summaryValue, styles.discountValue]}>-₹{discountAmount}</Text>
+              </View>
+            )}
+
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Delivery</Text>
+              <Text style={styles.summaryValue}>
+                {shippingAmount > 0 ? `₹${shippingAmount}` : 'FREE'}
+              </Text>
+            </View>
+
+            <View style={[styles.summaryRow, styles.totalRow]}>
+              <Text style={styles.totalLabel}>Total Amount</Text>
+              <Text style={styles.totalValue}>₹{finalTotal}</Text>
+            </View>
           </View>
-          
-          <View style={[styles.summaryRow, styles.totalRow]}>
-            <Text style={styles.totalLabel}>Total Amount</Text>
-            <Text style={styles.totalValue}>₹{finalTotal}</Text>
-          </View>
-        </View>
         </GlassCard>
       </AnimatedCard>
     );
@@ -465,184 +617,200 @@ const CheckoutScreenContent = () => {
           </TouchableOpacity>
         </View>
 
-      {showAddressForm && (
-        <GlassCard style={styles.addressForm} variant="light">
-          <Text style={styles.formTitle}>📍 Add New Address</Text>
-          
-          <View style={styles.formRow}>
-            <TextInput
-              style={[styles.input, styles.halfInput]}
-              placeholder="Full Name *"
-              value={newAddress.name}
-              onChangeText={(text) => setNewAddress(prev => ({...prev, name: text}))}
-            />
-            <TextInput
-              style={[styles.input, styles.halfInput]}
-              placeholder="Phone Number *"
-              value={newAddress.phone}
-              onChangeText={(text) => setNewAddress(prev => ({...prev, phone: text}))}
-              keyboardType="phone-pad"
-            />
-          </View>
-          
-          <TextInput
-            style={styles.input}
-            placeholder="Email (optional)"
-            value={newAddress.email}
-            onChangeText={(text) => setNewAddress(prev => ({...prev, email: text}))}
-            keyboardType="email-address"
-          />
-          
-          <TextInput
-            style={styles.input}
-            placeholder="Address Line 1 *"
-            value={newAddress.addressLine1}
-            onChangeText={(text) => setNewAddress(prev => ({...prev, addressLine1: text}))}
-            multiline
-          />
-          
-          <TextInput
-            style={styles.input}
-            placeholder="Address Line 2 (optional)"
-            value={newAddress.addressLine2}
-            onChangeText={(text) => setNewAddress(prev => ({...prev, addressLine2: text}))}
-          />
-          
-          <View style={styles.formRow}>
-            <TextInput
-              style={[styles.input, styles.halfInput]}
-              placeholder="City *"
-              value={newAddress.city}
-              onChangeText={(text) => setNewAddress(prev => ({...prev, city: text}))}
-            />
-            <TextInput
-              style={[styles.input, styles.halfInput]}
-              placeholder="Pincode *"
-              value={newAddress.pincode}
-              onChangeText={(text) => setNewAddress(prev => ({...prev, pincode: text}))}
-              keyboardType="numeric"
-            />
-          </View>
-          
-          <View style={styles.formRow}>
-            <TextInput
-              style={[styles.input, styles.halfInput]}
-              placeholder="State *"
-              value={newAddress.state}
-              onChangeText={(text) => setNewAddress(prev => ({...prev, state: text}))}
-            />
-            <TextInput
-              style={[styles.input, styles.halfInput]}
-              placeholder="Landmark"
-              value={newAddress.landmark}
-              onChangeText={(text) => setNewAddress(prev => ({...prev, landmark: text}))}
-            />
-          </View>
+        {showAddressForm && (
+          <GlassCard style={styles.addressForm} variant="light">
+            <Text style={styles.formTitle}>📍 Add New Address</Text>
 
-          <View style={styles.formActions}>
-            <TouchableOpacity 
-              style={styles.cancelButton}
-              onPress={() => setShowAddressForm(false)}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+            <View style={styles.formRow}>
+              <TextInput
+                style={[styles.input, styles.halfInput]}
+                placeholder="Full Name *"
+                value={newAddress.name}
+                onChangeText={(text) => setNewAddress(prev => ({ ...prev, name: text }))}
+              />
+              <TextInput
+                style={[styles.input, styles.halfInput]}
+                placeholder="Phone Number *"
+                value={newAddress.phone}
+                onChangeText={(text) => setNewAddress(prev => ({ ...prev, phone: text }))}
+                keyboardType="phone-pad"
+              />
+            </View>
+
+            <TextInput
+              style={styles.input}
+              placeholder="Email (optional)"
+              value={newAddress.email}
+              onChangeText={(text) => setNewAddress(prev => ({ ...prev, email: text }))}
+              keyboardType="email-address"
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Address Line 1 *"
+              value={newAddress.addressLine1}
+              onChangeText={(text) => setNewAddress(prev => ({ ...prev, addressLine1: text }))}
+              multiline
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Address Line 2 (optional)"
+              value={newAddress.addressLine2}
+              onChangeText={(text) => setNewAddress(prev => ({ ...prev, addressLine2: text }))}
+            />
+
+            <View style={styles.formRow}>
+              <TextInput
+                style={[styles.input, styles.halfInput]}
+                placeholder="City *"
+                value={newAddress.city}
+                onChangeText={(text) => setNewAddress(prev => ({ ...prev, city: text }))}
+              />
+              <TextInput
+                style={[styles.input, styles.halfInput]}
+                placeholder="Pincode *"
+                value={newAddress.pincode}
+                onChangeText={(text) => setNewAddress(prev => ({ ...prev, pincode: text }))}
+                keyboardType="numeric"
+              />
+            </View>
+
+            <View style={styles.formRow}>
+              <TextInput
+                style={[styles.input, styles.halfInput]}
+                placeholder="State *"
+                value={newAddress.state}
+                onChangeText={(text) => setNewAddress(prev => ({ ...prev, state: text }))}
+              />
+              <TextInput
+                style={[styles.input, styles.halfInput]}
+                placeholder="Landmark"
+                value={newAddress.landmark}
+                onChangeText={(text) => setNewAddress(prev => ({ ...prev, landmark: text }))}
+              />
+            </View>
+
+            <View style={styles.formActions}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setShowAddressForm(false)}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={saveAddress}
+                disabled={loading}>
+                {loading ? (
+                  <ActivityIndicator size="small" color={theme.colors.white} />
+                ) : (
+                  <Text style={styles.saveButtonText}>Save Address</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </GlassCard>
+        )}
+
+        {addresses.map((address, index) => (
+          <AnimatedCard key={address.id} delay={300 + index * 50}>
+            <TouchableOpacity
+              style={styles.addressCardContainer}
+              onPress={() => setSelectedAddress(address)}>
+              <GlassCard
+                style={[styles.addressCard, selectedAddress?.id === address.id && styles.selectedAddress]}
+                variant={selectedAddress?.id === address.id ? "base" : "light"}>
+                <View style={styles.addressHeader}>
+                  <Text style={styles.addressName}>{address.name}</Text>
+                  <Text style={styles.addressPhone}>{address.phone}</Text>
+                  {address.isDefault && (
+                    <View style={styles.defaultBadge}>
+                      <Text style={styles.defaultBadgeText}>DEFAULT</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.addressText}>
+                  {address.addressLine1}
+                  {address.addressLine2 ? `, ${address.addressLine2}` : ''}
+                </Text>
+                <Text style={styles.addressText}>
+                  {address.city}, {address.state} - {address.pincode}
+                </Text>
+                {address.landmark && (
+                  <Text style={styles.addressLandmark}>Near {address.landmark}</Text>
+                )}
+              </GlassCard>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.saveButton}
-              onPress={saveAddress}
-              disabled={loading}>
-              {loading ? (
-                <ActivityIndicator size="small" color={theme.colors.white} />
-              ) : (
-                <Text style={styles.saveButtonText}>Save Address</Text>
-              )}
+          </AnimatedCard>
+        ))}
+
+        {addresses.length === 0 && !showAddressForm && (
+          <GlassCard style={styles.emptyState} variant="light">
+            <Text style={styles.emptyStateText}>📍 No saved addresses</Text>
+            <TouchableOpacity onPress={() => setShowAddressForm(true)}>
+              <Text style={styles.addFirstAddressText}>Add your first address</Text>
             </TouchableOpacity>
-          </View>
-        </GlassCard>
-      )}
-
-      {addresses.map((address, index) => (
-        <AnimatedCard key={address.id} delay={300 + index * 50}>
-          <TouchableOpacity
-            style={styles.addressCardContainer}
-            onPress={() => setSelectedAddress(address)}>
-            <GlassCard 
-              style={[styles.addressCard, selectedAddress?.id === address.id && styles.selectedAddress]}
-              variant={selectedAddress?.id === address.id ? "base" : "light"}>
-              <View style={styles.addressHeader}>
-            <Text style={styles.addressName}>{address.name}</Text>
-            <Text style={styles.addressPhone}>{address.phone}</Text>
-            {address.isDefault && (
-              <View style={styles.defaultBadge}>
-                <Text style={styles.defaultBadgeText}>DEFAULT</Text>
-              </View>
-            )}
-          </View>
-          <Text style={styles.addressText}>
-            {address.addressLine1}
-            {address.addressLine2 ? `, ${address.addressLine2}` : ''}
-          </Text>
-          <Text style={styles.addressText}>
-            {address.city}, {address.state} - {address.pincode}
-          </Text>
-          {address.landmark && (
-            <Text style={styles.addressLandmark}>Near {address.landmark}</Text>
-          )}
-            </GlassCard>
-          </TouchableOpacity>
-        </AnimatedCard>
-      ))}
-
-      {addresses.length === 0 && !showAddressForm && (
-        <GlassCard style={styles.emptyState} variant="light">
-          <Text style={styles.emptyStateText}>📍 No saved addresses</Text>
-          <TouchableOpacity onPress={() => setShowAddressForm(true)}>
-            <Text style={styles.addFirstAddressText}>Add your first address</Text>
-          </TouchableOpacity>
-        </GlassCard>
-      )}
+          </GlassCard>
+        )}
       </GlassCard>
     </AnimatedCard>
   );
 
   // Render payment methods
-  const renderPaymentMethods = () => (
-    <AnimatedCard delay={400}>
-      <GlassCard style={styles.section} gradientColors={theme.glassGradients.purple}>
-        <Text style={styles.sectionTitle}>💳 Payment Method</Text>
-        
-        {paymentMethods.map((method, index) => (
-          <AnimatedCard key={method.id} delay={450 + index * 50}>
-            <TouchableOpacity
-              style={styles.paymentMethodContainer}
-              onPress={() => setSelectedPayment(method)}>
-              <GlassCard
-                style={[styles.paymentMethod, selectedPayment?.id === method.id && styles.selectedPayment]}
-                variant={selectedPayment?.id === method.id ? "base" : "light"}>
-                <View style={styles.paymentMethodContent}>
-            <Text style={styles.paymentMethodIcon}>
-              {method.type === 'COD' ? '💵' : 
-               method.type === 'UPI' ? '📱' :
-               method.type === 'CARD' ? '💳' :
-               method.type === 'NETBANKING' ? '🏦' : '💰'}
-            </Text>
-            <View style={styles.paymentMethodDetails}>
-              <Text style={styles.paymentMethodName}>{method.name}</Text>
-              {method.details && (
-                <Text style={styles.paymentMethodDetails}>{method.details}</Text>
-              )}
-            </View>
-          </View>
-          <View style={styles.radioButton}>
-            {selectedPayment?.id === method.id && (
-              <View style={styles.radioButtonSelected} />
-            )}
-          </View>
-              </GlassCard>
-            </TouchableOpacity>
-          </AnimatedCard>
-        ))}
-      </GlassCard>
-    </AnimatedCard>
-  );
+  const renderPaymentMethods = () => {
+    console.log('🎨 Rendering Payment Methods:', { paymentMethods, length: paymentMethods?.length });
+
+    return (
+      <AnimatedCard delay={400}>
+        <GlassCard style={styles.section} gradientColors={theme.glassGradients.purple}>
+          <Text style={styles.sectionTitle}>💳 Payment Method</Text>
+
+          {(paymentMethods || []).map((method, index) => (
+            <AnimatedCard key={method.id} delay={450 + index * 50}>
+              <TouchableOpacity
+                style={styles.paymentMethodContainer}
+                onPress={() => setSelectedPayment(method)}>
+                <GlassCard
+                  style={[styles.paymentMethod, selectedPayment?.id === method.id && styles.selectedPayment]}
+                  variant={selectedPayment?.id === method.id ? "base" : "light"}>
+                  <View style={styles.paymentMethodContent}>
+                    <Text style={styles.paymentMethodIcon}>
+                      {method.type === 'COD' ? '💵' :
+                        method.type === 'UPI' ? '📱' :
+                          method.type === 'CARD' ? '💳' :
+                            method.type === 'NETBANKING' ? '🏦' : '💰'}
+                    </Text>
+                    <View style={styles.paymentMethodDetails}>
+                      <Text style={styles.paymentMethodName}>{method.name}</Text>
+                      {method.details && (
+                        <Text style={styles.paymentMethodDetailsText}>{method.details}</Text>
+                      )}
+                      {['UPI', 'CARD', 'NETBANKING', 'WALLET'].includes(method.type) && (
+                        <View style={styles.razorpayBadge}>
+                          <Text style={styles.razorpayBadgeText}>Powered by Razorpay</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                  <View style={styles.radioButton}>
+                    {selectedPayment?.id === method.id && (
+                      <View style={styles.radioButtonSelected} />
+                    )}
+                  </View>
+                </GlassCard>
+              </TouchableOpacity>
+            </AnimatedCard>
+          ))}
+
+          {(!paymentMethods || paymentMethods.length === 0) && (
+            <GlassCard style={styles.emptyState} variant="light">
+              <Text style={styles.emptyStateText}>💳 No payment methods available</Text>
+              <Text style={styles.addFirstAddressText}>Loading payment options...</Text>
+            </GlassCard>
+          )}
+        </GlassCard>
+      </AnimatedCard>
+    );
+  };
 
   // Render order notes
   const renderOrderNotes = () => (
@@ -670,8 +838,8 @@ const CheckoutScreenContent = () => {
         style={styles.backgroundGradient}
       />
       <FloatingElements count={8} />
-      
-      <EnhancedHeader 
+
+      <EnhancedHeader
         title="💳 Checkout"
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
@@ -682,13 +850,13 @@ const CheckoutScreenContent = () => {
         {renderAddressSelection()}
         {renderPaymentMethods()}
         {renderOrderNotes()}
-        
+
         <View style={styles.footer}>
           <View style={styles.totalSummary}>
             <Text style={styles.finalTotalLabel}>Total Amount:</Text>
             <Text style={styles.finalTotalValue}>₹{cart?.finalAmount || total || 0}</Text>
           </View>
-          
+
           <GradientButton
             title={loading ? 'Placing Order...' : `Place Order - ₹${cart?.finalAmount || total || 0}`}
             onPress={placeOrder}
@@ -696,7 +864,7 @@ const CheckoutScreenContent = () => {
             style={styles.placeOrderButton}
             disabled={loading || !selectedAddress || !selectedPayment}
           />
-          
+
           <Text style={styles.secureText}>
             🔒 Your payment information is secure and encrypted
           </Text>
@@ -707,6 +875,13 @@ const CheckoutScreenContent = () => {
 };
 
 const styles = StyleSheet.create({
+  backgroundGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   container: {
     flex: 1,
     backgroundColor: theme.colors.neutral[50],
@@ -758,12 +933,18 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.weight.semibold,
     color: theme.colors.neutral[900],
   },
+  addButtonCard: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.colors.primary[50],
+  },
   addButton: {
     color: theme.colors.primary[500],
     fontSize: theme.typography.size.sm,
     fontWeight: theme.typography.weight.semibold,
   },
-  
+
   // Order Summary Styles
   orderItem: {
     flexDirection: 'row',
@@ -910,6 +1091,9 @@ const styles = StyleSheet.create({
   },
 
   // Address Card Styles
+  addressCardContainer: {
+    marginBottom: theme.spacing.md,
+  },
   addressCard: {
     backgroundColor: theme.colors.neutral[50],
     padding: theme.spacing.lg,
@@ -974,6 +1158,9 @@ const styles = StyleSheet.create({
   },
 
   // Payment Method Styles
+  paymentMethodContainer: {
+    marginBottom: theme.spacing.md,
+  },
   paymentMethod: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1004,6 +1191,24 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.size.base,
     fontWeight: theme.typography.weight.semibold,
     color: theme.colors.neutral[900],
+    marginBottom: theme.spacing.xs,
+  },
+  paymentMethodDetailsText: {
+    fontSize: theme.typography.size.sm,
+    color: theme.colors.neutral[600],
+    marginBottom: theme.spacing.xs,
+  },
+  razorpayBadge: {
+    backgroundColor: '#3395FF',
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 2,
+    borderRadius: theme.spacing.xs,
+    alignSelf: 'flex-start',
+  },
+  razorpayBadgeText: {
+    fontSize: theme.typography.size.xs,
+    color: theme.colors.white,
+    fontWeight: theme.typography.weight.medium,
   },
   radioButton: {
     width: 20,

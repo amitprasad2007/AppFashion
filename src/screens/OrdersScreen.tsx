@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,28 +11,28 @@ import {
   Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { theme } from '../theme';
 import AnimatedCard from '../components/AnimatedCard';
 import GradientButton from '../components/GradientButton';
 import EnhancedHeader from '../components/EnhancedHeader';
 import GlassCard from '../components/GlassCard';
 import FloatingElements from '../components/FloatingElements';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RootStackParamList} from '../types/navigation';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../types/navigation';
 import { apiService, ApiOrder } from '../services/api';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import ProtectedScreen from '../components/ProtectedScreen';
 
 const OrdersScreenContent = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  
-  const { 
-    userData, 
+
+  const {
+    userData,
     isLoading,
     error: profileError,
     getOrders,
-    refreshUserData 
+    refreshUserData
   } = useUserProfile();
 
   // Local state management
@@ -55,18 +55,18 @@ const OrdersScreenContent = () => {
   const loadOrders = async (isRefresh: boolean = false) => {
     try {
       setError(null);
-      
+
       // Use the comprehensive user data if available
       if (userData?.orders) {
         let filteredOrders = userData.orders;
-        
+
         // Apply status filter
         if (selectedFilter !== 'ALL') {
-          filteredOrders = userData.orders.filter(order => 
+          filteredOrders = userData.orders.filter(order =>
             order.status.toLowerCase() === selectedFilter.toLowerCase()
           );
         }
-        
+
         setOrders(filteredOrders);
         console.log('Orders loaded from user data:', filteredOrders.length);
       } else {
@@ -77,7 +77,7 @@ const OrdersScreenContent = () => {
         setOrders(fetchedOrders);
         console.log('Orders fetched directly:', fetchedOrders.length);
       }
-      
+
     } catch (err) {
       console.error('Error loading orders:', err);
       setError('Failed to load orders. Please try again.');
@@ -160,12 +160,12 @@ const OrdersScreenContent = () => {
   };
 
   // Filter orders by status
-  const filteredOrders = selectedFilter === 'ALL' 
-    ? orders 
+  const filteredOrders = selectedFilter === 'ALL'
+    ? orders
     : orders.filter(order => order.status.toLowerCase() === selectedFilter.toLowerCase());
 
   // Render order item
-  const renderOrder = ({item, index}: {item: ApiOrder; index: number}) => {
+  const renderOrder = ({ item, index }: { item: ApiOrder; index: number }) => {
     const gradients = [
       theme.glassGradients.aurora,
       theme.glassGradients.sunset,
@@ -173,7 +173,7 @@ const OrdersScreenContent = () => {
       theme.glassGradients.purple,
       theme.glassGradients.ocean,
     ];
-    
+
     const gradient = gradients[index % gradients.length];
 
     return (
@@ -191,87 +191,87 @@ const OrdersScreenContent = () => {
               </GlassCard>
             </View>
 
-      {/* Order Items Preview */}
-      <View style={styles.itemsPreview}>
-        {item.items.slice(0, 2).map((orderItem, idx) => (
-          <View key={orderItem.id} style={styles.orderItemRow}>
-            <Image 
-              source={{
-                uri: Array.isArray(orderItem.image) 
-                  ? orderItem.image[0] 
-                  : orderItem.image || 'https://via.placeholder.com/50'
-              }} 
-              style={styles.orderItemImage} 
-            />
-            <View style={styles.orderItemDetails}>
-              <Text style={styles.orderItemName} numberOfLines={1}>
-                {orderItem.name}
-              </Text>
-              <Text style={styles.orderItemInfo}>
-                Qty: {orderItem.quantity} • ₹{orderItem.price}
-              </Text>
+            {/* Order Items Preview */}
+            <View style={styles.itemsPreview}>
+              {item.items.slice(0, 2).map((orderItem, idx) => (
+                <View key={orderItem.id} style={styles.orderItemRow}>
+                  <Image
+                    source={{
+                      uri: Array.isArray(orderItem.image)
+                        ? orderItem.image[0]
+                        : orderItem.image || 'https://via.placeholder.com/50'
+                    }}
+                    style={styles.orderItemImage}
+                  />
+                  <View style={styles.orderItemDetails}>
+                    <Text style={styles.orderItemName} numberOfLines={1}>
+                      {orderItem.name}
+                    </Text>
+                    <Text style={styles.orderItemInfo}>
+                      Qty: {orderItem.quantity} • ₹{orderItem.price}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+              {item.items.length > 2 && (
+                <Text style={styles.moreItems}>
+                  +{item.items.length - 2} more item{item.items.length > 3 ? 's' : ''}
+                </Text>
+              )}
             </View>
-          </View>
-        ))}
-        {item.items.length > 2 && (
-          <Text style={styles.moreItems}>
-            +{item.items.length - 2} more item{item.items.length > 3 ? 's' : ''}
-          </Text>
-        )}
-      </View>
 
-      {/* Order Summary */}
-      <View style={styles.orderSummary}>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Total Items:</Text>
-          <Text style={styles.summaryValue}>{item.items.reduce((sum, orderItem) => sum + orderItem.quantity, 0)}</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Order Total:</Text>
-          <Text style={styles.summaryValue}>₹{item.total}</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Order Status:</Text>
-          <Text style={styles.summaryValue}>{item.status}</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Order Date:</Text>
-          <Text style={styles.summaryValue}>{item.date}</Text>
-        </View>
-      </View>
+            {/* Order Summary */}
+            <View style={styles.orderSummary}>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Total Items:</Text>
+                <Text style={styles.summaryValue}>{item.items.reduce((sum, orderItem) => sum + orderItem.quantity, 0)}</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Order Total:</Text>
+                <Text style={styles.summaryValue}>₹{item.total}</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Order Status:</Text>
+                <Text style={styles.summaryValue}>{item.status}</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Order Date:</Text>
+                <Text style={styles.summaryValue}>{item.date}</Text>
+              </View>
+            </View>
 
-      {/* Order Actions */}
-      <View style={styles.orderActions}>
-        {item.status.toLowerCase() === 'shipped' || item.status.toLowerCase() === 'out for delivery' ? (
-          <TouchableOpacity
-            style={styles.actionButtonContainer}
-            onPress={() => trackOrder(item.id)}>
-            <GlassCard style={styles.actionButton} variant="light">
-              <Text style={styles.actionButtonText}>🚚 Track Order</Text>
-            </GlassCard>
-          </TouchableOpacity>
-        ) : null}
-        
-        {item.status.toLowerCase() === 'pending' || item.status.toLowerCase() === 'confirmed' ? (
-          <TouchableOpacity
-            style={styles.actionButtonContainer}
-            onPress={() => cancelOrder(item.id)}>
-            <GlassCard style={[styles.actionButton, styles.cancelButton]} variant="light">
-              <Text style={[styles.actionButtonText, styles.cancelButtonText]}>❌ Cancel</Text>
-            </GlassCard>
-          </TouchableOpacity>
-        ) : null}
-        
-        {item.status.toLowerCase() === 'delivered' ? (
-          <TouchableOpacity
-            style={styles.actionButtonContainer}
-            onPress={() => Alert.alert('Reorder', 'Reorder functionality coming soon!')}>
-            <GlassCard style={styles.actionButton} variant="light">
-              <Text style={styles.actionButtonText}>🔄 Reorder</Text>
-            </GlassCard>
-          </TouchableOpacity>
-        ) : null}
-      </View>
+            {/* Order Actions */}
+            <View style={styles.orderActions}>
+              {item.status.toLowerCase() === 'shipped' || item.status.toLowerCase() === 'out for delivery' ? (
+                <TouchableOpacity
+                  style={styles.actionButtonContainer}
+                  onPress={() => trackOrder(item.id)}>
+                  <GlassCard style={styles.actionButton} variant="light">
+                    <Text style={styles.actionButtonText}>🚚 Track Order</Text>
+                  </GlassCard>
+                </TouchableOpacity>
+              ) : null}
+
+              {item.status.toLowerCase() === 'pending' || item.status.toLowerCase() === 'confirmed' ? (
+                <TouchableOpacity
+                  style={styles.actionButtonContainer}
+                  onPress={() => cancelOrder(item.id)}>
+                  <GlassCard style={[styles.actionButton, styles.cancelButton]} variant="light">
+                    <Text style={[styles.actionButtonText, styles.cancelButtonText]}>❌ Cancel</Text>
+                  </GlassCard>
+                </TouchableOpacity>
+              ) : null}
+
+              {item.status.toLowerCase() === 'delivered' ? (
+                <TouchableOpacity
+                  style={styles.actionButtonContainer}
+                  onPress={() => Alert.alert('Reorder', 'Reorder functionality coming soon!')}>
+                  <GlassCard style={styles.actionButton} variant="light">
+                    <Text style={styles.actionButtonText}>🔄 Reorder</Text>
+                  </GlassCard>
+                </TouchableOpacity>
+              ) : null}
+            </View>
           </GlassCard>
         </TouchableOpacity>
       </AnimatedCard>
@@ -284,7 +284,7 @@ const OrdersScreenContent = () => {
       key={filter.key}
       style={styles.filterButtonContainer}
       onPress={() => setSelectedFilter(filter.key as any)}>
-      <GlassCard 
+      <GlassCard
         style={[styles.filterButton, selectedFilter === filter.key && styles.activeFilter]}
         variant={selectedFilter === filter.key ? 'base' : 'light'}>
         <Text
@@ -312,13 +312,13 @@ const OrdersScreenContent = () => {
           style={styles.backgroundGradient}
         />
         <FloatingElements count={6} />
-        
-        <EnhancedHeader 
+
+        <EnhancedHeader
           title="📋 My Orders"
           showBackButton={true}
           onBackPress={() => navigation.goBack()}
         />
-        
+
         <View style={styles.loadingContainer}>
           <GlassCard style={styles.loadingCard}>
             <ActivityIndicator size="large" color={theme.colors.white} />
@@ -336,8 +336,8 @@ const OrdersScreenContent = () => {
         style={styles.backgroundGradient}
       />
       <FloatingElements count={6} />
-      
-      <EnhancedHeader 
+
+      <EnhancedHeader
         title="📋 My Orders"
         showBackButton={true}
       />
@@ -355,7 +355,7 @@ const OrdersScreenContent = () => {
       <View style={styles.filtersContainer}>
         <FlatList
           data={statusFilters}
-          renderItem={({item}) => renderFilterButton(item)}
+          renderItem={({ item }) => renderFilterButton(item)}
           keyExtractor={item => item.key}
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -372,8 +372,8 @@ const OrdersScreenContent = () => {
               {selectedFilter === 'ALL' ? 'No orders yet' : `No ${formatStatus(selectedFilter).toLowerCase()} orders`}
             </Text>
             <Text style={styles.emptySubtitle}>
-              {selectedFilter === 'ALL' 
-                ? 'Start shopping to see your orders here' 
+              {selectedFilter === 'ALL'
+                ? 'Start shopping to see your orders here'
                 : 'Try changing the filter or check back later'
               }
             </Text>
@@ -635,8 +635,8 @@ const styles = StyleSheet.create({
 const OrdersScreen = () => {
   return (
     <ProtectedScreen fallbackMessage="Please sign in to view your order history and track current orders.">
-      <OrdersScreenContent />
-    </ProtectedScreen>
+      < OrdersScreenContent />
+    </ProtectedScreen >
   );
 };
 
