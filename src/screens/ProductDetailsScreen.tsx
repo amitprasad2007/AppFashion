@@ -19,6 +19,8 @@ import AnimatedCard from '../components/AnimatedCard';
 import EnhancedHeader from '../components/EnhancedHeader';
 import GlassCard from '../components/GlassCard';
 import FloatingElements from '../components/FloatingElements';
+import CartIcon from '../components/CartIcon';
+import SafeAlert from '../utils/safeAlert';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/navigation';
 import { apiService, ApiProduct } from '../services/api';
@@ -173,7 +175,7 @@ const ProductDetailsScreen = () => {
         size: selectedSize,
       });
       
-      Alert.alert(
+      SafeAlert.show(
         'Added to Cart', 
         `${product.name} (Qty: ${quantity}) has been added to your cart.`,
         [
@@ -183,7 +185,7 @@ const ProductDetailsScreen = () => {
       );
     } catch (error) {
       console.error('Error adding to cart:', error);
-      Alert.alert('Error', 'Failed to add item to cart. Please try again.');
+      SafeAlert.error('Error', 'Failed to add item to cart. Please try again.');
     } finally {
       setAddingToCart(false);
     }
@@ -199,15 +201,15 @@ const ProductDetailsScreen = () => {
       if (isFavorite) {
         await removeFromWishlist(product.id);
         setIsFavorite(false);
-        Alert.alert('Removed', 'Item removed from wishlist');
+        SafeAlert.success('Removed', 'Item removed from wishlist');
       } else {
         await addToWishlist(product.id);
         setIsFavorite(true);
-        Alert.alert('Added', 'Item added to wishlist');
+        SafeAlert.success('Added', 'Item added to wishlist');
       }
     } catch (error) {
       console.error('Error toggling wishlist:', error);
-      Alert.alert('Error', 'Failed to update wishlist. Please try again.');
+      SafeAlert.error('Error', 'Failed to update wishlist. Please try again.');
     } finally {
       setTogglingWishlist(false);
     }
@@ -299,15 +301,7 @@ const ProductDetailsScreen = () => {
         title={`✨ ${product.name}`}
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
-        rightComponent={
-          <TouchableOpacity 
-            style={styles.shareButton}
-            onPress={() => Alert.alert('Share', `Share ${product.name}`)}>
-            <View style={styles.shareIcon}>
-              <Text style={styles.shareIconText}>🔗</Text>
-            </View>
-          </TouchableOpacity>
-        }
+        rightComponent={<CartIcon size="medium" color={theme.colors.white} />}
       />
       
       <ScrollView 

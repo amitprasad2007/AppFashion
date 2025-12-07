@@ -21,6 +21,8 @@ import EnhancedHeader from '../components/EnhancedHeader';
 import GlassCard from '../components/GlassCard';
 import FloatingElements from '../components/FloatingElements';
 import GlassInput from '../components/GlassInput';
+import CartIcon from '../components/CartIcon';
+import SafeAlert from '../utils/safeAlert';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {Product, RootStackParamList} from '../types/navigation';
 import { apiService, ApiProduct, ApiCategory } from '../services/api';
@@ -138,7 +140,7 @@ const ProductListScreen = () => {
     try {
       await apiService.addToCart(product.id, 1);
       
-      Alert.alert(
+      SafeAlert.show(
         'Added to Cart', 
         `${product.name} has been added to your cart.`,
         [
@@ -148,7 +150,7 @@ const ProductListScreen = () => {
       );
     } catch (error) {
       console.error('Error adding to cart:', error);
-      Alert.alert('Error', 'Failed to add item to cart. Please try again.');
+      SafeAlert.error('Error', 'Failed to add item to cart. Please try again.');
     }
   };
 
@@ -298,18 +300,7 @@ const ProductListScreen = () => {
         title={`🛍️ ${categoryName ? categoryName : type ? `${type.charAt(0).toUpperCase() + type.slice(1)} Products` : 'All Products'}`}
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
-        rightComponent={
-          <TouchableOpacity 
-            style={styles.cartButton}
-            onPress={() => navigation.navigate('Cart')}>
-            <View style={styles.cartIcon}>
-              <Text style={styles.cartIconText}>🛒</Text>
-              <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeText}>3</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        }
+        rightComponent={<CartIcon size="medium" color={theme.colors.white} />}
       />
 
       {/* Search */}

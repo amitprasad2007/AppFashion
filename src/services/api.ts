@@ -330,7 +330,7 @@ class ApiService {
       this.guestSessionToken = this.generateGuestSessionToken();
       console.log('🔑 Generated new guest session token:', this.guestSessionToken);
     }
-    
+
     return this.guestSessionToken;
   }
 
@@ -338,12 +338,12 @@ class ApiService {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
-      
+
       // Convert headers to plain object if it's a Headers instance
       const optionsHeaders = options.headers instanceof Headers
         ? Object.fromEntries(options.headers.entries())
         : (options.headers as Record<string, string> | undefined) || {};
-      
+
       const headers: Record<string, string> = {
         ...API_CONFIG.HEADERS,
         ...optionsHeaders,
@@ -395,7 +395,7 @@ class ApiService {
             responseBody: errorText,
             requestBody: options.body
           });
-          
+
           // Try to parse error response as JSON
           try {
             const errorJson = JSON.parse(errorText);
@@ -407,13 +407,13 @@ class ApiService {
           console.error('Could not read error response:', textError);
           errorDetails = `HTTP ${response.status}`;
         }
-        
+
         throw new Error(`HTTP error! status: ${response.status} - ${errorDetails}`);
       }
 
       // Get response text first to handle potential JSON parse errors
       const responseText = await response.text();
-      
+
       // Try to parse JSON
       let data;
       try {
@@ -427,7 +427,7 @@ class ApiService {
         });
         throw new Error(`Invalid JSON response from ${endpoint}: ${parseError}`);
       }
-      
+
       // 🔍 Log network responses for debugging
       console.log('📡 API Response:', {
         url: `${BASE_URL}${endpoint}`,
@@ -435,7 +435,7 @@ class ApiService {
         statusText: response.statusText,
         data: data
       });
-      
+
       return data;
     } catch (error) {
       console.error(`API Error for ${endpoint}:`, error);
@@ -446,7 +446,7 @@ class ApiService {
   async getBanners(): Promise<ApiBannerData[]> {
     try {
       const response = await this.fetchApi<ApiBannerData[]>('/getBanners');
-      
+
       // The API returns data directly as an array
       if (Array.isArray(response)) {
         return response;
@@ -457,7 +457,7 @@ class ApiService {
     } catch (error) {
       console.error('Error fetching banners:', error);
       console.log('🔄 Using mock data for banners');
-      
+
       // Return mock data as fallback
       return [
         {
@@ -485,7 +485,7 @@ class ApiService {
   async getCategories(): Promise<ApiCategory[]> {
     try {
       const response = await this.fetchApi<ApiCategory[]>('/categories');
-      
+
       // Handle both direct array and wrapped response
       if (Array.isArray(response)) {
         return response;
@@ -498,7 +498,7 @@ class ApiService {
     } catch (error) {
       console.error('Error fetching categories:', error);
       console.log('🔄 Using mock data for categories');
-      
+
       // Return mock data as fallback
       return [
         {
@@ -529,10 +529,10 @@ class ApiService {
     }
   }
 
-  async getCategoryProducts(categoryId:number): Promise<ApiProduct[]> {
+  async getCategoryProducts(categoryId: number): Promise<ApiProduct[]> {
     try {
       const response = await this.fetchApi<ApiProduct[]>(`/products/${categoryId}`);
-      
+
       // Handle both direct array and wrapped response
       if (Array.isArray(response)) {
         return response;
@@ -545,7 +545,7 @@ class ApiService {
     } catch (error) {
       console.error('Error fetching bestseller products:', error);
       console.log('🔄 Using mock data for bestseller products');
-      
+
       // Return mock data as fallback
       return [
         {
@@ -639,7 +639,7 @@ class ApiService {
   async getBestsellerProducts(): Promise<ApiProduct[]> {
     try {
       const response = await this.fetchApi<ApiProduct[]>('/bestseller-products');
-      
+
       // Handle both direct array and wrapped response
       if (Array.isArray(response)) {
         return response;
@@ -652,7 +652,7 @@ class ApiService {
     } catch (error) {
       console.error('Error fetching bestseller products:', error);
       console.log('🔄 Using mock data for bestseller products');
-      
+
       // Return mock data as fallback
       return [
         {
@@ -746,7 +746,7 @@ class ApiService {
   async getFeaturedProducts(): Promise<ApiProduct[]> {
     try {
       const response = await this.fetchApi<ApiProduct[]>('/featured-products');
-      
+
       // Handle both direct array and wrapped response
       if (Array.isArray(response)) {
         return response;
@@ -765,7 +765,7 @@ class ApiService {
   // Enhanced product methods using your actual endpoints
   async getProducts(params: {
     categoryId?: string | number;
-    type?: 'featured' | 'bestseller' | 'recommended' | 'all'|'category';
+    type?: 'featured' | 'bestseller' | 'recommended' | 'all' | 'category';
     limit?: number;
     page?: number;
     search?: string;
@@ -784,18 +784,18 @@ class ApiService {
       if (params.type === 'recommended') {
         return await this.getRecommendedProducts();
       }
-      
+
       // For category-based or general product requests, use featured as fallback
       // since /products endpoint doesn't exist in your backend
       console.log('Using featured products as fallback for general product request');
       const featuredProducts = await this.getFeaturedProducts();
-      
+
       // If categoryId is specified, try to filter (this may not work without proper endpoint)
       if (params.categoryId) {
         console.warn('Category filtering may not work without dedicated category products endpoint');
         // Return all featured products for now
       }
-      
+
       return featuredProducts;
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -847,7 +847,7 @@ class ApiService {
         console.warn('Using numeric product ID - consider using product slugs instead');
         return null;
       }
-      
+
       // Treat as slug
       return await this.getProductBySlug(productIdOrSlug as string);
     } catch (error) {
@@ -865,12 +865,12 @@ class ApiService {
     try {
       const queryParams = new URLSearchParams();
       queryParams.append('q', query);
-      
+
       if (filters.category) queryParams.append('category', filters.category);
       if (filters.minPrice) queryParams.append('min_price', filters.minPrice.toString());
       if (filters.maxPrice) queryParams.append('max_price', filters.maxPrice.toString());
       if (filters.rating) queryParams.append('rating', filters.rating.toString());
-      
+
       const response = await this.fetchApi<ApiProduct[]>(`/search?${queryParams.toString()}`);
       return Array.isArray(response) ? response : (response as any)?.data || [];
     } catch (error) {
@@ -890,7 +890,7 @@ class ApiService {
         method: 'POST',
         body: JSON.stringify(credentials),
       });
-      
+
       // Transform the response to match our AuthResponse interface
       const authResponse: AuthResponse = {
         success: true,
@@ -898,16 +898,16 @@ class ApiService {
         user: response.customer,
         token: response.token,
       };
-      
+
       // Set auth token if login successful
       if (authResponse.token) {
         this.setAuthToken(authResponse.token);
       }
-      
+
       return authResponse;
     } catch (error) {
       console.error('Error during login:', error);
-      
+
       // Return failed response
       return {
         success: false,
@@ -922,12 +922,12 @@ class ApiService {
         method: 'POST',
         body: JSON.stringify(credentials),
       });
-      
+
       // Set auth token if registration includes auto-login
       if (response.success && response.token) {
         this.setAuthToken(response.token);
       }
-      
+
       return response;
     } catch (error) {
       console.error('Error during registration:', error);
@@ -966,10 +966,10 @@ class ApiService {
       const response = await this.fetchApi<AuthResponse>('/auth/logout', {
         method: 'POST',
       });
-      
+
       // Clear auth token
       this.setAuthToken(null);
-      
+
       return response;
     } catch (error) {
       console.error('Error during logout:', error);
@@ -985,12 +985,12 @@ class ApiService {
         method: 'POST',
         body: JSON.stringify({ refreshToken }),
       });
-      
+
       // Update auth token if refresh successful
       if (response.success && response.token) {
         this.setAuthToken(response.token);
       }
-      
+
       return response;
     } catch (error) {
       console.error('Error during token refresh:', error);
@@ -1000,7 +1000,7 @@ class ApiService {
 
   async getCurrentUser(): Promise<AuthUser> {
     try {
-      const response = await this.fetchApi<{user: AuthUser}>('/user');
+      const response = await this.fetchApi<{ user: AuthUser }>('/user');
       return response.user;
     } catch (error) {
       console.error('Error fetching current user:', error);
@@ -1043,16 +1043,16 @@ class ApiService {
           userInfo,
         }),
       });
-      
+
       // Set auth token if login successful
       if (response.success && response.token) {
         this.setAuthToken(response.token);
       }
-      
+
       return response;
     } catch (error) {
       console.error(`Error during ${provider} OAuth login:`, error);
-      
+
       // Return mock success for development/testing
       console.log('🔄 Using mock OAuth response for development');
       const mockResponse: AuthResponse = {
@@ -1075,12 +1075,12 @@ class ApiService {
         refreshToken: 'mock_refresh_token_' + Date.now(),
         expiresIn: 3600,
       };
-      
+
       // Set mock auth token
       if (mockResponse.token) {
         this.setAuthToken(mockResponse.token);
       }
-      
+
       return mockResponse;
     }
   }
@@ -1092,7 +1092,7 @@ class ApiService {
   }
 
   // ==================== CART MANAGEMENT ====================
-  
+
   // Get current user's cart (using comprehensive user data)
   async getCart(): Promise<ApiCart> {
     try {
@@ -1100,7 +1100,7 @@ class ApiService {
       return userData.cart_items;
     } catch (error) {
       console.error('Error fetching cart:', error);
-      
+
       // Return empty cart as fallback
       return {
         items: [],
@@ -1117,7 +1117,7 @@ class ApiService {
   async getLegacyCart(): Promise<Cart> {
     try {
       const apiCart = await this.getCart();
-      
+
       // Transform API cart to legacy format
       const legacyItems: CartItem[] = apiCart.items.map((item, index) => ({
         id: `cart_item_${item.id}`,
@@ -1159,7 +1159,7 @@ class ApiService {
       };
     } catch (error) {
       console.error('Error fetching legacy cart:', error);
-      
+
       return {
         id: 'empty_cart',
         items: [],
@@ -1208,439 +1208,6 @@ class ApiService {
     } catch (error) {
       console.error('Error fetching addresses:', error);
       return [];
-    }
-  }
-
-  // Create new address
-  async createAddress(addressData: {
-    name: string;
-    type: string;
-    phone: string;
-    address: string;
-    city: string;
-    state: string;
-    postal: string;
-    isDefault: boolean;
-  }): Promise<{ success: boolean; message: string; address?: ApiAddress }> {
-    try {
-      const response = await this.fetchApi<{ success: boolean; message: string; address?: ApiAddress }>('/addresses', {
-        method: 'POST',
-        body: JSON.stringify(addressData),
-      });
-      return response;
-    } catch (error) {
-      console.error('Error creating address:', error);
-      throw error;
-    }
-  }
-
-  // Get payment methods (with Razorpay integration)
-  async getPaymentMethods(): Promise<PaymentMethod[]> {
-    try {
-      console.log('🔍 Fetching payment methods from API...');
-      
-      // Try different possible endpoint patterns
-      const possibleEndpoints = [
-        '/getPaymentMethods',
-        '/payment-methods', 
-        '/paymentmethods',
-        '/checkout/payment-methods'
-      ];
-      
-      let response = null;
-      let successEndpoint = null;
-      
-      for (const endpoint of possibleEndpoints) {
-        try {
-          console.log(`🔍 Trying endpoint: ${endpoint}`);
-          response = await this.fetchApi<PaymentMethod[] | {data: PaymentMethod[]} | any>(endpoint);
-          successEndpoint = endpoint;
-          console.log(`✅ Success with endpoint: ${endpoint}`);
-          break;
-        } catch (error) {
-          console.log(`❌ Failed with endpoint: ${endpoint}`, error.message);
-          continue;
-        }
-      }
-      
-      if (!response) {
-        throw new Error('No valid payment methods endpoint found');
-      }
-      
-      console.log('💳 Raw Payment Methods API Response:', response);
-      
-      // Handle different response structures
-      let paymentMethods: PaymentMethod[] = [];
-      
-      if (Array.isArray(response)) {
-        paymentMethods = response;
-      } else if (response && response.data && Array.isArray(response.data)) {
-        paymentMethods = response.data;
-      } else if (response && typeof response === 'object') {
-        // If response is an object, try to extract payment methods
-        const keys = Object.keys(response);
-        console.log('🔍 Response object keys:', keys);
-        
-        // Look for common property names that might contain payment methods
-        for (const key of ['payment_methods', 'paymentMethods', 'methods', 'data']) {
-          if (response[key] && Array.isArray(response[key])) {
-            paymentMethods = response[key];
-            break;
-          }
-        }
-      }
-      
-      console.log('💳 Processed Payment Methods:', paymentMethods);
-      
-      // If we got valid payment methods from API, return them
-      if (paymentMethods.length > 0) {
-        return paymentMethods.map(method => ({
-          id: method.id || method.code || method.type?.toLowerCase() || 'unknown',
-          type: (method.type || method.method_type || 'COD') as PaymentMethod['type'],
-          name: method.name || method.title || method.display_name || 'Unknown Payment Method',
-          details: method.details || method.description
-        }));
-      }
-      
-      // If no payment methods from API, use enhanced fallback with Razorpay
-      console.log('⚠️ No payment methods from API, using enhanced Razorpay fallback');
-      const razorpayMethods: PaymentMethod[] = [
-        { 
-          id: 'cod', 
-          type: 'COD' as const, 
-          name: 'Cash on Delivery',
-          details: 'Pay when you receive your order'
-        },
-        { 
-          id: 'upi', 
-          type: 'UPI' as const, 
-          name: 'UPI Payment',
-          details: 'Pay using PhonePe, GPay, Paytm, etc.'
-        },
-        { 
-          id: 'card', 
-          type: 'CARD' as const, 
-          name: 'Credit/Debit Card',
-          details: 'Visa, Mastercard, RuPay, Amex'
-        },
-        { 
-          id: 'netbanking', 
-          type: 'NETBANKING' as const, 
-          name: 'Net Banking',
-          details: 'All major banks supported'
-        },
-        { 
-          id: 'wallet', 
-          type: 'WALLET' as const, 
-          name: 'Digital Wallets',
-          details: 'Paytm, Mobikwik, FreeCharge, etc.'
-        },
-      ];
-      
-      return razorpayMethods;
-      
-    } catch (error) {
-      console.error('🚨 Error fetching payment methods:', error);
-      
-      // Return enhanced fallback payment methods with Razorpay on error
-      console.log('🔄 Using enhanced Razorpay fallback payment methods due to error');
-      return [
-        { 
-          id: 'cod', 
-          type: 'COD', 
-          name: 'Cash on Delivery',
-          details: 'Pay when you receive your order'
-        },
-        { 
-          id: 'upi', 
-          type: 'UPI', 
-          name: 'UPI Payment',
-          details: 'Pay using PhonePe, GPay, Paytm, etc.'
-        },
-        { 
-          id: 'card', 
-          type: 'CARD', 
-          name: 'Credit/Debit Card',
-          details: 'Visa, Mastercard, RuPay, Amex'
-        },
-        { 
-          id: 'netbanking', 
-          type: 'NETBANKING', 
-          name: 'Net Banking',
-          details: 'All major banks supported'
-        },
-        { 
-          id: 'wallet', 
-          type: 'WALLET', 
-          name: 'Digital Wallets',
-          details: 'Paytm, Mobikwik, FreeCharge, etc.'
-        },
-      ];
-    }
-  }
-
-  // ==================== RAZORPAY INTEGRATION ====================
-  
-  // Create Razorpay order
-  async createRazorpayOrder(orderData: {
-    amount: number; // Amount in rupees
-    currency?: string;
-    receipt: string;
-    notes?: Record<string, string>;
-  }): Promise<{ order_id: string; amount: number; currency: string }> {
-    try {
-      console.log('💰 Creating Razorpay order via API:', orderData);
-      
-      const response = await this.fetchApi<{
-        success: boolean;
-        order_id: string;
-        amount: number;
-        currency: string;
-        receipt: string;
-      }>('/razorpay/create-order', {
-        method: 'POST',
-        body: JSON.stringify({
-          amount: Math.round(orderData.amount * 100), // Convert to paise
-          currency: orderData.currency || 'INR',
-          receipt: orderData.receipt,
-          notes: orderData.notes || {}
-        }),
-      });
-      
-      if (response.success) {
-        return {
-          order_id: response.order_id,
-          amount: response.amount,
-          currency: response.currency
-        };
-      } else {
-        throw new Error('Failed to create Razorpay order');
-      }
-    } catch (error) {
-      console.error('❌ Error creating Razorpay order:', error);
-      
-      // Fallback: generate mock order for development
-      console.log('🔄 Using mock Razorpay order for development');
-      return {
-        order_id: `order_${Date.now()}`,
-        amount: Math.round(orderData.amount * 100), // Convert to paise
-        currency: orderData.currency || 'INR'
-      };
-    }
-  }
-  
-  // Verify Razorpay payment
-  async verifyRazorpayPayment(paymentData: {
-    razorpay_order_id: string;
-    razorpay_payment_id: string;
-    razorpay_signature: string;
-  }): Promise<{ success: boolean; verified: boolean }> {
-    try {
-      console.log('🔍 Verifying Razorpay payment:', paymentData);
-      
-      const response = await this.fetchApi<{
-        success: boolean;
-        verified: boolean;
-        message?: string;
-      }>('/razorpay/verify-payment', {
-        method: 'POST',
-        body: JSON.stringify(paymentData),
-      });
-      
-      return {
-        success: response.success,
-        verified: response.verified
-      };
-    } catch (error) {
-      console.error('❌ Error verifying Razorpay payment:', error);
-      
-      // For development, assume verification passes
-      console.log('🔄 Using mock verification for development');
-      return {
-        success: true,
-        verified: true
-      };
-    }
-  }
-  
-  // Enhanced checkout with Razorpay support
-  async checkoutWithRazorpay(orderData: {
-    items: any[];
-    address_id: number;
-    payment_method: string;
-    payment_data?: {
-      razorpay_order_id?: string;
-      razorpay_payment_id?: string;
-      razorpay_signature?: string;
-    };
-    subtotal: number;
-    shippingcost: number;
-    tax: number;
-    total: number;
-    totalquantity: number;
-    coupon_code?: string | null;
-  }): Promise<{
-    success: boolean;
-    message: string;
-    order_id?: string;
-    order_number?: string;
-    order?: any;
-    payment_status?: string;
-  }> {
-    try {
-      console.log('🛒 Enhanced Razorpay checkout:', orderData);
-      
-      // If it's a Razorpay payment, verify first
-      if (orderData.payment_data && orderData.payment_data.razorpay_payment_id) {
-        console.log('💳 Verifying Razorpay payment before order creation...');
-        const verification = await this.verifyRazorpayPayment(orderData.payment_data);
-        
-        if (!verification.verified) {
-          throw new Error('Payment verification failed');
-        }
-      }
-      
-      const response = await this.fetchApi<{
-        success: boolean;
-        message: string;
-        order_id?: string;
-        order_number?: string;
-        order?: any;
-        payment_status?: string;
-      }>('/order/checkout-razorpay', {
-        method: 'POST',
-        body: JSON.stringify(orderData),
-      });
-      
-      return response;
-    } catch (error) {
-      console.error('❌ Enhanced Razorpay checkout failed:', error);
-      throw error;
-    }
-  }
-
-  // ==================== ORDER MANAGEMENT ====================
-
-  // Get user's order history (using comprehensive user data)
-  async getOrders(params: {
-    page?: number;
-    limit?: number;
-    status?: string;
-  } = {}): Promise<{ orders: ApiOrder[]; total: number; hasMore: boolean }> {
-    try {
-      const userData = await this.getUserData();
-      let orders = userData.orders;
-
-      // Filter by status if provided
-      if (params.status) {
-        orders = orders.filter(order => 
-          order.status.toLowerCase() === params.status?.toLowerCase()
-        );
-      }
-
-      // Apply pagination
-      const startIndex = ((params.page || 1) - 1) * (params.limit || 10);
-      const endIndex = startIndex + (params.limit || 10);
-      const paginatedOrders = orders.slice(startIndex, endIndex);
-
-      return {
-        orders: paginatedOrders,
-        total: orders.length,
-        hasMore: endIndex < orders.length,
-      };
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      
-      return {
-        orders: [],
-        total: 0,
-        hasMore: false,
-      };
-    }
-  }
-
-  // Get orders in legacy format for backward compatibility
-  async getLegacyOrders(params: {
-    page?: number;
-    limit?: number;
-    status?: Order['status'];
-  } = {}): Promise<{ orders: Order[]; total: number; hasMore: boolean }> {
-    try {
-      const apiOrdersResponse = await this.getOrders(params);
-      
-      // Transform API orders to legacy format
-      const legacyOrders: Order[] = apiOrdersResponse.orders.map(apiOrder => ({
-        id: apiOrder.id,
-        orderNumber: apiOrder.id,
-        items: apiOrder.items.map(item => ({
-          id: `order_item_${item.id}`,
-          productId: item.id,
-          product: {
-            id: item.id,
-            name: item.name,
-            price: parseFloat(item.price),
-            images: Array.isArray(item.image) ? item.image : [item.image],
-            slug: `product-${item.id}`,
-            originalPrice: parseFloat(item.price),
-            discountPercentage: 0,
-            sku: `SKU-${item.id}`,
-            colors: [],
-            defaultVariantId: 1,
-            variants: [],
-            sizes: '',
-            stock: 10,
-            description: '',
-            specifications: [],
-            isBestseller: false,
-            category: { id: 1, title: 'General', slug: 'general', summary: '', photo: '', is_parent: 0 }
-          } as ApiProduct,
-          quantity: item.quantity,
-          addedAt: apiOrder.date,
-          subtotal: parseFloat(item.price) * item.quantity,
-        })) as CartItem[],
-        status: apiOrder.status.toUpperCase() as Order['status'],
-        paymentStatus: 'PENDING' as const,
-        paymentMethod: { id: 'cod', type: 'COD', name: 'Cash on Delivery' },
-        shippingAddress: { 
-          name: 'Customer', 
-          phone: '', 
-          addressLine1: '', 
-          city: '', 
-          state: '', 
-          pincode: '' 
-        },
-        totalItems: apiOrder.items.reduce((sum, item) => sum + item.quantity, 0),
-        totalAmount: parseFloat(apiOrder.total),
-        deliveryCharge: 0,
-        finalAmount: parseFloat(apiOrder.total),
-        placedAt: apiOrder.date,
-        updatedAt: apiOrder.date,
-      }));
-
-      return {
-        orders: legacyOrders,
-        total: apiOrdersResponse.total,
-        hasMore: apiOrdersResponse.hasMore,
-      };
-    } catch (error) {
-      console.error('Error fetching legacy orders:', error);
-      
-      return {
-        orders: [],
-        total: 0,
-        hasMore: false,
-      };
-    }
-  }
-
-  // Get specific order details
-  async getOrderById(orderId: string): Promise<Order | null> {
-    try {
-      const response = await this.fetchApi<Order>(`/orders/${orderId}`);
-      return response;
-    } catch (error) {
-      console.error(`Error fetching order ${orderId}:`, error);
-      return null;
     }
   }
 
@@ -1704,7 +1271,7 @@ class ApiService {
 
   // Add item to cart
   async addToCart(
-    productId: number, 
+    productId: number,
     quantity: number = 1,
     options?: { size?: string; color?: string; variant_id?: number }
   ): Promise<{ success: boolean; message: string; cart?: ApiCart }> {
@@ -1714,7 +1281,7 @@ class ApiService {
         quantity,
         ...options,
       };
-      
+
       const response = await this.fetchApi<{ success: boolean; message: string; cart?: ApiCart }>('/cart/add', {
         method: 'POST',
         body: JSON.stringify(payload),
@@ -1742,7 +1309,7 @@ class ApiService {
 
   // Update cart item
   async updateCartItem(
-    cartItemId: number, 
+    cartItemId: number,
     quantity: number
   ): Promise<{ success: boolean; message: string; cart?: ApiCart }> {
     try {
@@ -1882,30 +1449,30 @@ class ApiService {
   // Check if product is in wishlist
   // Check wishlist status for a product (with session token and variant support)
   async checkWishlist(
-    productId: number, 
+    productId: number,
     productVariantId?: number
   ): Promise<{ in_wishlist: boolean; wishlist_id?: number }> {
     try {
       // Use different endpoints based on authentication status
       const endpoint = this.authToken ? '/checkwishlist' : '/guest/checkwishlist';
-      
-      const requestBody: any = { 
+
+      const requestBody: any = {
         product_id: productId,
         product_variant_id: productVariantId || null // Always include product_variant_id (required parameter)
       };
-      
+
       // For guest users, add session token
       if (!this.authToken) {
         const sessionToken = this.getSessionToken();
         requestBody.session_token = sessionToken;
         console.log('🔍 Checking wishlist for product:', productId, 'variant:', productVariantId || 'null', 'with session token:', sessionToken);
       }
-      
+
       const response = await this.fetchApi<{ in_wishlist: boolean; wish_id?: number }>(endpoint, {
         method: 'POST',
         body: JSON.stringify(requestBody),
       });
-      
+
       // Normalize the response to match our interface
       return {
         in_wishlist: response.in_wishlist,
@@ -1945,12 +1512,12 @@ class ApiService {
         quantity,
         ...options,
       };
-      
-      const response = await this.fetchApi<{ 
-        success: boolean; 
-        message: string; 
-        order_id?: string; 
-        payment_url?: string 
+
+      const response = await this.fetchApi<{
+        success: boolean;
+        message: string;
+        order_id?: string;
+        payment_url?: string
       }>('/order/buy-now', {
         method: 'POST',
         body: JSON.stringify(payload),
@@ -1967,10 +1534,10 @@ class ApiService {
     addressId: number,
     paymentMethod: string,
     notes?: string
-  ): Promise<{ 
-    success: boolean; 
-    message: string; 
-    order_id?: string; 
+  ): Promise<{
+    success: boolean;
+    message: string;
+    order_id?: string;
     payment_url?: string;
     order_total?: number;
   }> {
@@ -1980,11 +1547,11 @@ class ApiService {
         payment_method: paymentMethod,
         notes,
       };
-      
-      const response = await this.fetchApi<{ 
-        success: boolean; 
-        message: string; 
-        order_id?: string; 
+
+      const response = await this.fetchApi<{
+        success: boolean;
+        message: string;
+        order_id?: string;
         payment_url?: string;
         order_total?: number;
       }>('/order/checkout', {
@@ -2019,24 +1586,24 @@ class ApiService {
     total: number;
     totalquantity: number;
     coupon_code?: string | null;
-  }): Promise<{ 
-    success: boolean; 
-    message: string; 
-    order_id?: string; 
+  }): Promise<{
+    success: boolean;
+    message: string;
+    order_id?: string;
     order_number?: string;
     order?: any;
   }> {
     try {
       console.log('🛒 Starting COD Checkout Process...');
-      
+
       // Send the checkout request with original payload structure
       console.log('💳 Processing checkout with original payload...');
       const checkoutPayload = orderData;
 
       console.log('🔍 Final checkout payload:', JSON.stringify(checkoutPayload, null, 2));
 
-      const response = await this.fetchApi<{ 
-        message: string; 
+      const response = await this.fetchApi<{
+        message: string;
         order: {
           order_id: string;
           customer_id: number;
@@ -2071,7 +1638,7 @@ class ApiService {
       };
     } catch (error) {
       console.error('Error in COD checkout:', error);
-      
+
       // Return error response in expected format
       return {
         success: false,
@@ -2081,15 +1648,15 @@ class ApiService {
   }
 
   // Get orders list (independent endpoint)
-  async getOrdersList(params?: { 
-    status?: string; 
-    page?: number; 
-    per_page?: number; 
-  }): Promise<{ 
-    orders: ApiOrder[]; 
-    current_page: number; 
-    last_page: number; 
-    total: number; 
+  async getOrdersList(params?: {
+    status?: string;
+    page?: number;
+    per_page?: number;
+  }): Promise<{
+    orders: ApiOrder[];
+    current_page: number;
+    last_page: number;
+    total: number;
   }> {
     try {
       const queryParams = new URLSearchParams();
@@ -2098,13 +1665,13 @@ class ApiService {
       if (params?.per_page) queryParams.append('per_page', params.per_page.toString());
 
       const endpoint = queryParams.toString() ? `/orders?${queryParams.toString()}` : '/orders';
-      const response = await this.fetchApi<{ 
-        orders: ApiOrder[]; 
-        current_page: number; 
-        last_page: number; 
-        total: number; 
+      const response = await this.fetchApi<{
+        orders: ApiOrder[];
+        current_page: number;
+        last_page: number;
+        total: number;
       }>(endpoint);
-      
+
       return response;
     } catch (error) {
       console.error('Error fetching orders list:', error);
@@ -2113,11 +1680,11 @@ class ApiService {
   }
 
   // Get order history
-  async getOrderHistory(params?: { 
-    year?: number; 
-    month?: number; 
-    status?: string; 
-  }): Promise<{ 
+  async getOrderHistory(params?: {
+    year?: number;
+    month?: number;
+    status?: string;
+  }): Promise<{
     orders: ApiOrder[];
     total_spent: number;
     order_count: number;
@@ -2129,14 +1696,14 @@ class ApiService {
       if (params?.month) queryParams.append('month', params.month.toString());
       if (params?.status) queryParams.append('status', params.status);
 
-      const endpoint = queryParams.toString() ? `/orders/history?${queryParams.toString()}` : '/orders/history';
-      const response = await this.fetchApi<{ 
+      const endpoint = queryParams.toString() ? '/orders/history?' + queryParams.toString() : '/orders/history';
+      const response = await this.fetchApi<{
         orders: ApiOrder[];
         total_spent: number;
         order_count: number;
         period: string;
       }>(endpoint);
-      
+
       return response;
     } catch (error) {
       console.error('Error fetching order history:', error);
@@ -2145,17 +1712,6 @@ class ApiService {
   }
 
   // ==================== ADDRESS OPERATIONS ====================
-
-  // Get user's saved addresses (using comprehensive user data)
-  async getAddresses(): Promise<ApiAddress[]> {
-    try {
-      const userData = await this.getUserData();
-      return userData.addresses;
-    } catch (error) {
-      console.error('Error fetching addresses from user data:', error);
-      return [];
-    }
-  }
 
   // Get addresses (independent endpoint)
   async getAddressesIndependent(): Promise<ApiAddress[]> {
@@ -2179,36 +1735,9 @@ class ApiService {
     }
   }
 
-  // Create new address
-  async createAddress(address: {
-    name: string;
-    type: string;
-    address: string;
-    city: string;
-    state: string;
-    postal: string;
-    phone: string;
-    isDefault?: boolean;
-  }): Promise<{ success: boolean; message: string; address?: ApiAddress }> {
-    try {
-      const response = await this.fetchApi<{ 
-        success: boolean; 
-        message: string; 
-        address?: ApiAddress 
-      }>('/addresses', {
-        method: 'POST',
-        body: JSON.stringify(address),
-      });
-      return response;
-    } catch (error) {
-      console.error('Error creating address:', error);
-      throw error;
-    }
-  }
-
   // Update address
   async updateAddress(
-    addressId: number, 
+    addressId: number,
     address: Partial<{
       name: string;
       type: string;
@@ -2221,11 +1750,11 @@ class ApiService {
     }>
   ): Promise<{ success: boolean; message: string; address?: ApiAddress }> {
     try {
-      const response = await this.fetchApi<{ 
-        success: boolean; 
-        message: string; 
-        address?: ApiAddress 
-      }>(`/addresses/${addressId}`, {
+      const response = await this.fetchApi<{
+        success: boolean;
+        message: string;
+        address?: ApiAddress
+      }>(`/ addresses / ${addressId} `, {
         method: 'PUT',
         body: JSON.stringify(address),
       });
@@ -2239,7 +1768,7 @@ class ApiService {
   // Delete address
   async deleteAddress(addressId: number): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await this.fetchApi<{ success: boolean; message: string }>(`/addresses/${addressId}`, {
+      const response = await this.fetchApi<{ success: boolean; message: string }>(`/ addresses / ${addressId} `, {
         method: 'DELETE',
       });
       return response;
@@ -2253,7 +1782,7 @@ class ApiService {
   async getLegacyAddresses(): Promise<ShippingAddress[]> {
     try {
       const apiAddresses = await this.getAddresses();
-      
+
       // Transform API addresses to legacy format
       const legacyAddresses: ShippingAddress[] = apiAddresses.map(apiAddress => ({
         id: apiAddress.id.toString(),
@@ -2293,16 +1822,16 @@ class ApiService {
     try {
       // Use different endpoints based on authentication status
       const endpoint = this.authToken ? '/recently-viewed' : '/guest/recently-viewed';
-      
+
       const requestBody: any = { product_id: productId };
-      
+
       // For guest users, add session token
       if (!this.authToken) {
         const sessionToken = this.getSessionToken();
         requestBody.session_token = sessionToken;
         console.log('🔍 Adding to recently viewed for product:', productId, 'with session token:', sessionToken);
       }
-      
+
       const response = await this.fetchApi<{ success: boolean; message: string }>(endpoint, {
         method: 'POST',
         body: JSON.stringify(requestBody),
@@ -2331,55 +1860,7 @@ class ApiService {
 
   // ==================== PAYMENT OPERATIONS ====================
 
-  // Create Razorpay order
-  async createRazorpayOrder(
-    amount: number,
-    currency: string = 'INR',
-    notes?: { [key: string]: string }
-  ): Promise<{
-    success: boolean;
-    order_id: string;
-    amount: number;
-    currency: string;
-    key: string;
-    name?: string;
-    description?: string;
-    prefill?: {
-      name?: string;
-      email?: string;
-      contact?: string;
-    };
-    theme?: {
-      color?: string;
-    };
-  }> {
-    try {
-      const response = await this.fetchApi<{
-        success: boolean;
-        order_id: string;
-        amount: number;
-        currency: string;
-        key: string;
-        name?: string;
-        description?: string;
-        prefill?: {
-          name?: string;
-          email?: string;
-          contact?: string;
-        };
-        theme?: {
-          color?: string;
-        };
-      }>('/createrazorpayorder', {
-        method: 'POST',
-        body: JSON.stringify({ amount, currency, notes }),
-      });
-      return response;
-    } catch (error) {
-      console.error('Error creating Razorpay order:', error);
-      throw error;
-    }
-  }
+
 
   // Verify and save payment
   async verifyAndSavePayment(paymentData: {
@@ -2440,7 +1921,7 @@ class ApiService {
           created_at: string;
           updated_at: string;
         };
-      }>(`/orderdetails/${orderId}`);
+      }>(`/ orderdetails / ${orderId} `);
       return response;
     } catch (error) {
       console.error('Error fetching order details:', error);
@@ -2452,7 +1933,7 @@ class ApiService {
   async generateOrderPDF(orderId: string): Promise<string> {
     try {
       // This returns a PDF download URL
-      const pdfUrl = `${BASE_URL}/order/pdf/${orderId}`;
+      const pdfUrl = `${BASE_URL} /order/pdf / ${orderId} `;
       return pdfUrl;
     } catch (error) {
       console.error('Error generating order PDF:', error);
@@ -2475,16 +1956,16 @@ class ApiService {
   }> {
     try {
       const userData = await this.getUserData();
-      
-      const pendingOrders = userData.orders.filter(order => 
+
+      const pendingOrders = userData.orders.filter(order =>
         order.status.toLowerCase() === 'pending'
       ).length;
-      
-      const completedOrders = userData.orders.filter(order => 
+
+      const completedOrders = userData.orders.filter(order =>
         order.status.toLowerCase() === 'delivered' || order.status.toLowerCase() === 'completed'
       ).length;
 
-      const totalSpent = userData.orders.reduce((sum, order) => 
+      const totalSpent = userData.orders.reduce((sum, order) =>
         sum + parseFloat(order.total), 0
       );
 
@@ -2500,7 +1981,7 @@ class ApiService {
       };
     } catch (error) {
       console.error('Error fetching user statistics:', error);
-      
+
       return {
         totalOrders: 0,
         pendingOrders: 0,
@@ -2521,10 +2002,10 @@ class ApiService {
   }> {
     try {
       const userData = await this.getUserData();
-      
+
       // Get 3 most recent orders
       const recentOrders = userData.orders.slice(0, 3);
-      
+
       // Get 5 most recent wishlist items
       const recentWishlistItems = userData.wishlists.slice(0, 5);
 
@@ -2534,7 +2015,7 @@ class ApiService {
       };
     } catch (error) {
       console.error('Error fetching recent activity:', error);
-      
+
       return {
         recentOrders: [],
         recentWishlistItems: [],
@@ -2546,9 +2027,9 @@ class ApiService {
   async searchOrders(query: string): Promise<ApiOrder[]> {
     try {
       const userData = await this.getUserData();
-      
+
       const searchTerm = query.toLowerCase();
-      const filteredOrders = userData.orders.filter(order => 
+      const filteredOrders = userData.orders.filter(order =>
         order.id.toLowerCase().includes(searchTerm) ||
         order.items.some(item => item.name.toLowerCase().includes(searchTerm))
       );
@@ -2564,8 +2045,8 @@ class ApiService {
   async handleOAuthCallback(provider: 'google' | 'facebook' | 'apple', params: { [key: string]: string }): Promise<AuthResponse> {
     try {
       const baseUrl = BASE_URL.replace('/api', '');
-      const callbackUrl = `${baseUrl}/auth/${provider}/callback`;
-      
+      const callbackUrl = `${baseUrl} /auth/${provider}/callback`;
+
       const response = await this.fetchApi<AuthResponse>(callbackUrl.replace(baseUrl, ''), {
         method: 'POST',
         body: JSON.stringify({
@@ -2573,12 +2054,12 @@ class ApiService {
           redirect_uri: 'appfashion://oauth/callback',
         }),
       });
-      
+
       // Set auth token if login successful
       if (response.success && response.token) {
         this.setAuthToken(response.token);
       }
-      
+
       return response;
     } catch (error) {
       console.error(`Error handling ${provider} OAuth callback:`, error);
@@ -2587,15 +2068,15 @@ class ApiService {
   }
 
   // ==================== COLLECTIONS API ====================
-  
+
   async getCollectionTypes(): Promise<ApiCollectionType[]> {
     try {
       console.log('🔍 Fetching collection types...');
-      
+
       const externalUrl = 'https://superadmin.samarsilkpalace.com/api/collection-types';
       const response = await fetch(externalUrl);
       const data = await response.json();
-      
+
       console.log('✅ Successfully fetched collection types:', data);
       return data;
     } catch (error) {
@@ -2605,12 +2086,12 @@ class ApiService {
   }
 
   // ==================== COLLECTIONS MANAGEMENT ====================
-  
+
   async getFeaturedCollections(): Promise<ApiCollection[]> {
     try {
       console.log('🔍 Fetching featured collections...');
       const response = await this.fetchApi<ApiCollection[]>('/featured-collections');
-      
+
       // Handle both direct array and wrapped response
       if (Array.isArray(response)) {
         return response;
@@ -2623,7 +2104,7 @@ class ApiService {
     } catch (error) {
       console.error('Error fetching featured collections:', error);
       console.log('🔄 Using mock data for featured collections');
-      
+
       // Return mock data as fallback
       return [
         {
@@ -2662,7 +2143,7 @@ class ApiService {
     try {
       console.log('🔍 Fetching all collections...');
       const response = await this.fetchApi<ApiCollection[]>('/collections');
-      
+
       // Handle both direct array and wrapped response
       if (Array.isArray(response)) {
         return response;
@@ -2675,7 +2156,7 @@ class ApiService {
     } catch (error) {
       console.error('Error fetching all collections:', error);
       console.log('🔄 Using mock data for all collections');
-      
+
       // Return mock data as fallback
       return [
         {
@@ -2710,35 +2191,291 @@ class ApiService {
     }
   }
 
-  async getFeaturedCollections(): Promise<ApiCollection[]> {
-    try {
-      console.log('🔍 Fetching featured collections...');
-      
-      const externalUrl = 'https://superadmin.samarsilkpalace.com/api/collections/featured';
-      const response = await fetch(externalUrl);
-      const data = await response.json();
-      
-      console.log('✅ Successfully fetched featured collections:', data);
-      return Array.isArray(data) ? data : [data];
-    } catch (error) {
-      console.error('❌ Error fetching featured collections:', error);
-      return [];
-    }
-  }
-
   async getCollectionBySlug(slug: string): Promise<ApiCollection | null> {
     try {
       console.log('🔍 Fetching collection by slug:', slug);
-      
+
       const externalUrl = `https://superadmin.samarsilkpalace.com/api/collections/${slug}`;
       const response = await fetch(externalUrl);
       const data = await response.json();
-      
+
       console.log('✅ Successfully fetched collection:', data);
       return data;
     } catch (error) {
       console.error('❌ Error fetching collection by slug:', error);
       return null;
+    }
+  }
+
+  // ==================== MISSING METHODS IMPLEMENTATION ====================
+
+  // Create new address
+  async createAddress(addressData: {
+    name: string;
+    type: string;
+    phone: string;
+    address: string;
+    city: string;
+    state: string;
+    postal: string;
+    isDefault: boolean;
+  }): Promise<{ success: boolean; message: string; address?: ApiAddress }> {
+    try {
+      const response = await this.fetchApi<{ success: boolean; message: string; address?: ApiAddress }>('/addresses', {
+        method: 'POST',
+        body: JSON.stringify(addressData),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error creating address:', error);
+      return { success: false, message: 'Failed to create address' };
+    }
+  }
+
+  // Get payment methods
+  async getPaymentMethods(): Promise<PaymentMethod[]> {
+    try {
+      const response = await this.fetchApi<any>('/payment-methods');
+      console.log('📡 Payment Methods API Response:', response);
+
+      // Handle nested response structure: {data: {payment_methods: []}}
+      if (response && response.data && response.data.payment_methods && Array.isArray(response.data.payment_methods)) {
+        console.log('✅ Found payment methods in response.data.payment_methods:', response.data.payment_methods.length);
+        return response.data.payment_methods;
+      }
+
+      // Fallback: check if payment_methods is at root level
+      if (response && response.payment_methods && Array.isArray(response.payment_methods)) {
+        console.log('✅ Found payment methods in response.payment_methods');
+        return response.payment_methods;
+      }
+
+      // Fallback: check if response is already an array
+      if (Array.isArray(response)) {
+        console.log('✅ Response is already an array');
+        return response;
+      }
+
+      console.warn('⚠️ Unexpected payment methods response structure:', response);
+      console.warn('⚠️ Using fallback payment methods');
+      return [
+        { id: 'cod', type: 'COD', name: 'Cash on Delivery', details: 'Pay when you receive' },
+        { id: 'razorpay', type: 'CARD', name: 'Online Payment', details: 'Credit/Debit Card, UPI, Netbanking', razorpay_enabled: true }
+      ];
+    } catch (error) {
+      console.error('Error fetching payment methods:', error);
+      return [
+        { id: 'cod', type: 'COD', name: 'Cash on Delivery', details: 'Pay when you receive' },
+        { id: 'razorpay', type: 'CARD', name: 'Online Payment', details: 'Credit/Debit Card, UPI, Netbanking', razorpay_enabled: true }
+      ];
+    }
+  }
+
+  // Get orders
+  async getOrders(params: {
+    page?: number;
+    limit?: number;
+    status?: string;
+  } = {}): Promise<{ orders: ApiOrder[]; total: number; hasMore: boolean }> {
+    try {
+      const userData = await this.getUserData();
+      let orders = userData.orders;
+
+      if (params.status) {
+        orders = orders.filter(order =>
+          order.status.toLowerCase() === params.status?.toLowerCase()
+        );
+      }
+
+      const startIndex = ((params.page || 1) - 1) * (params.limit || 10);
+      const endIndex = startIndex + (params.limit || 10);
+      const paginatedOrders = orders.slice(startIndex, endIndex);
+
+      return {
+        orders: paginatedOrders,
+        total: orders.length,
+        hasMore: endIndex < orders.length,
+      };
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      return {
+        orders: [],
+        total: 0,
+        hasMore: false,
+      };
+    }
+  }
+
+  // Get orders in legacy format
+  async getLegacyOrders(params: {
+    page?: number;
+    limit?: number;
+    status?: Order['status'];
+  } = {}): Promise<{ orders: Order[]; total: number; hasMore: boolean }> {
+    try {
+      const apiOrdersResponse = await this.getOrders(params);
+
+      const legacyOrders: Order[] = apiOrdersResponse.orders.map(apiOrder => ({
+        id: apiOrder.id,
+        orderNumber: apiOrder.id,
+        items: apiOrder.items.map(item => ({
+          id: `order_item_${item.id}`,
+          productId: item.id,
+          product: {
+            id: item.id,
+            name: item.name,
+            price: parseFloat(item.price),
+            images: Array.isArray(item.image) ? item.image : [item.image],
+            slug: `product-${item.id}`,
+            originalPrice: parseFloat(item.price),
+            discountPercentage: 0,
+            sku: `SKU-${item.id}`,
+            colors: [],
+            defaultVariantId: 1,
+            variants: [],
+            sizes: '',
+            stock: 10,
+            description: '',
+            specifications: [],
+            isBestseller: false,
+            category: { id: 1, title: 'General', slug: 'general', summary: '', photo: '', is_parent: 0 }
+          } as ApiProduct,
+          quantity: item.quantity,
+          addedAt: apiOrder.date,
+          subtotal: parseFloat(item.price) * item.quantity,
+        })) as CartItem[],
+        status: apiOrder.status.toUpperCase() as Order['status'],
+        paymentStatus: 'PENDING' as const,
+        paymentMethod: { id: 'cod', type: 'COD', name: 'Cash on Delivery' },
+        shippingAddress: {
+          name: 'Customer',
+          phone: '',
+          addressLine1: '',
+          city: '',
+          state: '',
+          pincode: ''
+        },
+        totalItems: apiOrder.items.reduce((sum, item) => sum + item.quantity, 0),
+        totalAmount: parseFloat(apiOrder.total),
+        deliveryCharge: 0,
+        finalAmount: parseFloat(apiOrder.total),
+        placedAt: apiOrder.date,
+        updatedAt: apiOrder.date,
+      }));
+
+      return {
+        orders: legacyOrders,
+        total: apiOrdersResponse.total,
+        hasMore: apiOrdersResponse.hasMore,
+      };
+    } catch (error) {
+      console.error('Error fetching legacy orders:', error);
+      return {
+        orders: [],
+        total: 0,
+        hasMore: false,
+      };
+    }
+  }
+
+  // Get specific order by ID
+  async getOrderById(orderId: string): Promise<Order | null> {
+    try {
+      const response = await this.fetchApi<Order>(`/orders/${orderId}`);
+      return response;
+    } catch (error) {
+      console.error(`Error fetching order ${orderId}:`, error);
+      return null;
+    }
+  }
+
+  // Checkout with Razorpay
+  async checkoutWithRazorpay(orderData: {
+    items: Array<{
+      cart_id: number;
+      id: number;
+      name: string;
+      price: string;
+      quantity: number;
+      image: string;
+      color: string;
+      slug: string;
+    }>;
+    address_id: number;
+    shipping: number;
+    payment_method: string;
+    subtotal: number;
+    shippingcost: number;
+    tax: number;
+    total: number;
+    totalquantity: number;
+    coupon_code?: string | null;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    order_id?: string;
+    order_number?: string;
+    order?: any;
+    razorpay_order_id?: string;
+    razorpay_key?: string;
+    amount?: number;
+    currency?: string;
+  }> {
+    try {
+      console.log('💳 Starting Razorpay Checkout Process...');
+
+      const response = await this.fetchApi<{
+        success: boolean;
+        message: string;
+        order_id?: string;
+        order_number?: string;
+        order?: any;
+        razorpay_order_id?: string;
+        razorpay_key?: string;
+        amount?: number;
+        currency?: string;
+      }>('/order/checkout-razorpay', {
+        method: 'POST',
+        body: JSON.stringify(orderData),
+      });
+
+      console.log('✅ Razorpay order created:', response);
+      return response;
+    } catch (error) {
+      console.error('Error in Razorpay checkout:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Razorpay checkout failed',
+      };
+    }
+  }
+  // Create Razorpay order (matching web app)
+  async createRazorpayOrder(orderData: any): Promise<any> {
+    try {
+      console.log('💳 Creating Razorpay Order:', orderData);
+      const response = await this.fetchApi<any>('/createrazorpayorder', {
+        method: 'POST',
+        body: JSON.stringify(orderData),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error creating Razorpay order:', error);
+      throw error;
+    }
+  }
+
+  // Save Razorpay payment (matching web app)
+  async saveRazorpayPayment(userData: { response: any; orderData: any }): Promise<any> {
+    try {
+      console.log('✅ Saving Razorpay Payment:', userData);
+      const response = await this.fetchApi<any>('/paychecksave', {
+        method: 'POST',
+        body: JSON.stringify(userData),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error saving Razorpay payment:', error);
+      throw error;
     }
   }
 }

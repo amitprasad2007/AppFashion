@@ -74,8 +74,8 @@ const CheckoutScreenContent = () => {
     try {
       // TODO: Replace with your actual Razorpay credentials
       razorpayService.initialize({
-        key_id: 'rzp_test_your_key_id', // Replace with your Razorpay Test/Live Key ID
-        key_secret: 'your_key_secret', // This should be kept on server only
+        key_id: 'rzp_live_RL5JZLkFipqqbJ', // Replace with your Razorpay Test/Live Key ID
+        key_secret: 'up83Yu27jOqFgj3PkRtk8cnn', // This should be kept on server only
       });
       console.log('🔧 Razorpay initialized successfully');
     } catch (error) {
@@ -112,8 +112,9 @@ const CheckoutScreenContent = () => {
       console.log('💳 Payment Methods Array Check:', Array.isArray(paymentMethodsData));
 
       const finalPaymentMethods = Array.isArray(paymentMethodsData) ? paymentMethodsData : [];
+
       setPaymentMethods(finalPaymentMethods);
-      console.log('💳 Final Payment Methods Set:', finalPaymentMethods);
+
 
       // Auto-select default address and first payment method
       const defaultAddress = addressesData.find(addr => addr.isDefault) || addressesData[0];
@@ -161,7 +162,7 @@ const CheckoutScreenContent = () => {
         city: newAddress.city,
         state: newAddress.state,
         postal: newAddress.pincode,
-        isDefault: newAddress.isDefault,
+        isDefault: newAddress.isDefault || false,
       });
       setAddresses(prev => [...prev, {
         id: savedAddress.address?.id.toString() || '',
@@ -196,6 +197,253 @@ const CheckoutScreenContent = () => {
       Alert.alert('Error', 'Failed to save address. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle Cash on Delivery payment
+  const handleCODPayment = async (
+    items: any[],
+    address: ShippingAddress,
+    finalTotal: number,
+    itemsCount: number,
+    itemsTotal: number,
+    discountAmount: number,
+    shippingAmount: number,
+    taxAmount: number
+  ) => {
+    try {
+      // Validate cart items before processing
+      if (!items || items.length === 0) {
+        throw new Error('No items found in cart');
+      }
+
+      // Use the specific COD checkout API
+      const codOrderData = {
+        items: items.map((item: any) => {
+          // Handle different item structures from cart vs direct items
+          const itemData = item.product || item;
+          const itemImage = Array.isArray(itemData.images) ? itemData.images[0] :
+            Array.isArray(itemData.image) ? itemData.image[0] :
+              typeof itemData.image === 'string' ? itemData.image :
+                itemData.images?.[0] || '';
+
+          // Ensure all required fields are present
+          const cartId = item.cart_id || item.id || Math.floor(Math.random() * 1000000);
+          const productId = itemData.id || item.id;
+          const productName = itemData.name || item.name;
+          const productPrice = (itemData.price || item.price || 0).toString();
+          const quantity = item.quantity || 1;
+          const color = item.selectedColor || item.color || itemData.color || 'Default';
+          const slug = itemData.slug || item.slug || `product-${productId}`;
+
+          // Validate required fields
+          if (!productId || !productName || !productPrice) {
+            console.error('Missing required item data:', {
+              productId, productName, productPrice, item
+            });
+            throw new Error(`Missing required product data for item: ${productName || 'Unknown'}`);
+          }
+
+          return {
+            cart_id: cartId,
+            id: productId,
+            name: productName,
+            price: productPrice,
+            quantity: quantity,
+            image: itemImage,
+            color: color,
+            slug: slug,
+          };
+        }),
+        address_id: parseInt(address.id || '1'),
+        shipping: Number(shippingAmount) || 0,
+        payment_method: 'cod',
+        subtotal: Number(itemsTotal) || 0,
+        shippingcost: Number(shippingAmount) || 0,
+        tax: Number(taxAmount) || 0,
+        total: Number(finalTotal) || 0,
+        totalquantity: Number(itemsCount) || 0,
+        coupon_code: null,
+      };
+
+      console.log('🛒 COD Order Data (Validated):', JSON.stringify(codOrderData, null, 2));
+
+      // Check if user is authenticated before making the API call
+      const authToken = apiService.getAuthToken();
+      if (!authToken) {
+        Alert.alert('Authentication Required', 'Please login to place an order.');
+        return;
+      }
+
+      // Check if there are items in server cart first
+      console.log('🔍 Checking server cart status...');
+      try {
+        const serverCart = await apiService.getCart();
+        console.log('📦 Server cart items:', serverCart.items.length);
+
+        if (serverCart.items.length === 0) {
+          console.log('⚠️ Server cart is empty, attempting to sync items...');
+          // Try to add current items to server cart
+          for (const item of codOrderData.items) {
+            try {
+              console.log(`🔄 Adding item ${item.id} to server cart...`);
+              await apiService.addToCart(item.id, item.quantity);
+            } catch (addError) {
+              console.warn(`Failed to add item ${item.id}:`, addError);
+            }
+          }
+        }
+      } catch (cartError) {
+        console.warn('Could not check/sync cart:', cartError);
+      }
+
+      const response = await apiService.checkoutCOD(codOrderData);
+
+      console.log('📡 COD Checkout Response:', response);
+
+      if (response.success) {
+        const orderDetails = response.order;
+        const orderId = response.order_id || orderDetails?.order_id;
+        const orderNumber = response.order_number || orderDetails?.order_id;
+
+        // Clear cart after successful order (optional)
+        try {
+          await apiService.clearCart();
+        } catch (clearError) {
+          console.warn('Could not clear cart after order:', clearError);
+        }
+
+        // Show success message with order details
+        Alert.alert(
+          'Order Placed Successfully! 🎉',
+          `Your order has been placed successfully!\n\nOrder ID: ${orderId}\nPayment: Cash on Delivery\nStatus: ${orderDetails?.status || 'Pending'}\nTotal: ₹${orderDetails?.total_amount || finalTotal}`,
+          [{
+            text: 'View Order',
+            onPress: () => {
+              // Navigate to order confirmation with detailed order info
+              navigation.navigate('OrderConfirmation', {
+                orderId: orderId,
+                orderNumber: orderNumber,
+                orderTotal: orderDetails?.total_amount || finalTotal,
+                paymentMethod: 'Cash on Delivery',
+                paymentStatus: orderDetails?.payment_status || 'unpaid',
+                orderStatus: orderDetails?.status || 'pending',
+                orderItems: orderDetails?.cart_items || [],
+                orderDetails: orderDetails
+              });
+            }
+          }]
+        );
+      } else {
+        throw new Error(response.message || 'Order placement failed');
+      }
+    } catch (error) {
+      console.error('❌ COD payment failed:', error);
+      throw error;
+    }
+  };
+
+  // Handle Razorpay payment
+  const handleRazorpayPayment = async (
+    items: any[],
+    address: ShippingAddress,
+    finalTotal: number,
+    itemsCount: number,
+    itemsTotal: number,
+    discountAmount: number,
+    shippingAmount: number,
+    taxAmount: number
+  ) => {
+    try {
+      console.log('💳 Processing Razorpay payment...');
+
+      // Check if user is authenticated
+      const authToken = apiService.getAuthToken();
+      if (!authToken) {
+        Alert.alert('Authentication Required', 'Please login to place an order.');
+        return;
+      }
+
+      // Prepare order data for backend (matching Web App structure)
+      const orderData = {
+        items: items.map((item: any) => {
+          const itemData = item.product || item;
+          const itemImage = Array.isArray(itemData.images) ? itemData.images[0] :
+            Array.isArray(itemData.image) ? itemData.image[0] :
+              typeof itemData.image === 'string' ? itemData.image :
+                itemData.images?.[0] || '';
+
+          return {
+            cart_id: item.cart_id || item.id || Math.floor(Math.random() * 1000000),
+            id: itemData.id || item.id,
+            name: itemData.name || item.name,
+            price: (itemData.price || item.price || 0).toString(),
+            quantity: item.quantity || 1,
+            image: itemImage,
+            color: item.selectedColor || item.color || itemData.color || 'Default',
+            slug: itemData.slug || item.slug || `product-${itemData.id}`,
+          };
+        }),
+        address_id: parseInt(address.id || '1'),
+        shipping: Number(shippingAmount) || 0,
+        payment_method: selectedPayment?.type.toLowerCase() || 'card',
+        subtotal: Number(itemsTotal) || 0,
+        shippingcost: Number(shippingAmount) || 0,
+        tax: Number(taxAmount) || 0,
+        total: Number(finalTotal) || 0,
+        totalquantity: Number(itemsCount) || 0,
+        coupon_code: null,
+      };
+
+      const userInfo = {
+        name: address.name,
+        email: address.email || 'customer@example.com',
+        phone: address.phone
+      };
+
+      // Use Razorpay service to process payment
+      const paymentResult = await razorpayService.processPayment(selectedPayment!, orderData, userInfo);
+
+      if (paymentResult.success) {
+        console.log('✅ Razorpay payment successful:', paymentResult);
+
+        // Clear cart after successful order
+        try {
+          await apiService.clearCart();
+        } catch (clearError) {
+          console.warn('Could not clear cart after order:', clearError);
+        }
+
+        // Show success message
+        Alert.alert(
+          'Payment Successful! 🎉',
+          `Your order has been placed successfully!\n\nPayment: ${selectedPayment!.name}\nAmount: ₹${finalTotal}`,
+          [{
+            text: 'View Order',
+            onPress: () => {
+              navigation.navigate('OrderConfirmation', {
+                orderId: paymentResult.paymentData?.razorpay_order_id || '',
+                orderNumber: paymentResult.paymentData?.razorpay_order_id || '',
+                orderTotal: finalTotal,
+                paymentMethod: selectedPayment!.name,
+                paymentStatus: 'paid',
+                orderStatus: 'confirmed',
+                orderItems: items,
+                orderDetails: null
+              });
+            }
+          }]
+        );
+      } else {
+        throw new Error(paymentResult.message || 'Payment failed');
+      }
+    } catch (error) {
+      console.error('❌ Razorpay payment failed:', error);
+      Alert.alert(
+        'Payment Failed',
+        `Payment could not be completed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+      throw error;
     }
   };
 
@@ -256,270 +504,7 @@ const CheckoutScreenContent = () => {
     }
   };
 
-  // Handle Cash on Delivery payment
-  const handleCODPayment = async (
-    items: any[],
-    address: ShippingAddress,
-    finalTotal: number,
-    itemsCount: number,
-    itemsTotal: number,
-    discountAmount: number,
-    shippingAmount: number,
-    taxAmount: number
-  ) => {
-    try {
-        // Validate cart items before processing
-        if (!items || items.length === 0) {
-          throw new Error('No items found in cart');
-        }
 
-        // Use the specific COD checkout API
-        const codOrderData = {
-          items: items.map((item: any) => {
-            // Handle different item structures from cart vs direct items
-            const itemData = item.product || item;
-            const itemImage = Array.isArray(itemData.images) ? itemData.images[0] :
-              Array.isArray(itemData.image) ? itemData.image[0] :
-                typeof itemData.image === 'string' ? itemData.image :
-                  itemData.images?.[0] || '';
-
-            // Ensure all required fields are present
-            const cartId = item.cart_id || item.id || Math.floor(Math.random() * 1000000);
-            const productId = itemData.id || item.id;
-            const productName = itemData.name || item.name;
-            const productPrice = (itemData.price || item.price || 0).toString();
-            const quantity = item.quantity || 1;
-            const color = item.selectedColor || item.color || itemData.color || 'Default';
-            const slug = itemData.slug || item.slug || `product-${productId}`;
-
-            // Validate required fields
-            if (!productId || !productName || !productPrice) {
-              console.error('Missing required item data:', {
-                productId, productName, productPrice, item
-              });
-              throw new Error(`Missing required product data for item: ${productName || 'Unknown'}`);
-            }
-
-            return {
-              cart_id: cartId,
-              id: productId,
-              name: productName,
-              price: productPrice,
-              quantity: quantity,
-              image: itemImage,
-              color: color,
-              slug: slug,
-            };
-          }),
-          address_id: parseInt(selectedAddress.id || '1'),
-          shipping: Number(shippingAmount) || 0,
-          payment_method: 'cod',
-          subtotal: Number(itemsTotal) || 0,
-          shippingcost: Number(shippingAmount) || 0,
-          tax: Number(taxAmount) || 0,
-          total: Number(finalTotal) || 0,
-          totalquantity: Number(itemsCount) || 0,
-          coupon_code: null,
-        };
-
-        console.log('🛒 COD Order Data (Validated):', JSON.stringify(codOrderData, null, 2));
-
-        // Check if user is authenticated before making the API call
-        const authToken = apiService.getAuthToken();
-        if (!authToken) {
-          Alert.alert('Authentication Required', 'Please login to place an order.');
-          return;
-        }
-
-        // Check if there are items in server cart first
-        console.log('🔍 Checking server cart status...');
-        try {
-          const serverCart = await apiService.getCart();
-          console.log('📦 Server cart items:', serverCart.items.length);
-
-          if (serverCart.items.length === 0) {
-            console.log('⚠️ Server cart is empty, attempting to sync items...');
-            // Try to add current items to server cart
-            for (const item of codOrderData.items) {
-              try {
-                console.log(`🔄 Adding item ${item.id} to server cart...`);
-                await apiService.addToCart(item.id, item.quantity);
-              } catch (addError) {
-                console.warn(`Failed to add item ${item.id}:`, addError);
-              }
-            }
-          }
-        } catch (cartError) {
-          console.warn('Could not check/sync cart:', cartError);
-        }
-
-        const response = await apiService.checkoutCOD(codOrderData);
-
-        console.log('📡 COD Checkout Response:', response);
-
-        if (response.success) {
-          const orderDetails = response.order;
-          const orderId = response.order_id || orderDetails?.order_id;
-          const orderNumber = response.order_number || orderDetails?.order_id;
-
-          // Clear cart after successful order (optional)
-          try {
-            await apiService.clearCart();
-          } catch (clearError) {
-            console.warn('Could not clear cart after order:', clearError);
-          }
-
-          // Show success message with order details
-          Alert.alert(
-            'Order Placed Successfully! 🎉',
-            `Your order has been placed successfully!\n\nOrder ID: ${orderId}\nPayment: Cash on Delivery\nStatus: ${orderDetails?.status || 'Pending'}\nTotal: ₹${orderDetails?.total_amount || finalTotal}`,
-            [{
-              text: 'View Order',
-              onPress: () => {
-                // Navigate to order confirmation with detailed order info
-                navigation.navigate('OrderConfirmation', {
-                  orderId: orderId,
-                  orderNumber: orderNumber,
-                  orderTotal: orderDetails?.total_amount || finalTotal,
-                  paymentMethod: 'Cash on Delivery',
-                  paymentStatus: orderDetails?.payment_status || 'unpaid',
-                  orderStatus: orderDetails?.status || 'pending',
-                  orderItems: orderDetails?.cart_items || [],
-                  orderDetails: orderDetails
-                });
-              }
-            }]
-          );
-        } else {
-          throw new Error(response.message || 'Order placement failed');
-        }
-    } catch (error) {
-      console.error('❌ COD payment failed:', error);
-      throw error;
-    }
-  };
-
-  // Handle Razorpay payment
-  const handleRazorpayPayment = async (
-    items: any[],
-    address: ShippingAddress,
-    finalTotal: number,
-    itemsCount: number,
-    itemsTotal: number,
-    discountAmount: number,
-    shippingAmount: number,
-    taxAmount: number
-  ) => {
-    try {
-      console.log('💳 Processing Razorpay payment...');
-
-      // Check if user is authenticated
-      const authToken = apiService.getAuthToken();
-      if (!authToken) {
-        Alert.alert('Authentication Required', 'Please login to place an order.');
-        return;
-      }
-
-      // Prepare order data for Razorpay
-      const orderDescription = `Order for ${itemsCount} item${itemsCount > 1 ? 's' : ''} from Samar Silk Palace`;
-      const customerName = address.name || 'Customer';
-      const customerEmail = address.email || 'customer@example.com';
-      const customerPhone = address.phone || '';
-
-      // Use Razorpay service to process payment
-      const paymentResult = await razorpayService.processPayment(selectedPayment!, {
-        amount: finalTotal,
-        orderId: `order_${Date.now()}`,
-        customerName,
-        customerEmail,
-        customerPhone,
-        description: orderDescription,
-        shippingAddress: address
-      });
-
-      if (paymentResult.success && paymentResult.paymentData) {
-        console.log('✅ Razorpay payment successful:', paymentResult);
-
-        // Prepare order data for backend
-        const orderData = {
-          items: items.map((item: any) => {
-            const itemData = item.product || item;
-            const itemImage = Array.isArray(itemData.images) ? itemData.images[0] :
-              Array.isArray(itemData.image) ? itemData.image[0] :
-                typeof itemData.image === 'string' ? itemData.image :
-                  itemData.images?.[0] || '';
-
-            return {
-              cart_id: item.cart_id || item.id || Math.floor(Math.random() * 1000000),
-              id: itemData.id || item.id,
-              name: itemData.name || item.name,
-              price: (itemData.price || item.price || 0).toString(),
-              quantity: item.quantity || 1,
-              image: itemImage,
-              color: item.selectedColor || item.color || itemData.color || 'Default',
-              slug: itemData.slug || item.slug || `product-${itemData.id}`,
-            };
-          }),
-          address_id: parseInt(address.id || '1'),
-          payment_method: selectedPayment!.type.toLowerCase(),
-          payment_data: paymentResult.paymentData,
-          subtotal: Number(itemsTotal) || 0,
-          shippingcost: Number(shippingAmount) || 0,
-          tax: Number(taxAmount) || 0,
-          total: Number(finalTotal) || 0,
-          totalquantity: Number(itemsCount) || 0,
-          coupon_code: null,
-        };
-
-        // Submit order to backend with payment data
-        const response = await apiService.checkoutWithRazorpay(orderData);
-
-        if (response.success) {
-          console.log('📡 Razorpay Order Response:', response);
-
-          // Clear cart after successful order
-          try {
-            await apiService.clearCart();
-          } catch (clearError) {
-            console.warn('Could not clear cart after order:', clearError);
-          }
-
-          // Show success message
-          Alert.alert(
-            'Payment Successful! 🎉',
-            `Your order has been placed and payment completed successfully!\n\nOrder ID: ${response.order_id}\nPayment: ${selectedPayment!.name}\nAmount: ₹${finalTotal}`,
-            [{
-              text: 'View Order',
-              onPress: () => {
-                navigation.navigate('OrderConfirmation', {
-                  orderId: response.order_id,
-                  orderNumber: response.order_number,
-                  orderTotal: finalTotal,
-                  paymentMethod: selectedPayment!.name,
-                  paymentStatus: 'paid',
-                  orderStatus: 'confirmed',
-                  orderItems: items,
-                  paymentData: paymentResult.paymentData,
-                  orderDetails: response.order
-                });
-              }
-            }]
-          );
-        } else {
-          throw new Error(response.message || 'Order creation failed after payment');
-        }
-      } else {
-        throw new Error(paymentResult.message || 'Payment failed');
-      }
-    } catch (error) {
-      console.error('❌ Razorpay payment failed:', error);
-      Alert.alert(
-        'Payment Failed',
-        `Payment could not be completed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
-      throw error;
-    }
-  };
 
   // Render cart summary (handle both cart and individual items)
   const renderCartSummary = () => {
@@ -757,7 +742,8 @@ const CheckoutScreenContent = () => {
 
   // Render payment methods
   const renderPaymentMethods = () => {
-    console.log('🎨 Rendering Payment Methods:', { paymentMethods, length: paymentMethods?.length });
+    console.log(paymentMethods);
+
 
     return (
       <AnimatedCard delay={400}>

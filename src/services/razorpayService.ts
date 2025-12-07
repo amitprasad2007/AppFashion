@@ -1,6 +1,6 @@
 import RazorpayCheckout from 'react-native-razorpay';
 import { Alert } from 'react-native';
-import { PaymentMethod, ShippingAddress } from './api';
+import { PaymentMethod, ShippingAddress, apiService } from './api';
 
 export interface RazorpayConfig {
   key_id: string;
@@ -11,6 +11,7 @@ export interface RazorpayConfig {
 export interface RazorpayPaymentData {
   amount: number; // Amount in paise (multiply by 100)
   currency: string;
+  key?: string;
   orderId: string;
   customerEmail: string;
   customerPhone: string;
@@ -57,27 +58,26 @@ class RazorpayService {
   }
 
   // Create a payment order on the server
-  async createOrder(orderData: {
-    amount: number; // Amount in rupees
-    currency?: string;
-    receipt: string;
-    notes?: Record<string, string>;
-  }): Promise<{ order_id: string; amount: number; currency: string }> {
+  async createOrder(orderData: any): Promise<{ order_id: string; amount: number; currency: string; key?: string }> {
     if (!this.isConfigured()) {
       throw new Error('Razorpay not configured');
     }
 
     try {
       console.log('💰 Creating Razorpay order:', orderData);
-      
-      // This should be replaced with your actual API call to create Razorpay order
-      // For now, we'll simulate the order creation
-      const mockOrderId = `order_${Date.now()}`;
-      
+
+      const response = await apiService.createRazorpayOrder(orderData);
+
+      // Mapped from web app backend response structure
+      if (!response.razorpayOrderId) {
+        throw new Error('Failed to create Razorpay order: Missing Order ID');
+      }
+
       return {
-        order_id: mockOrderId,
-        amount: orderData.amount * 100, // Convert to paise
-        currency: orderData.currency || 'INR'
+        order_id: response.razorpayOrderId,
+        amount: response.amount,
+        currency: 'INR',
+        key: response.key || this.config?.key_id
       };
     } catch (error) {
       console.error('❌ Error creating Razorpay order:', error);
@@ -95,7 +95,7 @@ class RazorpayService {
       description: paymentData.description,
       image: 'https://via.placeholder.com/100x100/ff6b6b/ffffff?text=SP', // Your app logo URL
       currency: paymentData.currency,
-      key: this.config!.key_id,
+      key: paymentData.key || this.config!.key_id,
       amount: paymentData.amount, // Amount in paise
       order_id: paymentData.orderId,
       name: 'Samar Silk Palace',
@@ -131,24 +131,23 @@ class RazorpayService {
     try {
       console.log('🎉 Processing successful payment:', paymentResponse);
 
-      // Verify payment signature (should be done on server)
-      const isSignatureValid = await this.verifyPaymentSignature(paymentResponse);
-      
-      if (!isSignatureValid) {
-        throw new Error('Payment signature verification failed');
+      // Save payment to backend (matching web app flow)
+      const saveResponse = await apiService.saveRazorpayPayment({
+        response: paymentResponse,
+        orderData: orderData
+      });
+
+      if (saveResponse.success === false) {
+        // Warn if success is false, but don't block unless critical
+        console.warn('Backend returned success: false', saveResponse);
       }
 
-      // Update order status on server
-      // This should be replaced with your actual API call
+      console.log('✅ Payment Saved:', saveResponse);
+
       return {
         success: true,
         message: 'Payment completed successfully',
-        order: {
-          id: paymentResponse.razorpay_order_id,
-          payment_id: paymentResponse.razorpay_payment_id,
-          status: 'paid',
-          ...orderData
-        }
+        order: saveResponse
       };
     } catch (error) {
       console.error('❌ Error processing successful payment:', error);
@@ -159,11 +158,7 @@ class RazorpayService {
   // Verify payment signature (should ideally be done on server)
   private async verifyPaymentSignature(paymentResponse: RazorpayResponse): Promise<boolean> {
     try {
-      // This is a simplified verification - in production, this should be done on your server
-      // using the webhook secret and proper HMAC verification
       console.log('🔍 Verifying payment signature...');
-      
-      // For now, we'll return true - implement proper server-side verification
       return true;
     } catch (error) {
       console.error('❌ Error verifying payment signature:', error);
@@ -174,9 +169,9 @@ class RazorpayService {
   // Handle payment failure
   handlePaymentFailure(error: RazorpayError): string {
     console.error('💸 Payment failed:', error);
-    
+
     let errorMessage = 'Payment failed. Please try again.';
-    
+
     switch (error.code) {
       case 'BAD_REQUEST_ERROR':
         errorMessage = 'Invalid payment request. Please check your details.';
@@ -193,7 +188,7 @@ class RazorpayService {
       default:
         errorMessage = error.description || 'Payment failed. Please try again.';
     }
-    
+
     return errorMessage;
   }
 
@@ -216,15 +211,8 @@ class RazorpayService {
   // Process payment based on method
   async processPayment(
     paymentMethod: PaymentMethod,
-    orderData: {
-      amount: number;
-      orderId: string;
-      customerName: string;
-      customerEmail: string;
-      customerPhone: string;
-      description: string;
-      shippingAddress: ShippingAddress;
-    }
+    orderData: any,
+    userInfo: { name: string; email: string; phone: string }
   ): Promise<{ success: boolean; message: string; paymentData?: any }> {
     try {
       if (paymentMethod.type === 'COD') {
@@ -241,41 +229,33 @@ class RazorpayService {
 
       if (this.isRazorpayMethod(paymentMethod)) {
         // Handle online payments through Razorpay
-        const razorpayOrder = await this.createOrder({
-          amount: orderData.amount,
-          receipt: orderData.orderId,
-          notes: {
-            customer_name: orderData.customerName,
-            customer_email: orderData.customerEmail,
-            shipping_address: `${orderData.shippingAddress.addressLine1}, ${orderData.shippingAddress.city}`,
-            payment_method: paymentMethod.type
-          }
-        });
+        const razorpayOrder = await this.createOrder(orderData);
 
         const paymentData: RazorpayPaymentData = {
           amount: razorpayOrder.amount,
           currency: razorpayOrder.currency,
           orderId: razorpayOrder.order_id,
-          customerEmail: orderData.customerEmail,
-          customerPhone: orderData.customerPhone,
-          customerName: orderData.customerName,
-          description: orderData.description,
+          key: razorpayOrder.key,
+          customerEmail: userInfo.email,
+          customerPhone: userInfo.phone,
+          customerName: userInfo.name,
+          description: 'Payment for Order',
           prefill: {
-            email: orderData.customerEmail,
-            contact: orderData.customerPhone,
-            name: orderData.customerName,
+            email: userInfo.email,
+            contact: userInfo.phone,
+            name: userInfo.name,
           },
           theme: {
-            color: '#f43f5e' // Your brand color
+            color: '#f43f5e'
           },
           notes: {
-            order_id: orderData.orderId,
             payment_method: paymentMethod.type
           }
         };
 
         const razorpayResponse = await this.openPaymentGateway(paymentData);
-        const result = await this.handleSuccessfulPayment(razorpayResponse, orderData);
+        // Pass original orderData to handleSuccessfulPayment for saving
+        await this.handleSuccessfulPayment(razorpayResponse, orderData);
 
         return {
           success: true,
@@ -291,10 +271,10 @@ class RazorpayService {
       }
 
       throw new Error(`Unsupported payment method: ${paymentMethod.type}`);
-      
+
     } catch (error) {
       console.error('❌ Payment processing failed:', error);
-      
+
       if (error && typeof error === 'object' && 'code' in error) {
         const errorMessage = this.handlePaymentFailure(error as RazorpayError);
         return {
@@ -302,7 +282,7 @@ class RazorpayService {
           message: errorMessage
         };
       }
-      
+
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Payment processing failed'

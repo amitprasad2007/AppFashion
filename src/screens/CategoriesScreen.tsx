@@ -17,6 +17,7 @@ import EnhancedHeader from '../components/EnhancedHeader';
 import GlassCard from '../components/GlassCard';
 import FloatingElements from '../components/FloatingElements';
 import AnimatedCard from '../components/AnimatedCard';
+import CartIcon from '../components/CartIcon';
 import { apiService, ApiCategory } from '../services/api';
 import { theme } from '../theme';
 import LinearGradient from 'react-native-linear-gradient';
@@ -212,13 +213,7 @@ const CategoriesScreen = () => {
           title="📂 Categories"
           showBackButton={true}
           onBackPress={() => navigation.goBack()}
-          rightComponent={
-            <TouchableOpacity 
-              style={styles.searchButton}
-              onPress={() => navigation.navigate('Search')}>
-              <Text style={styles.searchIconText}>🔍</Text>
-            </TouchableOpacity>
-          }
+          rightComponent={<CartIcon size="medium" color={theme.colors.white} />}
         />
         <View style={styles.loadingContainer}>
           <GlassCard style={styles.loadingCard}>
@@ -242,13 +237,7 @@ const CategoriesScreen = () => {
         title={`📂 Categories ${categories.length > 0 ? `(${categories.length})` : ''}`}
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
-        rightComponent={
-          <TouchableOpacity 
-            style={styles.searchButton}
-            onPress={() => navigation.navigate('Search')}>
-            <Text style={styles.searchIconText}>🔍</Text>
-          </TouchableOpacity>
-        }
+        rightComponent={<CartIcon size="medium" color={theme.colors.white} />}
       />
 
       {error && (

@@ -21,6 +21,8 @@ import GradientButton from '../components/GradientButton';
 import EnhancedHeader from '../components/EnhancedHeader';
 import GlassCard from '../components/GlassCard';
 import FloatingElements from '../components/FloatingElements';
+import CartIcon from '../components/CartIcon';
+import SafeAlert from '../utils/safeAlert';
 import { theme } from '../theme';
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -83,28 +85,21 @@ const WishlistScreenContent = () => {
   };
 
   const handleRemoveFromWishlist = (wishlistId: number, productName: string) => {
-    Alert.alert(
+    SafeAlert.confirm(
       'Remove from Wishlist',
       `Are you sure you want to remove "${productName}" from your wishlist?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            setRemoveLoading(wishlistId);
-            try {
-              await removeFromWishlistById(wishlistId);
-              Alert.alert('Removed', 'Item has been removed from your wishlist.');
-            } catch (error) {
-              console.error('Error removing from wishlist:', error);
-              Alert.alert('Error', 'Failed to remove item from wishlist. Please try again.');
-            } finally {
-              setRemoveLoading(0);
-            }
-          },
-        },
-      ]
+      async () => {
+        setRemoveLoading(wishlistId);
+        try {
+          await removeFromWishlistById(wishlistId);
+          SafeAlert.success('Removed', 'Item has been removed from your wishlist.');
+        } catch (error) {
+          console.error('Error removing from wishlist:', error);
+          SafeAlert.error('Error', 'Failed to remove item from wishlist. Please try again.');
+        } finally {
+          setRemoveLoading(0);
+        }
+      }
     );
   };
 
@@ -113,7 +108,7 @@ const WishlistScreenContent = () => {
     
     try {
       await addToCart(productId, 1);
-      Alert.alert(
+      SafeAlert.show(
         'Added to Cart',
         `${productName} has been added to your cart successfully!`,
         [
@@ -123,7 +118,7 @@ const WishlistScreenContent = () => {
       );
     } catch (error) {
       console.error('Error adding to cart:', error);
-      Alert.alert('Error', 'Failed to add item to cart. Please try again.');
+      SafeAlert.error('Error', 'Failed to add item to cart. Please try again.');
     } finally {
       setAddLoading(0);
     }
@@ -252,6 +247,7 @@ const WishlistScreenContent = () => {
           title="💝 My Wishlist"
           showBackButton={true}
           onBackPress={() => navigation.goBack()}
+          rightComponent={<CartIcon size="medium" color={theme.colors.white} />}
         />
         
         <View style={styles.loadingContainer}>
@@ -276,6 +272,7 @@ const WishlistScreenContent = () => {
         title={`💝 Wishlist (${wishlistItems.length})`}
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
+        rightComponent={<CartIcon size="medium" color={theme.colors.white} />}
       />
 
       {/* Error Message */}
@@ -307,26 +304,20 @@ const WishlistScreenContent = () => {
               <TouchableOpacity
                 style={styles.moveAllButtonContainer}
                 onPress={() => {
-                  Alert.alert(
+                  SafeAlert.confirm(
                     'Move to Cart',
                     `Move all ${wishlistItems.length} items to cart?`,
-                    [
-                      {text: 'Cancel'},
-                      {
-                        text: 'Move All',
-                        onPress: async () => {
-                          try {
-                            for (const item of wishlistItems) {
-                              await addToCart(item.id, 1);
-                            }
-                            Alert.alert('Items Moved', 'All items have been moved to your cart.');
-                            navigation.navigate('Cart');
-                          } catch (error) {
-                            Alert.alert('Error', 'Failed to move some items to cart.');
-                          }
-                        },
-                      },
-                    ]
+                    async () => {
+                      try {
+                        for (const item of wishlistItems) {
+                          await addToCart(item.id, 1);
+                        }
+                        SafeAlert.success('Items Moved', 'All items have been moved to your cart.');
+                        navigation.navigate('Cart');
+                      } catch (error) {
+                        SafeAlert.error('Error', 'Failed to move some items to cart.');
+                      }
+                    }
                   );
                 }}>
                 <GlassCard style={styles.moveAllButton} gradientColors={theme.glassGradients.emerald}>

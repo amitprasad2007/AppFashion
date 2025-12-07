@@ -22,6 +22,7 @@ import EnhancedHeader from '../components/EnhancedHeader';
 import GlassCard from '../components/GlassCard';
 import CollectionsSection from '../components/CollectionsSection';
 import FloatingElements from '../components/FloatingElements';
+import CartIcon from '../components/CartIcon';
 import { apiService, ApiCategory, ApiProduct, ApiCollection } from '../services/api';
 import type { Product, Category, RootStackParamList } from '../types/navigation';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -234,6 +235,7 @@ const HomeScreen = () => {
 
       <EnhancedHeader
         title="✨ Samar Silk Palace"
+        rightComponent={<CartIcon size="medium" color={theme.colors.white} />}
       />
       <ScrollView
         style={styles.scrollView}
