@@ -108,7 +108,7 @@ class RazorpayService {
       key: paymentData.key || this.config!.key_id,
       amount: paymentData.amount, // Amount in paise
       order_id: paymentData.orderId,
-      name: 'Samar Silk Palace',
+      name: '',
       prefill: paymentData.prefill || {
         email: paymentData.customerEmail,
         contact: paymentData.customerPhone,
@@ -240,7 +240,7 @@ class RazorpayService {
       if (this.isRazorpayMethod(paymentMethod)) {
         // Handle online payments through Razorpay
         const razorpayOrder = await this.createOrder(orderData);
-
+        console.log('🚀 Razorpay Order:', razorpayOrder);
         const paymentData: RazorpayPaymentData = {
           amount: razorpayOrder.amount,
           currency: razorpayOrder.currency,
