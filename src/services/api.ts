@@ -1329,7 +1329,10 @@ class ApiService {
     try {
       const response = await this.fetchApi<{ success: boolean; message: string }>('/cart/remove', {
         method: 'DELETE',
-        body: JSON.stringify({ cart_item_id: cartItemId }),
+        body: JSON.stringify({
+          cart_id: cartItemId,
+          product_id: cartItemId
+        }),
       });
       return response;
     } catch (error) {
