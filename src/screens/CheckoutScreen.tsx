@@ -74,8 +74,8 @@ const CheckoutScreenContent = () => {
     try {
       // TODO: Replace with your actual Razorpay credentials
       razorpayService.initialize({
-        key_id: 'rzp_live_RL5JZLkFipqqbJ', // Replace with your Razorpay Test/Live Key ID
-        key_secret: 'up83Yu27jOqFgj3PkRtk8cnn', // This should be kept on server only
+        key_id: 'rzp_test_kQ8xDx79gF13e2', // Replace with your Razorpay Test/Live Key ID
+        key_secret: 'hAWjjASWTuj3SHs3G4Q2s871', // This should be kept on server only
       });
       console.log('🔧 Razorpay initialized successfully');
     } catch (error) {
@@ -108,8 +108,6 @@ const CheckoutScreenContent = () => {
       }));
 
       setAddresses(transformedAddresses);
-      console.log('💳 Payment Methods Data:', paymentMethodsData);
-      console.log('💳 Payment Methods Array Check:', Array.isArray(paymentMethodsData));
 
       const finalPaymentMethods = Array.isArray(paymentMethodsData) ? paymentMethodsData : [];
 
@@ -355,8 +353,6 @@ const CheckoutScreenContent = () => {
     taxAmount: number
   ) => {
     try {
-      console.log('💳 Processing Razorpay payment...');
-
       // Check if user is authenticated
       const authToken = apiService.getAuthToken();
       if (!authToken) {
@@ -742,8 +738,6 @@ const CheckoutScreenContent = () => {
 
   // Render payment methods
   const renderPaymentMethods = () => {
-    console.log(paymentMethods);
-
 
     return (
       <AnimatedCard delay={400}>

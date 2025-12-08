@@ -2236,23 +2236,19 @@ class ApiService {
   async getPaymentMethods(): Promise<PaymentMethod[]> {
     try {
       const response = await this.fetchApi<any>('/payment-methods');
-      console.log('📡 Payment Methods API Response:', response);
 
       // Handle nested response structure: {data: {payment_methods: []}}
       if (response && response.data && response.data.payment_methods && Array.isArray(response.data.payment_methods)) {
-        console.log('✅ Found payment methods in response.data.payment_methods:', response.data.payment_methods.length);
         return response.data.payment_methods;
       }
 
       // Fallback: check if payment_methods is at root level
       if (response && response.payment_methods && Array.isArray(response.payment_methods)) {
-        console.log('✅ Found payment methods in response.payment_methods');
         return response.payment_methods;
       }
 
       // Fallback: check if response is already an array
       if (Array.isArray(response)) {
-        console.log('✅ Response is already an array');
         return response;
       }
 
