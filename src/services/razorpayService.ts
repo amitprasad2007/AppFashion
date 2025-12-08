@@ -16,7 +16,7 @@ export interface RazorpayPaymentData {
   customerEmail: string;
   customerPhone: string;
   customerName: string;
-  description: string;
+  description: any;
   notes?: Record<string, string>;
   prefill?: {
     email: string;
@@ -58,7 +58,16 @@ class RazorpayService {
   }
 
   // Create a payment order on the server
-  async createOrder(orderData: any): Promise<{ order_id: string; amount: number; currency: string; key?: string }> {
+  async createOrder(orderData: any): Promise<{
+    order_id: string;
+    amount: number;
+    currency: string;
+    key?: string;
+    rzdetails: {
+      receipt: string;
+      [key: string]: any;
+    };
+  }> {
     if (!this.isConfigured()) {
       throw new Error('Razorpay not configured');
     }
@@ -77,7 +86,8 @@ class RazorpayService {
         order_id: response.razorpayOrderId,
         amount: response.amount,
         currency: 'INR',
-        key: response.key || this.config?.key_id
+        key: response.key || this.config?.key_id,
+        rzdetails: response.rzdetails || { receipt: `order_${Date.now()}` }
       };
     } catch (error) {
       console.error('❌ Error creating Razorpay order:', error);
@@ -239,7 +249,7 @@ class RazorpayService {
           customerEmail: userInfo.email,
           customerPhone: userInfo.phone,
           customerName: userInfo.name,
-          description: 'Payment for Order',
+          description: razorpayOrder.rzdetails.receipt,
           prefill: {
             email: userInfo.email,
             contact: userInfo.phone,
