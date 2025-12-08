@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiService, UserData, ApiOrder, ApiWishlistItem, ApiAddress, ApiCart, ApiProduct } from '../services/api';
 import { useAuth } from './AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface UserProfileContextType {
   userData: UserData | null;
@@ -8,7 +9,7 @@ interface UserProfileContextType {
   recentActivity: RecentActivity | null;
   isLoading: boolean;
   error: string | null;
-  
+
   // Core data methods
   refreshUserData: () => Promise<void>;
   getOrders: (params?: { status?: string; page?: number; limit?: number }) => Promise<ApiOrder[]>;
@@ -17,28 +18,28 @@ interface UserProfileContextType {
   getCart: () => Promise<ApiCart>;
   getUserStatistics: () => Promise<UserStatistics>;
   searchOrders: (query: string) => Promise<ApiOrder[]>;
-  
+
   // Cart operations
   addToCart: (productId: number, quantity?: number, options?: { size?: string; color?: string; variant_id?: number }) => Promise<void>;
   updateCartItem: (cartItemId: number, quantity: number) => Promise<void>;
-  removeFromCart: (cartItemId: number) => Promise<void>;
+  removeFromCart: (cartItemId: number, productId: number) => Promise<void>;
   getCartSummary: () => Promise<{ total_items: number; subtotal: number; total: number; discount: number; shipping: number; tax: number; }>;
-  
+
   // Wishlist operations
   addToWishlist: (productId: number) => Promise<void>;
   removeFromWishlist: (productId: number) => Promise<void>;
   removeFromWishlistById: (wishlistId: number) => Promise<void>;
   checkWishlist: (productId: number) => Promise<{ in_wishlist: boolean; wishlist_id?: number }>;
-  
+
   // Address operations
   createAddress: (address: { name: string; type: string; address: string; city: string; state: string; postal: string; phone: string; isDefault?: boolean; }) => Promise<void>;
   updateAddress: (addressId: number, address: Partial<{ name: string; type: string; address: string; city: string; state: string; postal: string; phone: string; isDefault: boolean; }>) => Promise<void>;
   deleteAddress: (addressId: number) => Promise<void>;
-  
+
   // Order operations
   buyNow: (productId: number, quantity: number, options?: { size?: string; color?: string; variant_id?: number }) => Promise<{ success: boolean; message: string; order_id?: string; payment_url?: string }>;
   checkout: (addressId: number, paymentMethod: string, notes?: string) => Promise<{ success: boolean; message: string; order_id?: string; payment_url?: string; order_total?: number; }>;
-  
+
   // Recently viewed
   getRecentlyViewed: () => Promise<ApiProduct[]>;
   addToRecentlyViewed: (productId: number) => Promise<void>;
@@ -81,7 +82,7 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setError(null);
 
       console.log('🔄 Refreshing user data...');
-      
+
       // Fetch comprehensive user data
       const freshUserData = await apiService.getUserData();
       setUserData(freshUserData);
@@ -95,7 +96,7 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setRecentActivity(activity);
 
       console.log('✅ User data refreshed successfully');
-      
+
     } catch (error: any) {
       console.error('❌ Error refreshing user data:', error);
       setError(error.message || 'Failed to load user data');
@@ -105,10 +106,10 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   // Get orders with optional filtering
-  const getOrders = async (params: { 
-    status?: string; 
-    page?: number; 
-    limit?: number 
+  const getOrders = async (params: {
+    status?: string;
+    page?: number;
+    limit?: number
   } = {}): Promise<ApiOrder[]> => {
     try {
       const response = await apiService.getOrders(params);
@@ -233,13 +234,26 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   // Cart operations
   const addToCart = async (
-    productId: number, 
+    productId: number,
     quantity: number = 1,
     options?: { size?: string; color?: string; variant_id?: number }
   ): Promise<void> => {
     try {
-      await apiService.addToCart(productId, quantity, options);
-      // Refresh user data to update cart
+      // 1. Call API
+      const response: any = await apiService.addToCart(productId, quantity, options);
+
+      // 2. Optimistic Update / Sync with local storage
+      // If API returns the updated cart (as requested to be implemented in api.ts or if available)
+      if (response && response.cart) {
+        await AsyncStorage.setItem('cart', JSON.stringify(response.cart));
+        // Update local state shallowly if helpful, though userData is the source of truth
+        // We can try to update userData if we want immediate context prop update without refresh
+        if (userData) {
+          setUserData({ ...userData, cart_items: response.cart });
+        }
+      }
+
+      // 3. Complete sync
       await refreshUserData();
     } catch (error) {
       console.error('Error adding to cart:', error);
@@ -249,8 +263,15 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const updateCartItem = async (cartItemId: number, quantity: number): Promise<void> => {
     try {
-      await apiService.updateCartItem(cartItemId, quantity);
-      // Refresh user data to update cart
+      const response: any = await apiService.updateCartItem(cartItemId, quantity);
+
+      if (response && response.cart) {
+        await AsyncStorage.setItem('cart', JSON.stringify(response.cart));
+        if (userData) {
+          setUserData({ ...userData, cart_items: response.cart });
+        }
+      }
+
       await refreshUserData();
     } catch (error) {
       console.error('Error updating cart item:', error);
@@ -258,10 +279,19 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   };
 
-  const removeFromCart = async (cartItemId: number): Promise<void> => {
+  const removeFromCart = async (cartItemId: number, productId: number): Promise<void> => {
     try {
-      await apiService.removeFromCart(cartItemId);
-      // Refresh user data to update cart
+      const response: any = await apiService.removeFromCart(cartItemId, productId);
+
+      // If API returns cart, sync it. If not, we rely on refresh.
+      // Assuming we updated api.ts to return cart or we handle it.
+      if (response && response.cart) {
+        await AsyncStorage.setItem('cart', JSON.stringify(response.cart));
+        if (userData) {
+          setUserData({ ...userData, cart_items: response.cart });
+        }
+      }
+
       await refreshUserData();
     } catch (error) {
       console.error('Error removing from cart:', error);
@@ -304,7 +334,10 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
     isDefault?: boolean;
   }): Promise<void> => {
     try {
-      await apiService.createAddress(address);
+      await apiService.createAddress({
+        ...address,
+        isDefault: address.isDefault ?? false
+      });
       // Refresh user data to update addresses
       await refreshUserData();
     } catch (error) {
@@ -314,7 +347,7 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const updateAddress = async (
-    addressId: number, 
+    addressId: number,
     address: Partial<{
       name: string;
       type: string;
@@ -370,10 +403,10 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
     addressId: number,
     paymentMethod: string,
     notes?: string
-  ): Promise<{ 
-    success: boolean; 
-    message: string; 
-    order_id?: string; 
+  ): Promise<{
+    success: boolean;
+    message: string;
+    order_id?: string;
     payment_url?: string;
     order_total?: number;
   }> => {
@@ -435,28 +468,28 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
     getCart,
     getUserStatistics,
     searchOrders,
-    
+
     // Cart operations
     addToCart,
     updateCartItem,
     removeFromCart,
     getCartSummary,
-    
+
     // Wishlist operations
     addToWishlist,
     removeFromWishlist,
     removeFromWishlistById,
     checkWishlist,
-    
+
     // Address operations
     createAddress,
     updateAddress,
     deleteAddress,
-    
+
     // Order operations
     buyNow,
     checkout,
-    
+
     // Recently viewed
     getRecentlyViewed,
     addToRecentlyViewed,

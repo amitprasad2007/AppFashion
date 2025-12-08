@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,32 +11,33 @@ import {
   RefreshControl,
   TextInput,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import LinearGradient from 'react-native-linear-gradient';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { theme } from '../theme';
 import GradientButton from '../components/GradientButton';
 import AnimatedCard from '../components/AnimatedCard';
 import EnhancedHeader from '../components/EnhancedHeader';
 import GlassCard from '../components/GlassCard';
 import FloatingElements from '../components/FloatingElements';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RootStackParamList} from '../types/navigation';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../types/navigation';
 import { ApiCart, ApiCartItem } from '../services/api';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import ProtectedScreen from '../components/ProtectedScreen';
 
 const CartScreenContent = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { 
-    userData, 
-    isLoading, 
+  const {
+    userData,
+    isLoading,
     error: profileError,
     getCart,
     updateCartItem,
     removeFromCart,
-    refreshUserData 
+    refreshUserData
   } = useUserProfile();
-  
+
   // Local state management
   const [cart, setCart] = useState<ApiCart | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -44,29 +45,51 @@ const CartScreenContent = () => {
   const [couponCode, setCouponCode] = useState('');
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
-  // Load cart data from user profile context
+  // Load cart data
   const loadCart = async () => {
     try {
+      // 1. Try to load from local storage first for immediate display
+      const savedCart = await AsyncStorage.getItem('cart');
+      if (savedCart) {
+        try {
+          const parsedCart = JSON.parse(savedCart);
+          setCart(parsedCart);
+          console.log('Cart loaded from local storage');
+        } catch (e) {
+          console.error('Error parsing local cart:', e);
+        }
+      }
+
+      // 2. Fetch fresh data from API
+      let serverCart: ApiCart | null = null;
+
       if (userData?.cart_items) {
-        setCart(userData.cart_items);
-        console.log('Cart loaded from user data:', userData.cart_items.items.length, 'items');
+        serverCart = userData.cart_items;
+        console.log('Cart loaded from user data:', serverCart.items.length, 'items');
       } else {
         // Fallback: fetch cart directly
-        const cartData = await getCart();
-        setCart(cartData);
-        console.log('Cart fetched directly:', cartData.items.length, 'items');
+        serverCart = await getCart();
+        console.log('Cart fetched directly:', serverCart?.items?.length || 0, 'items');
+      }
+
+      if (serverCart) {
+        setCart(serverCart);
+        // Sync to local storage
+        await AsyncStorage.setItem('cart', JSON.stringify(serverCart));
       }
     } catch (err) {
       console.error('Error loading cart:', err);
-      // Set empty cart on error
-      setCart({
-        items: [],
-        subtotal: 0,
-        discount: 0,
-        shipping: 0,
-        tax: 0,
-        total: 0,
-      });
+      // Only set empty if we don't have local data either
+      if (!cart) {
+        setCart({
+          items: [],
+          subtotal: 0,
+          discount: 0,
+          shipping: 0,
+          tax: 0,
+          total: 0,
+        });
+      }
     } finally {
       setRefreshing(false);
     }
@@ -74,8 +97,12 @@ const CartScreenContent = () => {
 
   // Load cart when user data changes
   useEffect(() => {
-    if (userData) {
+    if (userData?.cart_items) {
       setCart(userData.cart_items);
+      // Keep local storage in sync
+      AsyncStorage.setItem('cart', JSON.stringify(userData.cart_items)).catch(err =>
+        console.error('Failed to update local cart storage:', err)
+      );
     }
   }, [userData]);
 
@@ -93,12 +120,12 @@ const CartScreenContent = () => {
   };
 
   // Update quantity
-  const updateQuantity = async (cartItemId: number, newQuantity: number) => {
+  const updateQuantity = async (cartItemId: number, productId: number, newQuantity: number) => {
     if (newQuantity <= 0) {
-      removeItem(cartItemId);
+      removeItem(cartItemId, productId);
       return;
     }
-    
+
     try {
       setUpdatingItems(prev => new Set(prev).add(cartItemId));
       await updateCartItem(cartItemId, newQuantity);
@@ -116,7 +143,7 @@ const CartScreenContent = () => {
   };
 
   // Remove item
-  const removeItem = (cartItemId: number) => {
+  const removeItem = (cartItemId: number, productId: number) => {
     Alert.alert(
       'Remove Item',
       'Are you sure you want to remove this item from your cart?',
@@ -128,7 +155,7 @@ const CartScreenContent = () => {
           onPress: async () => {
             try {
               setUpdatingItems(prev => new Set(prev).add(cartItemId));
-              await removeFromCart(cartItemId);
+              await removeFromCart(cartItemId, productId);
               // Cart will be updated via refreshUserData in the context
             } catch (error) {
               console.error('Error removing item:', error);
@@ -148,8 +175,8 @@ const CartScreenContent = () => {
 
   // Clear entire cart
   const clearCart = () => {
-    if (!cart || cart.items.length === 0) return;
-    
+    if (!cart || !cart.items || cart.items.length === 0) return;
+
     Alert.alert(
       'Clear Cart',
       'Are you sure you want to remove all items from your cart?',
@@ -162,7 +189,7 @@ const CartScreenContent = () => {
             try {
               // Remove each item individually since we don't have a clear cart endpoint
               for (const item of cart.items) {
-                await removeFromCart(item.id);
+                await removeFromCart(item.cart_id, item.id);
               }
             } catch (error) {
               console.error('Error clearing cart:', error);
@@ -196,11 +223,11 @@ const CartScreenContent = () => {
 
   // Proceed to checkout
   const proceedToCheckout = () => {
-    if (!cart || cart.items.length === 0) {
+    if (!cart || !cart.items || cart.items.length === 0) {
       Alert.alert('Empty Cart', 'Please add items to your cart before proceeding.');
       return;
     }
-    
+
     navigation.navigate('Checkout', {
       cartItems: cart.items.map(item => ({
         id: item.id.toString(),
@@ -226,7 +253,7 @@ const CartScreenContent = () => {
   };
 
   // Render cart item
-  const renderCartItem = ({item, index}: {item: ApiCartItem; index: number}) => {
+  const renderCartItem = ({ item, index }: { item: ApiCartItem; index: number }) => {
     const isUpdating = updatingItems.has(item.id);
     const itemPrice = parseFloat(item.price);
     const itemTotal = itemPrice * item.quantity;
@@ -235,56 +262,56 @@ const CartScreenContent = () => {
       <AnimatedCard delay={index * 100}>
         <GlassCard style={styles.cartItem} variant="base">
           <View style={styles.itemContent}>
-          <Image 
-            source={{
-              uri: Array.isArray(item.image) ? item.image[0] : item.image || 'https://via.placeholder.com/100'
-            }} 
-            style={styles.itemImage} 
-          />
-          
-          <View style={styles.itemDetails}>
-            <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
-            
-            <View style={styles.priceContainer}>
-              <Text style={styles.currentPrice}>₹{item.price}</Text>
-            </View>
+            <Image
+              source={{
+                uri: Array.isArray(item.image) ? item.image[0] : item.image || 'https://via.placeholder.com/100'
+              }}
+              style={styles.itemImage}
+            />
 
-            <Text style={styles.subtotal}>Subtotal: ₹{itemTotal.toFixed(2)}</Text>
-          </View>
+            <View style={styles.itemDetails}>
+              <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
 
-          <View style={styles.itemActions}>
-            <TouchableOpacity
-              style={styles.removeButton}
-              onPress={() => removeItem(item.id)}
-              disabled={isUpdating}>
-              <Text style={styles.removeIcon}>🗑️</Text>
-            </TouchableOpacity>
-
-            <View style={styles.quantityContainer}>
-              <TouchableOpacity
-                style={[styles.quantityButton, isUpdating && styles.disabledButton]}
-                onPress={() => updateQuantity(item.id, item.quantity - 1)}
-                disabled={isUpdating || item.quantity <= 1}>
-                <Text style={styles.quantityButtonText}>-</Text>
-              </TouchableOpacity>
-              
-              <View style={styles.quantityDisplay}>
-                {isUpdating ? (
-                  <ActivityIndicator size="small" color={theme.colors.primary[500]} />
-                ) : (
-                  <Text style={styles.quantityText}>{item.quantity}</Text>
-                )}
+              <View style={styles.priceContainer}>
+                <Text style={styles.currentPrice}>₹{item.price}</Text>
               </View>
-              
+
+              <Text style={styles.subtotal}>Subtotal: ₹{itemTotal.toFixed(2)}</Text>
+            </View>
+
+            <View style={styles.itemActions}>
               <TouchableOpacity
-                style={[styles.quantityButton, isUpdating && styles.disabledButton]}
-                onPress={() => updateQuantity(item.id, item.quantity + 1)}
+                style={styles.removeButton}
+                onPress={() => removeItem(item.cart_id, item.id)}
                 disabled={isUpdating}>
-                <Text style={styles.quantityButtonText}>+</Text>
+                <Text style={styles.removeIcon}>🗑️</Text>
               </TouchableOpacity>
+
+              <View style={styles.quantityContainer}>
+                <TouchableOpacity
+                  style={[styles.quantityButton, isUpdating && styles.disabledButton]}
+                  onPress={() => updateQuantity(item.cart_id, item.id, item.quantity - 1)}
+                  disabled={isUpdating || item.quantity <= 1}>
+                  <Text style={styles.quantityButtonText}>-</Text>
+                </TouchableOpacity>
+
+                <View style={styles.quantityDisplay}>
+                  {isUpdating ? (
+                    <ActivityIndicator size="small" color={theme.colors.primary[500]} />
+                  ) : (
+                    <Text style={styles.quantityText}>{item.quantity}</Text>
+                  )}
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.quantityButton, isUpdating && styles.disabledButton]}
+                  onPress={() => updateQuantity(item.cart_id, item.id, item.quantity + 1)}
+                  disabled={isUpdating}>
+                  <Text style={styles.quantityButtonText}>+</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
         </GlassCard>
       </AnimatedCard>
     );
@@ -299,13 +326,13 @@ const CartScreenContent = () => {
           style={styles.backgroundGradient}
         />
         <FloatingElements count={6} />
-        
-        <EnhancedHeader 
+
+        <EnhancedHeader
           title="🛒 Shopping Cart"
           showBackButton={true}
           onBackPress={() => navigation.goBack()}
         />
-        
+
         <View style={styles.loadingContainer}>
           <GlassCard style={styles.loadingCard}>
             <ActivityIndicator size="large" color={theme.colors.white} />
@@ -323,14 +350,14 @@ const CartScreenContent = () => {
         style={styles.backgroundGradient}
       />
       <FloatingElements count={6} />
-      
-      <EnhancedHeader 
-        title={`🛒 Shopping Cart ${cart ? `(${cart.items.reduce((sum, item) => sum + item.quantity, 0)})` : ''}`}
+
+      <EnhancedHeader
+        title={`🛒 Shopping Cart ${cart && cart.items ? `(${cart.items.reduce((sum, item) => sum + item.quantity, 0)})` : ''}`}
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
         rightComponent={
-          cart && cart.items.length > 0 ? (
-            <TouchableOpacity 
+          cart && cart.items && cart.items.length > 0 ? (
+            <TouchableOpacity
               style={styles.clearButton}
               onPress={clearCart}>
               <GlassCard style={styles.clearIcon} variant="light">
@@ -351,7 +378,7 @@ const CartScreenContent = () => {
       )}
 
       {/* Cart Content */}
-      {!cart || cart.items.length === 0 ? (
+      {!cart || !cart.items || cart.items.length === 0 ? (
         <View style={styles.emptyCart}>
           <GlassCard style={styles.emptyCartCard} gradientColors={theme.glassGradients.sunset}>
             <Text style={styles.emptyCartIcon}>🛒</Text>
@@ -369,7 +396,7 @@ const CartScreenContent = () => {
         <>
           {/* Cart Items */}
           <FlatList
-            data={cart.items}
+            data={cart.items || []}
             renderItem={renderCartItem}
             keyExtractor={item => item.id.toString()}
             contentContainerStyle={styles.cartList}
@@ -405,33 +432,33 @@ const CartScreenContent = () => {
                 {/* Order Summary */}
                 <GlassCard style={styles.summarySection} variant="base">
                   <Text style={styles.sectionTitle}>📊 Order Summary</Text>
-                  
+
                   <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Items ({cart.items.reduce((sum, item) => sum + item.quantity, 0)})</Text>
+                    <Text style={styles.summaryLabel}>Items ({cart.items ? cart.items.reduce((sum, item) => sum + item.quantity, 0) : 0})</Text>
                     <Text style={styles.summaryValue}>₹{cart.subtotal}</Text>
                   </View>
-                  
+
                   {cart.discount > 0 && (
                     <View style={styles.summaryRow}>
                       <Text style={[styles.summaryLabel, styles.discountLabel]}>Discount</Text>
                       <Text style={[styles.summaryValue, styles.discountValue]}>-₹{cart.discount}</Text>
                     </View>
                   )}
-                  
+
                   {cart.shipping > 0 && (
                     <View style={styles.summaryRow}>
                       <Text style={styles.summaryLabel}>Shipping</Text>
                       <Text style={styles.summaryValue}>₹{cart.shipping}</Text>
                     </View>
                   )}
-                  
+
                   {cart.tax > 0 && (
                     <View style={styles.summaryRow}>
                       <Text style={styles.summaryLabel}>Tax</Text>
                       <Text style={styles.summaryValue}>₹{cart.tax}</Text>
                     </View>
                   )}
-                  
+
                   <View style={[styles.summaryRow, styles.totalRow]}>
                     <Text style={styles.totalLabel}>Total</Text>
                     <Text style={styles.totalValue}>₹{cart.total}</Text>

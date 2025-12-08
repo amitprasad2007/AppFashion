@@ -148,6 +148,7 @@ export interface AuthResponse {
 // Updated interfaces to match your API response
 export interface ApiCartItem {
   id: number;
+  cart_id: number;
   name: string;
   price: string;
   quantity: number;
@@ -1315,7 +1316,7 @@ class ApiService {
     try {
       const response = await this.fetchApi<{ success: boolean; message: string; cart?: ApiCart }>('/cart/update', {
         method: 'PUT',
-        body: JSON.stringify({ cart_item_id: cartItemId, quantity }),
+        body: JSON.stringify({ cart_id: cartItemId, quantity }),
       });
       return response;
     } catch (error) {
@@ -1325,13 +1326,13 @@ class ApiService {
   }
 
   // Remove item from cart
-  async removeFromCart(cartItemId: number): Promise<{ success: boolean; message: string }> {
+  async removeFromCart(cartId: number, productId: number): Promise<{ success: boolean; message: string }> {
     try {
       const response = await this.fetchApi<{ success: boolean; message: string }>('/cart/remove', {
         method: 'DELETE',
         body: JSON.stringify({
-          cart_id: cartItemId,
-          product_id: cartItemId
+          cart_id: cartId,
+          product_id: productId
         }),
       });
       return response;
@@ -1340,6 +1341,7 @@ class ApiService {
       throw error;
     }
   }
+
 
   // Get checkout cart details
   async getCheckoutCart(): Promise<{
