@@ -29,7 +29,6 @@ const CheckoutScreenContent = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute();
 
-  // Get cart data from route params (handle both cart and individual item checkout)
   const params = route.params as any;
   const cart = params?.cart;
   const cartItems = params?.cartItems;
@@ -39,7 +38,6 @@ const CheckoutScreenContent = () => {
   const tax = params?.tax;
   const discount = params?.discount;
 
-  // State management
   const [loading, setLoading] = useState(false);
   const [addresses, setAddresses] = useState<ShippingAddress[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
@@ -49,7 +47,6 @@ const CheckoutScreenContent = () => {
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [orderNotes, setOrderNotes] = useState('');
 
-  // Address form state
   const [newAddress, setNewAddress] = useState<Omit<ShippingAddress, 'id'>>({
     name: '',
     phone: '',
@@ -63,13 +60,10 @@ const CheckoutScreenContent = () => {
     isDefault: false,
   });
 
-  // Load addresses and payment methods
   useEffect(() => {
     loadCheckoutData();
     initializeRazorpay();
   }, []);
-
-  // Initialize Razorpay with configuration
   const initializeRazorpay = () => {
     try {
       // TODO: Replace with your actual Razorpay credentials
@@ -92,12 +86,11 @@ const CheckoutScreenContent = () => {
         apiService.getPaymentMethods()
       ]);
 
-      // Transform ApiAddress to ShippingAddress format
       const transformedAddresses: ShippingAddress[] = addressesData.map(apiAddr => ({
         id: apiAddr.id.toString(),
         name: apiAddr.name,
         phone: apiAddr.phone,
-        email: '', // ApiAddress doesn't have email field
+        email: '',
         addressLine1: apiAddr.address,
         addressLine2: '', // ApiAddress doesn't have addressLine2
         city: apiAddr.city,
@@ -114,7 +107,6 @@ const CheckoutScreenContent = () => {
       setPaymentMethods(finalPaymentMethods);
 
 
-      // Auto-select default address and first payment method
       const defaultAddress = addressesData.find(addr => addr.isDefault) || addressesData[0];
       if (defaultAddress) {
         setSelectedAddress(transformedAddresses.find(addr => addr.id === defaultAddress.id.toString()) || null);
@@ -142,7 +134,6 @@ const CheckoutScreenContent = () => {
     }
   };
 
-  // Save new address
   const saveAddress = async () => {
     try {
       if (!newAddress.name || !newAddress.phone || !newAddress.addressLine1 ||
@@ -226,7 +217,7 @@ const CheckoutScreenContent = () => {
                 itemData.images?.[0] || '';
 
           // Ensure all required fields are present
-          const cartId = item.cart_id || item.id || Math.floor(Math.random() * 1000000);
+          const cartId = item.cart_id;
           const productId = itemData.id || item.id;
           const productName = itemData.name || item.name;
           const productPrice = (itemData.price || item.price || 0).toString();
@@ -264,27 +255,17 @@ const CheckoutScreenContent = () => {
         coupon_code: null,
       };
 
-      console.log('🛒 COD Order Data (Validated):', JSON.stringify(codOrderData, null, 2));
-
-      // Check if user is authenticated before making the API call
       const authToken = apiService.getAuthToken();
       if (!authToken) {
         Alert.alert('Authentication Required', 'Please login to place an order.');
         return;
       }
 
-      // Check if there are items in server cart first
-      console.log('🔍 Checking server cart status...');
       try {
         const serverCart = await apiService.getCart();
-        console.log('📦 Server cart items:', serverCart.items.length);
-
         if (serverCart.items.length === 0) {
-          console.log('⚠️ Server cart is empty, attempting to sync items...');
-          // Try to add current items to server cart
           for (const item of codOrderData.items) {
             try {
-              console.log(`🔄 Adding item ${item.id} to server cart...`);
               await apiService.addToCart(item.id, item.quantity);
             } catch (addError) {
               console.warn(`Failed to add item ${item.id}:`, addError);
@@ -297,28 +278,22 @@ const CheckoutScreenContent = () => {
 
       const response = await apiService.checkoutCOD(codOrderData);
 
-      console.log('📡 COD Checkout Response:', response);
-
       if (response.success) {
         const orderDetails = response.order;
         const orderId = response.order_id || orderDetails?.order_id;
         const orderNumber = response.order_number || orderDetails?.order_id;
-
-        // Clear cart after successful order (optional)
         try {
           await apiService.clearCart();
         } catch (clearError) {
           console.warn('Could not clear cart after order:', clearError);
         }
 
-        // Show success message with order details
         Alert.alert(
           'Order Placed Successfully! 🎉',
           `Your order has been placed successfully!\n\nOrder ID: ${orderId}\nPayment: Cash on Delivery\nStatus: ${orderDetails?.status || 'Pending'}\nTotal: ₹${orderDetails?.total_amount || finalTotal}`,
           [{
             text: 'View Order',
             onPress: () => {
-              // Navigate to order confirmation with detailed order info
               navigation.navigate('OrderConfirmation', {
                 orderId: orderId,
                 orderNumber: orderNumber,
@@ -341,7 +316,6 @@ const CheckoutScreenContent = () => {
     }
   };
 
-  // Handle Razorpay payment
   const handleRazorpayPayment = async (
     items: any[],
     address: ShippingAddress,
@@ -353,14 +327,11 @@ const CheckoutScreenContent = () => {
     taxAmount: number
   ) => {
     try {
-      // Check if user is authenticated
       const authToken = apiService.getAuthToken();
       if (!authToken) {
         Alert.alert('Authentication Required', 'Please login to place an order.');
         return;
       }
-
-      // Prepare order data for backend (matching Web App structure)
       const orderData = {
         items: items.map((item: any) => {
           const itemData = item.product || item;
@@ -370,7 +341,7 @@ const CheckoutScreenContent = () => {
                 itemData.images?.[0] || '';
 
           return {
-            cart_id: item.cart_id || item.id || Math.floor(Math.random() * 1000000),
+            cart_id: item.cart_id,
             id: itemData.id || item.id,
             name: itemData.name || item.name,
             price: (itemData.price || item.price || 0).toString(),
@@ -382,7 +353,7 @@ const CheckoutScreenContent = () => {
         }),
         address_id: parseInt(address.id || '1'),
         shipping: Number(shippingAmount) || 0,
-        payment_method: selectedPayment?.type.toLowerCase() || 'card',
+        payment_method: 'online',
         subtotal: Number(itemsTotal) || 0,
         shippingcost: Number(shippingAmount) || 0,
         tax: Number(taxAmount) || 0,

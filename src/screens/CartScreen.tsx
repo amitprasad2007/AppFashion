@@ -116,7 +116,13 @@ const CartScreenContent = () => {
   // Refresh function
   const onRefresh = async () => {
     setRefreshing(true);
-    await refreshUserData();
+    try {
+      await refreshUserData();
+    } catch (error) {
+      console.error('Error refreshing cart:', error);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   // Update quantity
@@ -230,6 +236,7 @@ const CartScreenContent = () => {
 
     navigation.navigate('Checkout', {
       cartItems: cart.items.map(item => ({
+        cart_id: item.cart_id,
         id: item.id.toString(),
         name: item.name,
         price: parseFloat(item.price),

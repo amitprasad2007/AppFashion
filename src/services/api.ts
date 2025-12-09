@@ -1,5 +1,6 @@
 // API service for AppFashion
 import { getApiBaseUrl, API_CONFIG } from '../utils/networkConfig';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BASE_URL = getApiBaseUrl();
 
@@ -1175,10 +1176,8 @@ class ApiService {
   // Clear entire cart
   async clearCart(): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await this.fetchApi<{ success: boolean; message: string }>('/cart/clear', {
-        method: 'DELETE',
-      });
-      return response;
+      await AsyncStorage.removeItem('cart');
+      return { success: true, message: 'Cart cleared successfully' };
     } catch (error) {
       console.error('Error clearing cart:', error);
       throw error;
