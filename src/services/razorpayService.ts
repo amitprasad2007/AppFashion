@@ -108,7 +108,7 @@ class RazorpayService {
       key: paymentData.key || this.config!.key_id,
       amount: paymentData.amount, // Amount in paise
       order_id: paymentData.orderId,
-      name: '',
+      name: 'Samar Silk Palace',
       prefill: paymentData.prefill || {
         email: paymentData.customerEmail,
         contact: paymentData.customerPhone,
