@@ -103,7 +103,7 @@ class RazorpayService {
 
     const options = {
       description: paymentData.description,
-      image: 'https://via.placeholder.com/100x100/ff6b6b/ffffff?text=SP', // Your app logo URL
+      image: 'https://samarsilkpalace.com/favicon.PNG?text=SP', // Your app logo URL
       currency: paymentData.currency,
       key: paymentData.key || this.config!.key_id,
       amount: paymentData.amount, // Amount in paise
