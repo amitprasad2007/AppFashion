@@ -49,7 +49,6 @@ class RazorpayService {
   // Initialize Razorpay with configuration
   initialize(config: RazorpayConfig) {
     this.config = config;
-    console.log('🔧 Razorpay Service Initialized');
   }
 
   // Check if Razorpay is properly configured
@@ -73,10 +72,7 @@ class RazorpayService {
     }
 
     try {
-      console.log('💰 Creating Razorpay order:', orderData);
-
       const response = await apiService.createRazorpayOrder(orderData);
-
       // Mapped from web app backend response structure
       if (!response.razorpayOrderId) {
         throw new Error('Failed to create Razorpay order: Missing Order ID');
@@ -90,7 +86,6 @@ class RazorpayService {
         rzdetails: response.rzdetails || { receipt: `order_${Date.now()}` }
       };
     } catch (error) {
-      console.error('❌ Error creating Razorpay order:', error);
       throw error;
     }
   }
@@ -118,16 +113,12 @@ class RazorpayService {
       notes: paymentData.notes || {},
     };
 
-    console.log('🚀 Opening Razorpay gateway with options:', options);
-
     return new Promise((resolve, reject) => {
       RazorpayCheckout.open(options)
         .then((data: RazorpayResponse) => {
-          console.log('✅ Payment successful:', data);
           resolve(data);
         })
         .catch((error: RazorpayError) => {
-          console.error('❌ Payment failed:', error);
           reject(error);
         });
     });
@@ -139,8 +130,6 @@ class RazorpayService {
     orderData: any
   ): Promise<{ success: boolean; message: string; order?: any }> {
     try {
-      console.log('🎉 Processing successful payment:', paymentResponse);
-
       // Save payment to backend (matching web app flow)
       const saveResponse = await apiService.saveRazorpayPayment({
         response: paymentResponse,
@@ -148,11 +137,7 @@ class RazorpayService {
       });
 
       if (saveResponse.success === false) {
-        // Warn if success is false, but don't block unless critical
-        console.warn('Backend returned success: false', saveResponse);
       }
-
-      console.log('✅ Payment Saved:', saveResponse);
 
       return {
         success: true,
@@ -160,7 +145,6 @@ class RazorpayService {
         order: saveResponse
       };
     } catch (error) {
-      console.error('❌ Error processing successful payment:', error);
       throw error;
     }
   }
@@ -168,20 +152,15 @@ class RazorpayService {
   // Verify payment signature (should ideally be done on server)
   private async verifyPaymentSignature(paymentResponse: RazorpayResponse): Promise<boolean> {
     try {
-      console.log('🔍 Verifying payment signature...');
       return true;
     } catch (error) {
-      console.error('❌ Error verifying payment signature:', error);
       return false;
     }
   }
 
   // Handle payment failure
   handlePaymentFailure(error: RazorpayError): string {
-    console.error('💸 Payment failed:', error);
-
     let errorMessage = 'Payment failed. Please try again.';
-
     switch (error.code) {
       case 'BAD_REQUEST_ERROR':
         errorMessage = 'Invalid payment request. Please check your details.';
@@ -283,8 +262,6 @@ class RazorpayService {
       throw new Error(`Unsupported payment method: ${paymentMethod.type}`);
 
     } catch (error) {
-      console.error('❌ Payment processing failed:', error);
-
       if (error && typeof error === 'object' && 'code' in error) {
         const errorMessage = this.handlePaymentFailure(error as RazorpayError);
         return {

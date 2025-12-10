@@ -330,7 +330,6 @@ class ApiService {
     if (!this.guestSessionToken) {
       // Generate a new one and store it (matching website localStorage logic)
       this.guestSessionToken = this.generateGuestSessionToken();
-      console.log('🔑 Generated new guest session token:', this.guestSessionToken);
     }
 
     return this.guestSessionToken;
