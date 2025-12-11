@@ -122,9 +122,7 @@ const CheckoutScreenContent = () => {
       // Fallback payment methods
       const fallbackPaymentMethods: PaymentMethod[] = [
         { id: 'cod', type: 'COD', name: 'Cash on Delivery' },
-        { id: 'upi', type: 'UPI', name: 'UPI Payment' },
-        { id: 'card', type: 'CARD', name: 'Credit/Debit Card' },
-        { id: 'netbanking', type: 'NETBANKING', name: 'Net Banking' },
+        { id: 'online', type: 'ONLINE', name: 'Online Payment' }
       ];
 
       setPaymentMethods(fallbackPaymentMethods);
@@ -735,16 +733,14 @@ const CheckoutScreenContent = () => {
                   <View style={styles.paymentMethodContent}>
                     <Text style={styles.paymentMethodIcon}>
                       {method.type === 'COD' ? '💵' :
-                        method.type === 'UPI' ? '📱' :
-                          method.type === 'CARD' ? '💳' :
-                            method.type === 'NETBANKING' ? '🏦' : '💰'}
+                        method.type === 'ONLINE' ? '📱 💳 🏦 💰' : '💰'}
                     </Text>
                     <View style={styles.paymentMethodDetails}>
                       <Text style={styles.paymentMethodName}>{method.name}</Text>
                       {method.details && (
                         <Text style={styles.paymentMethodDetailsText}>{method.details}</Text>
                       )}
-                      {['UPI', 'CARD', 'NETBANKING', 'WALLET'].includes(method.type) && (
+                      {['ONLINE'].includes(method.type) && (
                         <View style={styles.razorpayBadge}>
                           <Text style={styles.razorpayBadgeText}>Powered by Razorpay</Text>
                         </View>

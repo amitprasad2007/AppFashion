@@ -253,7 +253,7 @@ export interface ShippingAddress {
 
 export interface PaymentMethod {
   id: string;
-  type: 'COD' | 'UPI' | 'CARD' | 'NETBANKING' | 'WALLET';
+  type: 'COD' | 'ONLINE';
   name: string;
   details?: string;
   razorpay_enabled?: boolean;
@@ -2259,13 +2259,13 @@ class ApiService {
       console.warn('⚠️ Using fallback payment methods');
       return [
         { id: 'cod', type: 'COD', name: 'Cash on Delivery', details: 'Pay when you receive' },
-        { id: 'razorpay', type: 'CARD', name: 'Online Payment', details: 'Credit/Debit Card, UPI, Netbanking', razorpay_enabled: true }
+        { id: 'razorpay', type: 'ONLINE', name: 'Online Payment', details: 'Credit/Debit Card, UPI, Netbanking', razorpay_enabled: true }
       ];
     } catch (error) {
       console.error('Error fetching payment methods:', error);
       return [
         { id: 'cod', type: 'COD', name: 'Cash on Delivery', details: 'Pay when you receive' },
-        { id: 'razorpay', type: 'CARD', name: 'Online Payment', details: 'Credit/Debit Card, UPI, Netbanking', razorpay_enabled: true }
+        { id: 'razorpay', type: 'ONLINE', name: 'Online Payment', details: 'Credit/Debit Card, UPI, Netbanking', razorpay_enabled: true }
       ];
     }
   }
