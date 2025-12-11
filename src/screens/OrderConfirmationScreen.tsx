@@ -7,9 +7,9 @@ import {
   ScrollView,
   Image,
 } from 'react-native';
-import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RootStackParamList} from '../types/navigation';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../types/navigation';
 import ScreenWrapper from '../components/ScreenWrapper';
 import EnhancedImage from '../components/EnhancedImage';
 import AnimatedCard from '../components/AnimatedCard';
@@ -93,14 +93,15 @@ const OrderConfirmationScreen = () => {
 
   const orderDetails = {
     orderNumber: orderNumber || orderId,
-    orderDate: serverOrderDetails?.created_at 
+    orderDate: serverOrderDetails?.created_at
       ? new Date(serverOrderDetails.created_at).toLocaleDateString('en-IN')
       : new Date().toLocaleDateString('en-IN'),
     estimatedDelivery: getEstimatedDelivery(),
     total: serverOrderDetails?.total_amount || orderTotal,
     subtotal: serverOrderDetails?.sub_total || orderTotal,
-    tax: 0, // Calculate if needed
-    shipping: 0, // Free shipping for COD
+    tax: serverOrderDetails?.tax || 0, // Calculate if needed
+    shipping_cost: serverOrderDetails?.shipping_cost || 0, // Free shipping for COD
+    discount: serverOrderDetails?.discount || 0, // Calculate if needed
     items: transformOrderItems(),
     paymentMethod: {
       type: paymentMethod === 'cod' ? 'Cash on Delivery' : paymentMethod,
@@ -125,17 +126,17 @@ const OrderConfirmationScreen = () => {
   };
 
   const renderOrderItem = (item: OrderItem, index: number) => {
-    const itemImageUrl = typeof item.image === 'string' && item.image.startsWith('http') 
-      ? item.image 
-      : item.image 
+    const itemImageUrl = typeof item.image === 'string' && item.image.startsWith('http')
+      ? item.image
+      : item.image
         ? `https://superadmin.samarsilkpalace.com/storage/${item.image}`
         : 'https://via.placeholder.com/60';
-    
+
     return (
       <AnimatedCard key={item.id} delay={300 + index * 100}>
         <GlassCard style={styles.orderItem} variant="light">
-          <EnhancedImage 
-            source={{uri: itemImageUrl}} 
+          <EnhancedImage
+            source={{ uri: itemImageUrl }}
             style={styles.itemImage}
             width={60}
             height={60}
@@ -169,8 +170,8 @@ const OrderConfirmationScreen = () => {
         style={styles.backgroundGradient}
       />
       <FloatingElements count={10} />
-      
-      <EnhancedHeader 
+
+      <EnhancedHeader
         title="✅ Order Confirmed"
         showBackButton={false}
         rightComponent={
@@ -184,152 +185,158 @@ const OrderConfirmationScreen = () => {
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.contentContainer}>
-      {/* Success Header */}
-      <View style={styles.successHeader}>
-        <Text style={styles.successIcon}>✅</Text>
-        <Text style={styles.successTitle}>Order Confirmed!</Text>
-        <Text style={styles.successSubtitle}>
-          Thank you for your purchase. Your order has been placed successfully with {orderDetails.paymentMethod.type}.
-        </Text>
-      </View>
-
-      {/* Order Summary */}
-      <View style={styles.orderSummary}>
-        <Text style={styles.sectionTitle}>Order Summary</Text>
-        
-        <View style={styles.orderInfo}>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Order Number</Text>
-            <Text style={styles.infoValue}>#{orderDetails.orderNumber}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Order Date</Text>
-            <Text style={styles.infoValue}>{orderDetails.orderDate}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Estimated Delivery</Text>
-            <Text style={styles.infoValue}>{orderDetails.estimatedDelivery}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Order Status</Text>
-            <Text style={[styles.infoValue, styles.statusValue]}>
-              {orderDetails.paymentMethod.orderStatus?.charAt(0).toUpperCase() + 
-               orderDetails.paymentMethod.orderStatus?.slice(1) || 'Pending'}
+          {/* Success Header */}
+          <View style={styles.successHeader}>
+            <Text style={styles.successIcon}>✅</Text>
+            <Text style={styles.successTitle}>Order Confirmed!</Text>
+            <Text style={styles.successSubtitle}>
+              Thank you for your purchase. Your order has been placed successfully with {orderDetails.paymentMethod.type}.
             </Text>
           </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Payment Status</Text>
-            <Text style={[styles.infoValue, styles.paymentStatusValue]}>
-              {orderDetails.paymentMethod.status?.charAt(0).toUpperCase() + 
-               orderDetails.paymentMethod.status?.slice(1) || 'Pending'}
-            </Text>
-          </View>
-        </View>
-      </View>
 
-      {/* Order Items */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Items Ordered ({orderDetails.items.length})</Text>
-        {orderDetails.items.length > 0 ? (
-          orderDetails.items.map(renderOrderItem)
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>No items to display</Text>
-          </View>
-        )}
-      </View>
+          {/* Order Summary */}
+          <View style={styles.orderSummary}>
+            <Text style={styles.sectionTitle}>Order Summary</Text>
 
-      {/* Payment Method */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Payment Method</Text>
-        <View style={styles.paymentCard}>
-          <Text style={styles.paymentType}>{orderDetails.paymentMethod.type}</Text>
-          <Text style={styles.paymentDetails}>
-            {orderDetails.paymentMethod.type === 'Cash on Delivery' 
-              ? 'Pay when your order is delivered to your doorstep'
-              : `Payment Status: ${orderDetails.paymentMethod.status}`}
-          </Text>
-        </View>
-      </View>
-
-      {/* Order Total */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Order Total</Text>
-        <View style={styles.totalCard}>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Subtotal</Text>
-            <Text style={styles.totalValue}>{formatCurrency(orderDetails.subtotal)}</Text>
-          </View>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Shipping</Text>
-            <Text style={styles.totalValue}>
-              {orderDetails.shipping > 0 ? formatCurrency(orderDetails.shipping) : 'Free'}
-            </Text>
-          </View>
-          {orderDetails.tax > 0 && (
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Tax</Text>
-              <Text style={styles.totalValue}>{formatCurrency(orderDetails.tax)}</Text>
+            <View style={styles.orderInfo}>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Order Number</Text>
+                <Text style={styles.infoValue}>#{orderDetails.orderNumber}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Order Date</Text>
+                <Text style={styles.infoValue}>{orderDetails.orderDate}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Estimated Delivery</Text>
+                <Text style={styles.infoValue}>{orderDetails.estimatedDelivery}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Order Status</Text>
+                <Text style={[styles.infoValue, styles.statusValue]}>
+                  {orderDetails.paymentMethod.orderStatus?.charAt(0).toUpperCase() +
+                    orderDetails.paymentMethod.orderStatus?.slice(1) || 'Pending'}
+                </Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Payment Status</Text>
+                <Text style={[styles.infoValue, styles.paymentStatusValue]}>
+                  {orderDetails.paymentMethod.status?.charAt(0).toUpperCase() +
+                    orderDetails.paymentMethod.status?.slice(1) || 'Pending'}
+                </Text>
+              </View>
             </View>
-          )}
-          <View style={styles.divider} />
-          <View style={styles.totalRow}>
-            <Text style={styles.grandTotalLabel}>Total</Text>
-            <Text style={styles.grandTotalValue}>
-              {formatCurrency(orderDetails.total)}
-            </Text>
           </View>
-        </View>
-      </View>
 
-      {/* What's Next */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>What's Next?</Text>
-        <View style={styles.nextStepsCard}>
-          <View style={styles.stepItem}>
-            <Text style={styles.stepIcon}>📧</Text>
-            <Text style={styles.stepText}>
-              You'll receive an order confirmation email shortly
-            </Text>
+          {/* Order Items */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Items Ordered ({orderDetails.items.length})</Text>
+            {orderDetails.items.length > 0 ? (
+              orderDetails.items.map(renderOrderItem)
+            ) : (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateText}>No items to display</Text>
+              </View>
+            )}
           </View>
-          <View style={styles.stepItem}>
-            <Text style={styles.stepIcon}>📦</Text>
-            <Text style={styles.stepText}>
-              We'll notify you when your order ships
-            </Text>
-          </View>
-          <View style={styles.stepItem}>
-            <Text style={styles.stepIcon}>🚚</Text>
-            <Text style={styles.stepText}>
-              Track your delivery in real-time
-            </Text>
-          </View>
-        </View>
-      </View>
 
-      {/* Action Buttons */}
-      <View style={styles.actionButtons}>
-        <TouchableOpacity style={styles.trackButton} onPress={handleTrackOrder}>
-          <Text style={styles.trackButtonText}>Track Your Order</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={styles.continueButton}
-          onPress={handleContinueShopping}>
-          <Text style={styles.continueButtonText}>Continue Shopping</Text>
-        </TouchableOpacity>
-      </View>
+          {/* Payment Method */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Payment Method</Text>
+            <View style={styles.paymentCard}>
+              <Text style={styles.paymentType}>{orderDetails.paymentMethod.type}</Text>
+              <Text style={styles.paymentDetails}>
+                {orderDetails.paymentMethod.type === 'Cash on Delivery'
+                  ? 'Pay when your order is delivered to your doorstep'
+                  : `Payment Status: ${orderDetails.paymentMethod.status}`}
+              </Text>
+            </View>
+          </View>
 
-      {/* Help Section */}
-      <View style={styles.helpSection}>
-        <Text style={styles.helpTitle}>Need Help?</Text>
-        <Text style={styles.helpText}>
-          If you have any questions about your order, please contact our customer support.
-        </Text>
-        <TouchableOpacity style={styles.helpButton}>
-          <Text style={styles.helpButtonText}>Contact Support</Text>
-        </TouchableOpacity>
-      </View>
+          {/* Order Total */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Order Total</Text>
+            <View style={styles.totalCard}>
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>Subtotal</Text>
+                <Text style={styles.totalValue}>{formatCurrency(orderDetails.subtotal)}</Text>
+              </View>
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>Shipping</Text>
+                <Text style={styles.totalValue}>
+                  {orderDetails.shipping_cost > 0 ? formatCurrency(orderDetails.shipping_cost) : 'Free'}
+                </Text>
+              </View>
+              {orderDetails.tax > 0 && (
+                <View style={styles.totalRow}>
+                  <Text style={styles.totalLabel}>Tax</Text>
+                  <Text style={styles.totalValue}>{formatCurrency(orderDetails.tax)}</Text>
+                </View>
+              )}
+              {orderDetails.discount > 0 && (
+                <View style={styles.totalRow}>
+                  <Text style={styles.totalLabel}>Discount</Text>
+                  <Text style={styles.totalValue}>-{formatCurrency(orderDetails.discount)}</Text>
+                </View>
+              )}
+              <View style={styles.divider} />
+              <View style={styles.totalRow}>
+                <Text style={styles.grandTotalLabel}>Total</Text>
+                <Text style={styles.grandTotalValue}>
+                  {formatCurrency(orderDetails.total)}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* What's Next */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>What's Next?</Text>
+            <View style={styles.nextStepsCard}>
+              <View style={styles.stepItem}>
+                <Text style={styles.stepIcon}>📧</Text>
+                <Text style={styles.stepText}>
+                  You'll receive an order confirmation email shortly
+                </Text>
+              </View>
+              <View style={styles.stepItem}>
+                <Text style={styles.stepIcon}>📦</Text>
+                <Text style={styles.stepText}>
+                  We'll notify you when your order ships
+                </Text>
+              </View>
+              <View style={styles.stepItem}>
+                <Text style={styles.stepIcon}>🚚</Text>
+                <Text style={styles.stepText}>
+                  Track your delivery in real-time
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.actionButtons}>
+            <TouchableOpacity style={styles.trackButton} onPress={handleTrackOrder}>
+              <Text style={styles.trackButtonText}>Track Your Order</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.continueButton}
+              onPress={handleContinueShopping}>
+              <Text style={styles.continueButtonText}>Continue Shopping</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Help Section */}
+          <View style={styles.helpSection}>
+            <Text style={styles.helpTitle}>Need Help?</Text>
+            <Text style={styles.helpText}>
+              If you have any questions about your order, please contact our customer support.
+            </Text>
+            <TouchableOpacity style={styles.helpButton}>
+              <Text style={styles.helpButtonText}>Contact Support</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -340,6 +347,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  backgroundGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
+  scrollView: {
+    flex: 1,
   },
   successHeader: {
     alignItems: 'center',
@@ -619,6 +636,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   closeIcon: {
+    fontSize: 18,
+    color: '#666',
+    fontWeight: 'bold',
+  },
+  closeIconText: {
     fontSize: 18,
     color: '#666',
     fontWeight: 'bold',

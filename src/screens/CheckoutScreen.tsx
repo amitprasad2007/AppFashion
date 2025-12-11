@@ -249,6 +249,7 @@ const CheckoutScreenContent = () => {
         payment_method: 'cod',
         subtotal: Number(itemsTotal) || 0,
         shippingcost: Number(shippingAmount) || 0,
+        discount: Number(discountAmount) || 0,
         tax: Number(taxAmount) || 0,
         total: Number(finalTotal) || 0,
         totalquantity: Number(itemsCount) || 0,
@@ -357,6 +358,7 @@ const CheckoutScreenContent = () => {
         subtotal: Number(itemsTotal) || 0,
         shippingcost: Number(shippingAmount) || 0,
         tax: Number(taxAmount) || 0,
+        discount: Number(discountAmount) || 0,
         total: Number(finalTotal) || 0,
         totalquantity: Number(itemsCount) || 0,
         coupon_code: null,
@@ -485,6 +487,7 @@ const CheckoutScreenContent = () => {
     const itemsTotal = cart?.totalAmount || subtotal || 0;
     const discountAmount = cart?.discount || discount || 0;
     const shippingAmount = cart?.deliveryCharge || shipping || 0;
+    const taxAmount = cart?.tax || tax || 0;
     const finalTotal = cart?.finalAmount || total || 0;
 
     return (
@@ -543,6 +546,12 @@ const CheckoutScreenContent = () => {
               <Text style={styles.summaryLabel}>Delivery</Text>
               <Text style={styles.summaryValue}>
                 {shippingAmount > 0 ? `₹${shippingAmount}` : 'FREE'}
+              </Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Tax</Text>
+              <Text style={styles.summaryValue}>
+                {taxAmount > 0 ? `₹${taxAmount}` : 'FREE'}
               </Text>
             </View>
 
