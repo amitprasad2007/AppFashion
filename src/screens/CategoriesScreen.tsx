@@ -9,9 +9,9 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RootStackParamList} from '../types/navigation';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../types/navigation';
 import AppHeader from '../components/AppHeader';
 import EnhancedHeader from '../components/EnhancedHeader';
 import GlassCard from '../components/GlassCard';
@@ -97,7 +97,7 @@ const CategoriesScreen = () => {
     try {
       setError(null);
       const categoriesData = await apiService.getCategories();
-      
+
       if (categoriesData.length > 0) {
         setCategories(categoriesData);
         console.log('Categories loaded successfully:', categoriesData.length);
@@ -139,7 +139,7 @@ const CategoriesScreen = () => {
     setExpandedItems(newExpanded);
   };
 
-  const renderCategory = ({item, index}: {item: ApiCategory; index: number}) => {
+  const renderCategory = ({ item, index }: { item: ApiCategory; index: number }) => {
     const gradients = [
       theme.glassGradients.aurora,
       theme.glassGradients.sunset,
@@ -148,7 +148,7 @@ const CategoriesScreen = () => {
       theme.glassGradients.rose,
       theme.glassGradients.ocean,
     ];
-    
+
     const gradient = gradients[index % gradients.length];
     const isExpanded = expandedItems.has(String(item.id));
     const description = item.description || 'Explore this amazing category with a wide variety of products. Discover the latest trends and find exactly what you\'re looking for in our carefully curated collection.';
@@ -156,10 +156,10 @@ const CategoriesScreen = () => {
 
     return (
       <TouchableOpacity
-        onPress={() => navigation.navigate('ProductList', {categoryId: String(item.id), categoryName: item.name})}
+        onPress={() => navigation.navigate('ProductList', { categoryId: String(item.id), categoryName: item.name })}
         activeOpacity={0.9}>
         <GlassCard style={styles.categoryCard} gradientColors={gradient}>
-          <Image source={{uri: item.image}} style={styles.categoryImage} />
+          <Image source={{ uri: item.image }} style={styles.categoryImage} />
           <View style={styles.categoryInfo}>
             <Text style={styles.categoryName}>{item.name}</Text>
             <View style={styles.descriptionContainer}>
@@ -167,7 +167,7 @@ const CategoriesScreen = () => {
                 {description}
               </Text>
               {shouldShowReadMore && (
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => toggleExpanded(String(item.id))}
                   style={styles.readMoreButton}
                 >
@@ -208,8 +208,8 @@ const CategoriesScreen = () => {
           style={styles.backgroundGradient}
         />
         <FloatingElements count={6} />
-        
-        <EnhancedHeader 
+
+        <EnhancedHeader
           title="📂 Categories"
           showBackButton={true}
           onBackPress={() => navigation.goBack()}
@@ -232,8 +232,8 @@ const CategoriesScreen = () => {
         style={styles.backgroundGradient}
       />
       <FloatingElements count={6} />
-      
-      <EnhancedHeader 
+
+      <EnhancedHeader
         title={`📂 Categories ${categories.length > 0 ? `(${categories.length})` : ''}`}
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
@@ -277,16 +277,34 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.neutral[50],
   },
+  backgroundGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingCard: {
+    padding: theme.spacing[6],
+    alignItems: 'center',
+  },
   loadingText: {
     fontSize: theme.typography.fontSize.base,
-    color: theme.colors.neutral[600],
+    color: theme.colors.white,
     marginTop: theme.spacing[3],
     fontWeight: theme.typography.fontWeight.medium,
+  },
+  errorCard: {
+    padding: theme.spacing[4],
+  },
+  emptyCard: {
+    padding: theme.spacing[6],
+    alignItems: 'center',
   },
   errorContainer: {
     backgroundColor: '#ffebee',

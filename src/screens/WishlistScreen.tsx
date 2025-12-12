@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,9 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RootStackParamList} from '../types/navigation';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../types/navigation';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import { ApiWishlistItem } from '../services/api';
 import ProtectedScreen from '../components/ProtectedScreen';
@@ -28,17 +28,17 @@ import LinearGradient from 'react-native-linear-gradient';
 
 const WishlistScreenContent = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { 
-    userData, 
-    isLoading, 
+  const {
+    userData,
+    isLoading,
     error: profileError,
     getWishlist,
     removeFromWishlist,
     removeFromWishlistById,
     addToCart,
-    refreshUserData 
+    refreshUserData
   } = useUserProfile();
-  
+
   const [wishlistItems, setWishlistItems] = useState<ApiWishlistItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [removeLoading, setRemoveLoading] = useState<number>(0);
@@ -105,7 +105,7 @@ const WishlistScreenContent = () => {
 
   const handleAddToCart = async (productId: number, productName: string) => {
     setAddLoading(productId);
-    
+
     try {
       await addToCart(productId, 1);
       SafeAlert.show(
@@ -124,8 +124,8 @@ const WishlistScreenContent = () => {
     }
   };
 
-  const renderWishlistItem = ({item, index}: {item: ApiWishlistItem; index: number}) => {
-    const discountPercentage = item.originalPrice 
+  const renderWishlistItem = ({ item, index }: { item: ApiWishlistItem; index: number }) => {
+    const discountPercentage = item.originalPrice
       ? Math.round(((item.originalPrice - parseFloat(item.price)) / item.originalPrice) * 100)
       : 0;
     const isRemoving = removeLoading === item.wish_id;
@@ -138,49 +138,49 @@ const WishlistScreenContent = () => {
       theme.glassGradients.purple,
       theme.glassGradients.ocean,
     ];
-    
+
     const gradient = gradients[index % gradients.length];
 
     return (
       <AnimatedCard delay={index * 100}>
         <GlassCard style={styles.itemCard} gradientColors={gradient}>
           <TouchableOpacity
-            onPress={() => navigation.navigate('ProductDetails', {productSlug: item.slug})}
+            onPress={() => navigation.navigate('ProductDetails', { productSlug: item.slug })}
             style={styles.itemContent}
             activeOpacity={0.9}>
-        <Image 
-          source={{
-            uri: Array.isArray(item.image) 
-              ? item.image[0] 
-              : item.image || 'https://via.placeholder.com/150'
-          }} 
-          style={styles.itemImage} 
-        />
-        
-        {/* Discount Badge */}
-        {discountPercentage > 0 && (
-          <GlassCard style={styles.discountBadge} variant="light">
-            <Text style={styles.discountText}>{discountPercentage}% OFF</Text>
-          </GlassCard>
-        )}
-        
-        <View style={styles.itemDetails}>
-          <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
-          <Text style={styles.category}>{item.category}</Text>
-          <View style={styles.priceContainer}>
-            <Text style={styles.currentPrice}>₹{parseFloat(item.price).toLocaleString()}</Text>
-            {item.originalPrice && (
-              <Text style={styles.originalPrice}>₹{item.originalPrice.toLocaleString()}</Text>
+            <Image
+              source={{
+                uri: Array.isArray(item.image)
+                  ? item.image[0]
+                  : item.image || 'https://via.placeholder.com/150'
+              }}
+              style={styles.itemImage}
+            />
+
+            {/* Discount Badge */}
+            {discountPercentage > 0 && (
+              <GlassCard style={styles.discountBadge} variant="light">
+                <Text style={styles.discountText}>{discountPercentage}% OFF</Text>
+              </GlassCard>
             )}
-          </View>
-          {item.originalPrice && (
-            <Text style={styles.savings}>
-              You save ₹{(item.originalPrice - parseFloat(item.price)).toFixed(2)}
-            </Text>
-          )}
-        </View>
+
+            <View style={styles.itemDetails}>
+              <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+              <Text style={styles.category}>{item.category}</Text>
+              <View style={styles.priceContainer}>
+                <Text style={styles.currentPrice}>₹{parseFloat(item.price).toLocaleString()}</Text>
+                {item.originalPrice && (
+                  <Text style={styles.originalPrice}>₹{item.originalPrice.toLocaleString()}</Text>
+                )}
+              </View>
+              {item.originalPrice && (
+                <Text style={styles.savings}>
+                  You save ₹{(item.originalPrice - parseFloat(item.price)).toFixed(2)}
+                </Text>
+              )}
+            </View>
           </TouchableOpacity>
-          
+
           <View style={styles.itemActions}>
             <TouchableOpacity
               style={[styles.addToCartButtonContainer, isAdding && styles.disabledButton]}
@@ -194,7 +194,7 @@ const WishlistScreenContent = () => {
                 )}
               </GlassCard>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[styles.removeButtonContainer, isRemoving && styles.disabledButton]}
               onPress={() => handleRemoveFromWishlist(item.wish_id, item.name)}
@@ -242,14 +242,14 @@ const WishlistScreenContent = () => {
           style={styles.backgroundGradient}
         />
         <FloatingElements count={6} />
-        
-        <EnhancedHeader 
+
+        <EnhancedHeader
           title="💝 My Wishlist"
           showBackButton={true}
           onBackPress={() => navigation.goBack()}
           rightComponent={<CartIcon size="medium" color={theme.colors.white} />}
         />
-        
+
         <View style={styles.loadingContainer}>
           <GlassCard style={styles.loadingCard}>
             <ActivityIndicator size="large" color={theme.colors.white} />
@@ -267,8 +267,8 @@ const WishlistScreenContent = () => {
         style={styles.backgroundGradient}
       />
       <FloatingElements count={8} />
-      
-      <EnhancedHeader 
+
+      <EnhancedHeader
         title={`💝 Wishlist (${wishlistItems.length})`}
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
@@ -297,7 +297,7 @@ const WishlistScreenContent = () => {
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
           />
-          
+
           {/* Move All to Cart Button */}
           <AnimatedCard delay={wishlistItems.length * 100 + 100}>
             <View style={styles.bottomActions}>
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     overflow: 'hidden',
@@ -564,6 +564,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  addToCartButtonContainer: {
+    flex: 1,
+  },
+  removeButtonContainer: {
+    flex: 1,
+  },
+  moveAllButtonContainer: {
+    flex: 1,
+  },
+  backgroundGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
+  loadingCard: {
+    padding: 30,
+    alignItems: 'center',
+  },
+  emptyCard: {
+    padding: 30,
+    alignItems: 'center',
+  },
+  errorCard: {
+    padding: 15,
   },
 });
 

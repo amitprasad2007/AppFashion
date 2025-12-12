@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,9 +9,9 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RootStackParamList} from '../../types/navigation';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../types/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { theme } from '../../theme';
 import AnimatedCard from '../../components/AnimatedCard';
@@ -26,7 +26,7 @@ import LinearGradient from 'react-native-linear-gradient';
 const RegisterScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { state, register, oauthLogin, clearError } = useAuth();
-  
+
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -37,7 +37,7 @@ const RegisterScreen = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
+  const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
 
   // Clear error when component mounts
   useEffect(() => {
@@ -52,7 +52,7 @@ const RegisterScreen = () => {
   }, [state.isAuthenticated, state.isLoading]);
 
   const validateForm = () => {
-    const errors: {[key: string]: string} = {};
+    const errors: { [key: string]: string } = {};
 
     if (!firstName.trim()) {
       errors.firstName = 'First name is required';
@@ -110,7 +110,7 @@ const RegisterScreen = () => {
         phone: phone.trim() || undefined,
         acceptTerms: agreeToTerms,
       });
-      
+
       if (response.success) {
         // Success is handled by the useEffect above
         Alert.alert(
@@ -136,7 +136,7 @@ const RegisterScreen = () => {
     try {
       clearError();
       const response = await oauthLogin(provider);
-      
+
       if (response.success) {
         // Success is handled by the useEffect above
         console.log(`${provider} registration/login successful`);
@@ -162,14 +162,14 @@ const RegisterScreen = () => {
         style={styles.backgroundGradient}
       />
       <FloatingElements count={12} />
-      
-      <EnhancedHeader 
+
+      <EnhancedHeader
         title="✨ Create Account"
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
       />
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}>
@@ -190,8 +190,8 @@ const RegisterScreen = () => {
             <View style={styles.nameContainer}>
               <View style={styles.nameInput}>
                 <Text style={styles.inputLabel}>👤 First Name</Text>
-                <GlassCard 
-                  style={[styles.inputWrapper, validationErrors.firstName && styles.inputError]} 
+                <GlassCard
+                  style={[styles.inputWrapper, !!validationErrors.firstName && styles.inputError]}
                   variant="light">
                   <TextInput
                     style={styles.input}
@@ -201,7 +201,7 @@ const RegisterScreen = () => {
                     onChangeText={(text) => {
                       setFirstName(text);
                       if (validationErrors.firstName) {
-                        setValidationErrors(prev => ({...prev, firstName: ''}));
+                        setValidationErrors(prev => ({ ...prev, firstName: '' }));
                       }
                     }}
                     autoCapitalize="words"
@@ -214,8 +214,8 @@ const RegisterScreen = () => {
               </View>
               <View style={styles.nameInput}>
                 <Text style={styles.inputLabel}>👤 Last Name</Text>
-                <GlassCard 
-                  style={[styles.inputWrapper, validationErrors.lastName && styles.inputError]} 
+                <GlassCard
+                  style={[styles.inputWrapper, !!validationErrors.lastName && styles.inputError]}
                   variant="light">
                   <TextInput
                     style={styles.input}
@@ -225,7 +225,7 @@ const RegisterScreen = () => {
                     onChangeText={(text) => {
                       setLastName(text);
                       if (validationErrors.lastName) {
-                        setValidationErrors(prev => ({...prev, lastName: ''}));
+                        setValidationErrors(prev => ({ ...prev, lastName: '' }));
                       }
                     }}
                     autoCapitalize="words"
@@ -240,8 +240,8 @@ const RegisterScreen = () => {
 
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>📧 Email Address</Text>
-              <GlassCard 
-                style={[styles.inputWrapper, validationErrors.email && styles.inputError]} 
+              <GlassCard
+                style={[styles.inputWrapper, !!validationErrors.email && styles.inputError]}
                 variant="light">
                 <TextInput
                   style={styles.input}
@@ -251,7 +251,7 @@ const RegisterScreen = () => {
                   onChangeText={(text) => {
                     setEmail(text);
                     if (validationErrors.email) {
-                      setValidationErrors(prev => ({...prev, email: ''}));
+                      setValidationErrors(prev => ({ ...prev, email: '' }));
                     }
                   }}
                   keyboardType="email-address"
@@ -282,8 +282,8 @@ const RegisterScreen = () => {
 
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>🔒 Password</Text>
-              <GlassCard 
-                style={[styles.passwordContainer, validationErrors.password && styles.inputError]} 
+              <GlassCard
+                style={[styles.passwordContainer, !!validationErrors.password && styles.inputError]}
                 variant="light">
                 <TextInput
                   style={styles.passwordInput}
@@ -293,7 +293,7 @@ const RegisterScreen = () => {
                   onChangeText={(text) => {
                     setPassword(text);
                     if (validationErrors.password) {
-                      setValidationErrors(prev => ({...prev, password: ''}));
+                      setValidationErrors(prev => ({ ...prev, password: '' }));
                     }
                   }}
                   secureTextEntry={!showPassword}
@@ -320,8 +320,8 @@ const RegisterScreen = () => {
 
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>🔒 Confirm Password</Text>
-              <GlassCard 
-                style={[styles.passwordContainer, validationErrors.confirmPassword && styles.inputError]} 
+              <GlassCard
+                style={[styles.passwordContainer, !!validationErrors.confirmPassword && styles.inputError]}
                 variant="light">
                 <TextInput
                   style={styles.passwordInput}
@@ -331,7 +331,7 @@ const RegisterScreen = () => {
                   onChangeText={(text) => {
                     setConfirmPassword(text);
                     if (validationErrors.confirmPassword) {
-                      setValidationErrors(prev => ({...prev, confirmPassword: ''}));
+                      setValidationErrors(prev => ({ ...prev, confirmPassword: '' }));
                     }
                   }}
                   secureTextEntry={!showConfirmPassword}
@@ -353,31 +353,31 @@ const RegisterScreen = () => {
               )}
             </View>
 
-        {/* Terms and Conditions */}
-        <View style={styles.termsContainer}>
-          <TouchableOpacity
-            style={styles.checkbox}
-            onPress={() => {
-              setAgreeToTerms(!agreeToTerms);
-              if (validationErrors.agreeToTerms) {
-                setValidationErrors(prev => ({...prev, agreeToTerms: ''}));
-              }
-            }}
-            disabled={isSubmitting || state.isLoading}>
-            <Text style={styles.checkboxIcon}>
-              {agreeToTerms ? '☑️' : '☐'}
-            </Text>
-          </TouchableOpacity>
-          <Text style={styles.termsText}>
-            I agree to the{' '}
-            <Text style={styles.termsLink}>Terms and Conditions</Text>
-            {' '}and{' '}
-            <Text style={styles.termsLink}>Privacy Policy</Text>
-          </Text>
-        </View>
-        {validationErrors.agreeToTerms && (
-          <Text style={styles.validationError}>{validationErrors.agreeToTerms}</Text>
-        )}
+            {/* Terms and Conditions */}
+            <View style={styles.termsContainer}>
+              <TouchableOpacity
+                style={styles.checkbox}
+                onPress={() => {
+                  setAgreeToTerms(!agreeToTerms);
+                  if (validationErrors.agreeToTerms) {
+                    setValidationErrors(prev => ({ ...prev, agreeToTerms: '' }));
+                  }
+                }}
+                disabled={isSubmitting || state.isLoading}>
+                <Text style={styles.checkboxIcon}>
+                  {agreeToTerms ? '☑️' : '☐'}
+                </Text>
+              </TouchableOpacity>
+              <Text style={styles.termsText}>
+                I agree to the{' '}
+                <Text style={styles.termsLink}>Terms and Conditions</Text>
+                {' '}and{' '}
+                <Text style={styles.termsLink}>Privacy Policy</Text>
+              </Text>
+            </View>
+            {validationErrors.agreeToTerms && (
+              <Text style={styles.validationError}>{validationErrors.agreeToTerms}</Text>
+            )}
 
             {/* Show global error */}
             {state.error && (
@@ -395,12 +395,12 @@ const RegisterScreen = () => {
               disabled={isSubmitting || state.isLoading}
             />
 
-        {(isSubmitting || state.isLoading) && (
-          <GlassCard style={styles.loadingContainer} variant="light">
-            <ActivityIndicator size="small" color={theme.colors.white} />
-            <Text style={styles.loadingText}>Registering...</Text>
-          </GlassCard>
-        )}
+            {(isSubmitting || state.isLoading) && (
+              <GlassCard style={styles.loadingContainer} variant="light">
+                <ActivityIndicator size="small" color={theme.colors.white} />
+                <Text style={styles.loadingText}>Registering...</Text>
+              </GlassCard>
+            )}
           </GlassCard>
         </AnimatedCard>
 
@@ -412,26 +412,26 @@ const RegisterScreen = () => {
               <Text style={styles.orText}>or sign up with</Text>
               <View style={styles.dividerLine} />
             </View>
-            
+
             <View style={styles.socialButtons}>
-              <OAuthButton 
-                provider="google" 
+              <OAuthButton
+                provider="google"
                 onSuccess={() => navigation.navigate('MainTabs')}
                 onError={(error) => console.error('Google OAuth Error:', error)}
                 disabled={isSubmitting || state.isLoading}
                 style={styles.socialButton}
               />
 
-              <OAuthButton 
-                provider="facebook" 
+              <OAuthButton
+                provider="facebook"
                 onSuccess={() => navigation.navigate('MainTabs')}
                 onError={(error) => console.error('Facebook OAuth Error:', error)}
                 disabled={isSubmitting || state.isLoading}
                 style={styles.socialButton}
               />
 
-              <OAuthButton 
-                provider="apple" 
+              <OAuthButton
+                provider="apple"
                 onSuccess={() => navigation.navigate('MainTabs')}
                 onError={(error) => console.error('Apple OAuth Error:', error)}
                 disabled={true}
@@ -459,6 +459,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  backgroundGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 30,
   },
   header: {
     flexDirection: 'row',
@@ -586,6 +599,9 @@ const styles = StyleSheet.create({
   eyeIcon: {
     fontSize: 20,
   },
+  eyeIconText: {
+    fontSize: 20,
+  },
   passwordHint: {
     fontSize: 12,
     color: '#666',
@@ -647,7 +663,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     marginHorizontal: theme.spacing[4],
     textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: {width: 0, height: 1},
+    textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
   socialButtons: {

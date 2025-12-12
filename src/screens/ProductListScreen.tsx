@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
   ScrollView,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { theme } from '../theme';
 import AnimatedCard from '../components/AnimatedCard';
 import GradientButton from '../components/GradientButton';
@@ -23,8 +23,8 @@ import FloatingElements from '../components/FloatingElements';
 import GlassInput from '../components/GlassInput';
 import CartIcon from '../components/CartIcon';
 import SafeAlert from '../utils/safeAlert';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {Product, RootStackParamList} from '../types/navigation';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { Product, RootStackParamList } from '../types/navigation';
 import { apiService, ApiProduct, ApiCategory } from '../services/api';
 
 const ProductListScreen = () => {
@@ -32,17 +32,17 @@ const ProductListScreen = () => {
   const route = useRoute();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
-  
+
   // API state management
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Get route parameters
   const { categoryId, categoryName, type } = route.params as any || {};
-  
+
   // Dynamic filters based on available categories
   const [filters, setFilters] = useState(['all']);
 
@@ -50,24 +50,24 @@ const ProductListScreen = () => {
   const loadData = async () => {
     try {
       setError(null);
-      
+
       // Load categories for filters
       const categoriesData = await apiService.getCategories();
       setCategories(categoriesData);
-      
+
       // Create dynamic filters from categories
       const categoryFilters = ['all', ...categoriesData.map(cat => (cat.slug || cat.name).toLowerCase().replace(/\s+/g, '-'))];
       setFilters(categoryFilters);
-      
+
       // Load products based on route parameters
       let productsData: ApiProduct[] = [];
-      
+
       if (categoryId) {
         //console.log(categoryId);
         const searchType = 'category';
         // Load products for specific category
         productsData = await apiService.getProducts({ categoryId, type: searchType });
-        
+
       } else if (type) {
         // Load products by type (featured, bestseller, etc.)
         productsData = await apiService.getProducts({ type: type as any });
@@ -79,14 +79,14 @@ const ProductListScreen = () => {
         ]);
         productsData = [...featured, ...bestsellers];
       }
-      
+
       setProducts(productsData);
       console.log('Products loaded:', productsData.length);
-      
+
     } catch (err) {
       console.error('Error loading product list data:', err);
       setError('Failed to load products. Using offline content.');
-      
+
       // Fallback to static data on error
       setProducts([
         {
@@ -139,9 +139,9 @@ const ProductListScreen = () => {
   const handleAddToCartFromList = async (product: ApiProduct) => {
     try {
       await apiService.addToCart(product.id, 1);
-      
+
       SafeAlert.show(
-        'Added to Cart', 
+        'Added to Cart',
         `${product.name} has been added to your cart.`,
         [
           { text: 'Continue Shopping', style: 'cancel' },
@@ -163,9 +163,9 @@ const ProductListScreen = () => {
   // Simple search filtering only (since products are now fetched by category)
   const filteredProducts = products.filter(product => {
     // Only apply search filtering, category filtering is now done server-side
-    return searchQuery.trim() === '' || 
+    return searchQuery.trim() === '' ||
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (typeof product.category === 'string' && product.category.toLowerCase().includes(searchQuery.toLowerCase()));
+      product.category?.title?.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   console.log(`📊 CURRENT STATE:`);
@@ -174,35 +174,35 @@ const ProductListScreen = () => {
   console.log(`  Filtered Products (after search): ${filteredProducts.length}`);
   console.log(`  Search Query: "${searchQuery}"`);
 
-  const renderProduct = ({item, index}: {item: ApiProduct; index: number}) => {
+  const renderProduct = ({ item, index }: { item: ApiProduct; index: number }) => {
     return (
       <TouchableOpacity
-        onPress={() => navigation.navigate('ProductDetails', {productSlug: item.slug || item.id.toString()})}
+        onPress={() => navigation.navigate('ProductDetails', { productSlug: item.slug || item.id.toString() })}
         style={styles.productCard}
         activeOpacity={0.8}>
-        
+
         <View style={styles.imageContainer}>
-          <Image source={{uri: item.images[0]}} style={styles.productImage} />
+          <Image source={{ uri: item.images[0] }} style={styles.productImage} />
           {item.isBestseller && (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>Bestseller</Text>
             </View>
           )}
         </View>
-        
+
         <View style={styles.productInfo}>
           <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
           <Text style={styles.productCategory}>
             {typeof item.category === 'string' ? item.category : (item.category as any)?.title || 'Category'}
           </Text>
-          
+
           <View style={styles.priceRow}>
             <Text style={styles.price}>₹{item.price}</Text>
             {item.originalPrice && item.originalPrice > item.price && (
               <Text style={styles.originalPrice}>₹{item.originalPrice}</Text>
             )}
           </View>
-          
+
           <View style={styles.ratingRow}>
             <Text style={styles.rating}>★ {item.rating || 4.5}</Text>
             <Text style={styles.reviewCount}>({item.reviewCount || 0} reviews)</Text>
@@ -217,9 +217,9 @@ const ProductListScreen = () => {
     try {
       setLoading(true);
       console.log(`🔄 LOADING PRODUCTS FOR CATEGORY: "${filterKey}"`);
-      
+
       let productsData: ApiProduct[] = [];
-      
+
       if (filterKey === 'all') {
         // Load all products (featured + bestsellers like initial load)
         const [featured, bestsellers] = await Promise.all([
@@ -227,7 +227,7 @@ const ProductListScreen = () => {
           apiService.getBestsellerProducts()
         ]);
         productsData = [...featured, ...bestsellers];
-        
+
         console.log(`📦 LOADED ALL PRODUCTS: ${productsData.length} (Featured: ${featured.length}, Bestsellers: ${bestsellers.length})`);
       } else {
         // Find the category by filter key
@@ -235,16 +235,16 @@ const ProductListScreen = () => {
           const catSlug = (cat.slug || cat.name).toLowerCase().replace(/\s+/g, '-');
           return catSlug === filterKey;
         });
-        
+
         if (selectedCategory) {
           console.log(`🎯 FOUND CATEGORY: "${selectedCategory.name}" (ID: ${selectedCategory.id})`);
-          
+
           // Load products for specific category
-          productsData = await apiService.getProducts({ 
-            categoryId: selectedCategory.id, 
-            type: 'category' 
+          productsData = await apiService.getProducts({
+            categoryId: selectedCategory.id,
+            type: 'category'
           });
-          
+
           console.log(`📦 LOADED CATEGORY PRODUCTS: ${productsData.length} for "${selectedCategory.name}"`);
         } else {
           console.log(`❌ CATEGORY NOT FOUND for filter: "${filterKey}"`);
@@ -256,12 +256,12 @@ const ProductListScreen = () => {
           productsData = [...featured, ...bestsellers];
         }
       }
-      
+
       setProducts(productsData);
-      
+
     } catch (error) {
       console.error('❌ Error loading products by category:', error);
-      
+
       // Fallback to current products on error
       console.log('🔄 KEEPING CURRENT PRODUCTS ON ERROR');
     } finally {
@@ -269,7 +269,7 @@ const ProductListScreen = () => {
     }
   };
 
-  const renderFilter = ({item, index}: {item: string; index: number}) => (
+  const renderFilter = ({ item, index }: { item: string; index: number }) => (
     <TouchableOpacity
       key={index}
       style={[styles.filterButton, selectedFilter === item && styles.activeFilter]}
@@ -295,8 +295,8 @@ const ProductListScreen = () => {
         style={styles.backgroundGradient}
       />
       <FloatingElements count={8} />
-      
-      <EnhancedHeader 
+
+      <EnhancedHeader
         title={`🛍️ ${categoryName ? categoryName : type ? `${type.charAt(0).toUpperCase() + type.slice(1)} Products` : 'All Products'}`}
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
@@ -315,7 +315,7 @@ const ProductListScreen = () => {
             onChangeText={handleSearch}
           />
         </View>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.filterIconContainer}
           onPress={() => {
             // Toggle between 'all' and first category filter
@@ -325,18 +325,18 @@ const ProductListScreen = () => {
           <View style={styles.filterIcon}>
             <Text style={styles.filterIconText}>🎛️</Text>
           </View>
-        </TouchableOpacity> 
+        </TouchableOpacity>
       </View>
 
       {/* Filters */}
-      <ScrollView 
+      <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.filtersContainer}
         style={styles.filtersScrollView}>
-        {filters.map((filter, index) => renderFilter({item: filter, index}))}
+        {filters.map((filter, index) => renderFilter({ item: filter, index }))}
       </ScrollView>
-   
+
 
       {/* Error Message */}
       {error && (
@@ -370,8 +370,8 @@ const ProductListScreen = () => {
             <View style={styles.resultsHeader}>
               <GlassCard style={styles.resultsCard} variant="light">
                 <Text style={styles.resultsText}>
-                  {searchQuery ? `🔍 Found ${filteredProducts.length} results for "${searchQuery}"` : 
-                   `📦 Showing ${filteredProducts.length} products`}
+                  {searchQuery ? `🔍 Found ${filteredProducts.length} results for "${searchQuery}"` :
+                    `📦 Showing ${filteredProducts.length} products`}
                 </Text>
               </GlassCard>
             </View>
@@ -397,6 +397,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.neutral[50],
+  },
+  backgroundGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
   },
   header: {
     flexDirection: 'row',
@@ -493,7 +500,7 @@ const styles = StyleSheet.create({
     padding: theme.spacing[3],
     borderRadius: theme.borderRadius.base,
     ...theme.shadows.sm,
-  
+
   },
   filterIconText: {
     fontSize: 18,
@@ -600,11 +607,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     lineHeight: 18,
   },
-  productCategory: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginBottom: 8,
-  },
+
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -616,11 +619,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#059669',
   },
-  originalPrice: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    textDecorationLine: 'line-through',
-  },
+
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -631,17 +630,18 @@ const styles = StyleSheet.create({
     color: '#F59E0B',
     fontWeight: '500',
   },
-  reviewCount: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  
+
+
   // Loading and error states
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: theme.spacing.xl,
+  },
+  loadingCard: {
+    padding: theme.spacing.lg,
+    alignItems: 'center',
   },
   loadingText: {
     marginTop: theme.spacing.md,
@@ -658,6 +658,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.error?.[200] || '#fecaca',
   },
+  errorCard: {
+    padding: theme.spacing.md,
+  },
   errorText: {
     color: theme.colors.error?.[700] || '#b91c1c',
     fontSize: theme.typography.size.sm,
@@ -668,6 +671,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: theme.spacing.xl,
+  },
+  emptyCard: {
+    padding: theme.spacing.lg,
+    alignItems: 'center',
   },
   emptyText: {
     fontSize: theme.typography.size.lg,
@@ -680,7 +687,7 @@ const styles = StyleSheet.create({
     color: theme.colors.neutral[500],
     textAlign: 'center',
   },
-  
+
   // Enhanced product card styles
   productCategory: {
     fontSize: theme.typography.size.xs,
@@ -739,6 +746,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.neutral?.[50] || '#f9fafb',
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.neutral[200],
+  },
+  resultsCard: {
+    padding: theme.spacing.sm,
   },
   resultsText: {
     fontSize: theme.typography.size.sm,

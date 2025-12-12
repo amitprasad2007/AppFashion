@@ -27,13 +27,18 @@ const FloatingElements: React.FC<FloatingElementsProps> = ({ count = 6 }) => {
   useEffect(() => {
     const createFloatingAnimation = (index: number) => {
       const { translateY, translateX, opacity, scale } = animations[index];
-      
+
       const animateFloat = () => {
-        // Reset position
+        // Reset position and store the initial X position
         translateY.setValue(height + 100);
-        translateX.setValue(Math.random() * width);
+        const initialX = Math.random() * width;
+        translateX.setValue(initialX);
         opacity.setValue(0.3);
         scale.setValue(0.5 + Math.random() * 0.5);
+
+        // Create oscillation offsets
+        const offset1 = (Math.random() - 0.5) * 100;
+        const offset2 = (Math.random() - 0.5) * 100;
 
         // Create floating animation
         Animated.parallel([
@@ -62,12 +67,12 @@ const FloatingElements: React.FC<FloatingElementsProps> = ({ count = 6 }) => {
           Animated.loop(
             Animated.sequence([
               Animated.timing(translateX, {
-                toValue: translateX._value + (Math.random() - 0.5) * 100,
+                toValue: initialX + offset1,
                 duration: 3000,
                 useNativeDriver: true,
               }),
               Animated.timing(translateX, {
-                toValue: translateX._value + (Math.random() - 0.5) * 100,
+                toValue: initialX + offset2,
                 duration: 3000,
                 useNativeDriver: true,
               }),

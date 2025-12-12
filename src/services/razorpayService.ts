@@ -185,16 +185,13 @@ class RazorpayService {
   getPaymentMethods(): PaymentMethod[] {
     return [
       { id: 'cod', type: 'COD', name: 'Cash on Delivery', details: 'Pay when you receive your order' },
-      { id: 'upi', type: 'UPI', name: 'UPI Payment', details: 'Pay using PhonePe, GPay, Paytm, etc.' },
-      { id: 'card', type: 'CARD', name: 'Credit/Debit Card', details: 'Visa, Mastercard, RuPay, Amex' },
-      { id: 'netbanking', type: 'NETBANKING', name: 'Net Banking', details: 'All major banks supported' },
-      { id: 'wallet', type: 'WALLET', name: 'Digital Wallets', details: 'Paytm, Mobikwik, FreeCharge, etc.' },
+      { id: 'online', type: 'ONLINE', name: 'Online Payment', details: 'Pay using PhonePe, GPay, Paytm, etc.' },
     ];
   }
 
   // Check if payment method requires Razorpay
   isRazorpayMethod(paymentMethod: PaymentMethod): boolean {
-    return ['UPI', 'CARD', 'NETBANKING', 'WALLET'].includes(paymentMethod.type);
+    return ['online'].includes(paymentMethod.type);
   }
 
   // Process payment based on method

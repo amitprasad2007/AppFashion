@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,13 @@ import {
   Alert,
   ActivityIndicator,
   RefreshControl,
+  ViewStyle,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RootStackParamList} from '../types/navigation';
-import {useAuth} from '../contexts/AuthContext';
-import {useUserProfile} from '../contexts/UserProfileContext';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../types/navigation';
+import { useAuth } from '../contexts/AuthContext';
+import { useUserProfile } from '../contexts/UserProfileContext';
 import ProtectedScreen from '../components/ProtectedScreen';
 import AnimatedCard from '../components/AnimatedCard';
 import GradientButton from '../components/GradientButton';
@@ -27,14 +28,14 @@ import LinearGradient from 'react-native-linear-gradient';
 const ProfileScreenContent = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { state: authState, logout } = useAuth();
-  const { 
-    userData, 
-    userStatistics, 
-    isLoading, 
-    error, 
-    refreshUserData 
+  const {
+    userData,
+    userStatistics,
+    isLoading,
+    error,
+    refreshUserData
   } = useUserProfile();
-  
+
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = async () => {
@@ -100,7 +101,7 @@ const ProfileScreenContent = () => {
       'Logout',
       'Are you sure you want to logout?',
       [
-        {text: 'Cancel', style: 'cancel'},
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Logout',
           style: 'destructive',
@@ -117,7 +118,7 @@ const ProfileScreenContent = () => {
     );
   };
 
-  const renderMenuItem = ({item, index}: {item: typeof menuItems[0]; index: number}) => (
+  const renderMenuItem = ({ item, index }: { item: typeof menuItems[0]; index: number }) => (
     <AnimatedCard key={index} delay={300 + index * 50}>
       <TouchableOpacity
         style={styles.menuItem}
@@ -144,16 +145,16 @@ const ProfileScreenContent = () => {
       <View style={styles.container}>
         <LinearGradient
           colors={theme.glassGradients.sunset}
-        style={styles.backgroundGradient as ViewStyle}
+          style={styles.backgroundGradient as ViewStyle}
 
         />
         <FloatingElements count={6} />
-        
-        <EnhancedHeader 
+
+        <EnhancedHeader
           title="👤 Profile"
           showBackButton={false}
         />
-        
+
         <View style={styles.loginPrompt}>
           <GlassCard gradientColors={theme.glassGradients.aurora}>
             <Text style={styles.loginTitle}>✨ Welcome to Samar Silk Palace</Text>
@@ -184,12 +185,12 @@ const ProfileScreenContent = () => {
           style={styles.backgroundGradient}
         />
         <FloatingElements count={6} />
-        
-        <EnhancedHeader 
+
+        <EnhancedHeader
           title="👤 Profile"
           showBackButton={false}
         />
-        
+
         <View style={styles.loadingContainer}>
           <GlassCard>
             <ActivityIndicator size="large" color={theme.colors.white} />
@@ -202,12 +203,12 @@ const ProfileScreenContent = () => {
 
   const user = userData?.user || authState.user;
   const stats = userStatistics;
-  
+
   // Format member since date
-  const memberSince = user?.created_at ? 
-    new Date(user.created_at).toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long' 
+  const memberSince = user?.created_at ?
+    new Date(user.created_at).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long'
     }) : 'Recently';
 
   return (
@@ -217,8 +218,8 @@ const ProfileScreenContent = () => {
         style={styles.backgroundGradient as any}
       />
       <FloatingElements count={8} />
-      
-      <EnhancedHeader 
+
+      <EnhancedHeader
         title="👤 Profile"
         showBackButton={false}
         rightComponent={
@@ -230,7 +231,7 @@ const ProfileScreenContent = () => {
         }
       />
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -253,11 +254,11 @@ const ProfileScreenContent = () => {
         <AnimatedCard delay={100}>
           <GlassCard style={styles.userSection} gradientColors={theme.glassGradients.aurora}>
             <View style={styles.userInfo}>
-              <Image 
+              <Image
                 source={{
                   uri: user?.avatar || 'https://via.placeholder.com/100/f43f5e/ffffff?text=' + (user?.name?.charAt(0) || 'U')
-                }} 
-                style={styles.avatar} 
+                }}
+                style={styles.avatar}
               />
               <View style={styles.userDetails}>
                 <Text style={styles.userName}>{user?.name || 'User'}</Text>
@@ -318,7 +319,7 @@ const ProfileScreenContent = () => {
 
         {/* Menu Items */}
         <View style={styles.menuSection}>
-          {menuItems.map((item, index) => renderMenuItem({item, index}))}
+          {menuItems.map((item, index) => renderMenuItem({ item, index }))}
         </View>
 
         {/* App Info */}
@@ -351,6 +352,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  backgroundGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
   },
   header: {
     padding: 15,

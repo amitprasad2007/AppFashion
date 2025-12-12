@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,9 +11,9 @@ import {
   Keyboard,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import {useNavigation} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RootStackParamList} from '../../types/navigation';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../types/navigation';
 import { theme } from '../../theme';
 import AnimatedCard from '../../components/AnimatedCard';
 import GradientButton from '../../components/GradientButton';
@@ -27,12 +27,12 @@ import { useAuth } from '../../contexts/AuthContext';
 const LoginScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { state, login, forgotPassword, clearError, oauthLogin } = useAuth();
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
+  const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
 
   // Clear error when component mounts
   useEffect(() => {
@@ -48,7 +48,7 @@ const LoginScreen = () => {
 
   // Validation function
   const validateForm = () => {
-    const errors: {[key: string]: string} = {};
+    const errors: { [key: string]: string } = {};
 
     if (!email.trim()) {
       errors.email = 'Email is required';
@@ -81,7 +81,7 @@ const LoginScreen = () => {
       Keyboard.dismiss();
 
       const response = await login({ email: email.trim(), password });
-      
+
       if (response.success) {
         // Success is handled by the useEffect above
         console.log('Login successful');
@@ -112,7 +112,7 @@ const LoginScreen = () => {
 
     try {
       const response = await forgotPassword(email.trim());
-      
+
       if (response.success) {
         Alert.alert(
           'Reset Email Sent! 📧',
@@ -131,7 +131,7 @@ const LoginScreen = () => {
     try {
       clearError();
       const response = await oauthLogin(provider);
-      
+
       if (response.success) {
         // Success is handled by the useEffect above
         console.log(`${provider} login successful`);
@@ -157,14 +157,14 @@ const LoginScreen = () => {
         style={styles.backgroundGradient}
       />
       <FloatingElements count={12} />
-      
-      <EnhancedHeader 
+
+      <EnhancedHeader
         title="🔐 Welcome Back"
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
       />
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}>
@@ -183,18 +183,18 @@ const LoginScreen = () => {
         <AnimatedCard delay={200}>
           <GlassCard style={styles.formCard} gradientColors={theme.glassGradients.sunset}>
             <Text style={styles.formTitle}>🔑 Sign In to Your Account</Text>
-            
+
             {/* Show global error */}
             {state.error && (
               <GlassCard style={styles.errorContainer} variant="light">
                 <Text style={styles.errorText}>⚠️ {state.error}</Text>
               </GlassCard>
             )}
-            
+
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>📧 Email Address</Text>
-              <GlassCard 
-                style={[styles.inputWrapper, validationErrors.email && styles.inputError]} 
+              <GlassCard
+                style={[styles.inputWrapper, !!validationErrors.email && styles.inputError]}
                 variant="light">
                 <TextInput
                   style={styles.input}
@@ -205,7 +205,7 @@ const LoginScreen = () => {
                     setEmail(text);
                     // Clear validation error when user starts typing
                     if (validationErrors.email) {
-                      setValidationErrors(prev => ({...prev, email: ''}));
+                      setValidationErrors(prev => ({ ...prev, email: '' }));
                     }
                   }}
                   keyboardType="email-address"
@@ -221,8 +221,8 @@ const LoginScreen = () => {
 
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>🔒 Password</Text>
-              <GlassCard 
-                style={[styles.passwordContainer, validationErrors.password && styles.inputError]} 
+              <GlassCard
+                style={[styles.passwordContainer, !!validationErrors.password && styles.inputError]}
                 variant="light">
                 <TextInput
                   style={styles.passwordInput}
@@ -233,7 +233,7 @@ const LoginScreen = () => {
                     setPassword(text);
                     // Clear validation error when user starts typing
                     if (validationErrors.password) {
-                      setValidationErrors(prev => ({...prev, password: ''}));
+                      setValidationErrors(prev => ({ ...prev, password: '' }));
                     }
                   }}
                   secureTextEntry={!showPassword}
@@ -255,13 +255,13 @@ const LoginScreen = () => {
               )}
             </View>
 
-          <TouchableOpacity 
-            onPress={handleForgotPassword}
-            disabled={isSubmitting || state.isLoading}>
-            <Text style={[styles.forgotPassword, (isSubmitting || state.isLoading) && styles.disabledText]}>
-              Forgot Password?
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleForgotPassword}
+              disabled={isSubmitting || state.isLoading}>
+              <Text style={[styles.forgotPassword, (isSubmitting || state.isLoading) && styles.disabledText]}>
+                Forgot Password?
+              </Text>
+            </TouchableOpacity>
 
             <GradientButton
               title={isSubmitting || state.isLoading ? "Signing In..." : "🚀 Sign In to Samar Silk Palace"}
@@ -289,26 +289,26 @@ const LoginScreen = () => {
               <Text style={styles.orText}>or continue with</Text>
               <View style={styles.dividerLine} />
             </View>
-            
+
             <View style={styles.socialButtons}>
-              <OAuthButton 
-                provider="google" 
+              <OAuthButton
+                provider="google"
                 onSuccess={() => navigation.navigate('Home' as never)}
                 onError={(error) => console.error('Google OAuth Error:', error)}
                 disabled={isSubmitting || state.isLoading}
                 style={styles.socialButton}
               />
 
-              <OAuthButton 
-                provider="facebook" 
+              <OAuthButton
+                provider="facebook"
                 onSuccess={() => navigation.navigate('Home' as never)}
                 onError={(error) => console.error('Facebook OAuth Error:', error)}
                 disabled={isSubmitting || state.isLoading}
                 style={styles.socialButton}
               />
 
-              <OAuthButton 
-                provider="apple" 
+              <OAuthButton
+                provider="apple"
                 onSuccess={() => navigation.navigate('Home' as never)}
                 onError={(error) => console.error('Apple OAuth Error:', error)}
                 disabled={true}
@@ -349,6 +349,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.neutral[50],
+  },
+  backgroundGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: theme.spacing[8],
   },
   header: {
     flexDirection: 'row',
@@ -395,7 +408,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     marginBottom: theme.spacing[2],
     textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: {width: 0, height: 2},
+    textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
   welcomeSubtitle: {
@@ -454,6 +467,9 @@ const styles = StyleSheet.create({
     padding: theme.spacing[4],
   },
   eyeIcon: {
+    fontSize: 20,
+  },
+  eyeIconText: {
     fontSize: 20,
   },
   forgotPassword: {
@@ -534,7 +550,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     marginHorizontal: theme.spacing[4],
     textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: {width: 0, height: 1},
+    textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
   socialButtons: {

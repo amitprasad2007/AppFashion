@@ -630,6 +630,46 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     alignItems: 'center',
   },
+  backgroundGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  actionButtonContainer: {
+    flex: 1,
+  },
+  filterButtonContainer: {
+    marginRight: theme.spacing.sm,
+  },
+  filterBadge: {
+    marginLeft: theme.spacing.xs,
+    backgroundColor: theme.colors.primary[600],
+    paddingHorizontal: theme.spacing.xs,
+    paddingVertical: 2,
+    borderRadius: theme.spacing.sm,
+    minWidth: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterBadgeText: {
+    fontSize: theme.typography.size.xs,
+    color: theme.colors.white,
+    fontWeight: theme.typography.weight.bold,
+  },
+  loadingCard: {
+    padding: theme.spacing.xl,
+    alignItems: 'center',
+  },
+  emptyCard: {
+    padding: theme.spacing.xl,
+    alignItems: 'center',
+  },
+  errorCard: {
+    padding: theme.spacing.md,
+    alignItems: 'center',
+  },
 });
 
 const OrdersScreen = () => {

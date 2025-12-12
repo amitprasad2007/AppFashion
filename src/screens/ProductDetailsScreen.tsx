@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { theme } from '../theme';
 import GradientButton from '../components/GradientButton';
 import AnimatedCard from '../components/AnimatedCard';
@@ -21,31 +21,31 @@ import GlassCard from '../components/GlassCard';
 import FloatingElements from '../components/FloatingElements';
 import CartIcon from '../components/CartIcon';
 import SafeAlert from '../utils/safeAlert';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RootStackParamList} from '../types/navigation';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../types/navigation';
 import { apiService, ApiProduct } from '../services/api';
 import { useUserProfile } from '../contexts/UserProfileContext';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 const ProductDetailsScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute();
-  const { 
-    addToCart, 
-    addToWishlist, 
-    removeFromWishlist, 
+  const {
+    addToCart,
+    addToWishlist,
+    removeFromWishlist,
     checkWishlist,
-    addToRecentlyViewed 
+    addToRecentlyViewed
   } = useUserProfile();
-  
+
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const [selectedSize, setSelectedSize] = useState('');
   const [addingToCart, setAddingToCart] = useState(false);
   const [togglingWishlist, setTogglingWishlist] = useState(false);
-  
+
   // API state management
   const [product, setProduct] = useState<ApiProduct | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,10 +55,10 @@ const ProductDetailsScreen = () => {
 
   // Get route parameters - handle multiple parameter formats for backwards compatibility
   const { productId, productSlug, product: productParam } = route.params as any || {};
-  
+
   // Determine the slug to use based on available parameters
   let slugToUse: string | undefined;
-  
+
   if (productSlug) {
     // Direct slug passed
     slugToUse = productSlug;
@@ -74,21 +74,21 @@ const ProductDetailsScreen = () => {
   const loadProductData = async () => {
     try {
       setError(null);
-      
+
       if (!slugToUse) {
         console.error('❌ Product slug is missing. Route params:', { productId, productSlug, product: productParam });
         console.error('Available route params:', route.params);
         throw new Error('Product slug is required');
       }
-      
+
       console.log('🔍 Loading product with slug:', slugToUse);
-      
+
       // Load product details using slug-based API (matching your frontend)
       const productData = await apiService.getProductBySlug(slugToUse);
-      
+
       if (productData) {
         setProduct(productData);
-        
+
         // Check if product is in wishlist
         try {
           const wishlistStatus = await checkWishlist(productData.id);
@@ -103,7 +103,7 @@ const ProductDetailsScreen = () => {
         } catch (error) {
           console.log('Error adding to recently viewed:', error);
         }
-        
+
         // Load related products using the correct API with product slug
         let related: ApiProduct[] = [];
         try {
@@ -116,20 +116,20 @@ const ProductDetailsScreen = () => {
           const featuredProducts = await apiService.getFeaturedProducts();
           related = featuredProducts.slice(0, 6); // Limit to 6 products
         }
-        
+
         // Filter out current product from related
         const filteredRelated = related.filter(p => p.id !== productData.id);
         setRelatedProducts(filteredRelated);
-        
+
         console.log('Product loaded:', productData.name);
       } else {
         throw new Error('Product not found');
       }
-      
+
     } catch (err) {
       console.error('Error loading product data:', err);
       setError('Failed to load product details.');
-      
+
       // Fallback product data
       setProduct({
         id: 1,
@@ -137,7 +137,7 @@ const ProductDetailsScreen = () => {
         slug: 'premium-banarasi-saree',
         images: [
           'https://via.placeholder.com/400x600/ff6b6b/ffffff?text=Saree+1',
-          'https://via.placeholder.com/400x600/4ecdc4/ffffff?text=Saree+2', 
+          'https://via.placeholder.com/400x600/4ecdc4/ffffff?text=Saree+2',
           'https://via.placeholder.com/400x600/45b7d1/ffffff?text=Saree+3',
         ],
         price: 2499,
@@ -168,15 +168,15 @@ const ProductDetailsScreen = () => {
   // Handle add to cart
   const handleAddToCart = async () => {
     if (!product) return;
-    
+
     try {
       setAddingToCart(true);
       await addToCart(product.id, quantity, {
         size: selectedSize,
       });
-      
+
       SafeAlert.show(
-        'Added to Cart', 
+        'Added to Cart',
         `${product.name} (Qty: ${quantity}) has been added to your cart.`,
         [
           { text: 'Continue Shopping', style: 'cancel' },
@@ -194,10 +194,10 @@ const ProductDetailsScreen = () => {
   // Handle wishlist toggle
   const handleWishlistToggle = async () => {
     if (!product) return;
-    
+
     try {
       setTogglingWishlist(true);
-      
+
       if (isFavorite) {
         await removeFromWishlist(product.id);
         setIsFavorite(false);
@@ -218,14 +218,14 @@ const ProductDetailsScreen = () => {
   // Handle buy now
   const handleBuyNow = () => {
     if (!product) return;
-    
+
     // Create cart item format for checkout - ensure image is always an array of strings
-    const productImages = Array.isArray(product.images) 
-      ? product.images 
-      : typeof product.images === 'string' 
+    const productImages = Array.isArray(product.images)
+      ? product.images
+      : typeof product.images === 'string'
         ? [product.images]
         : ['https://via.placeholder.com/50'];
-        
+
     const cartItem = {
       id: product.id.toString(),
       name: product.name,
@@ -238,7 +238,7 @@ const ProductDetailsScreen = () => {
     };
 
     const orderTotal = product.price * quantity;
-    
+
     navigation.navigate('Checkout', {
       cartItems: [cartItem],
       total: orderTotal,
@@ -285,7 +285,7 @@ const ProductDetailsScreen = () => {
     );
   }
 
-  const discount = product.originalPrice && product.originalPrice > product.price 
+  const discount = product.originalPrice && product.originalPrice > product.price
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
 
@@ -296,201 +296,201 @@ const ProductDetailsScreen = () => {
         style={styles.backgroundGradient}
       />
       <FloatingElements count={8} />
-      
-      <EnhancedHeader 
+
+      <EnhancedHeader
         title={`✨ ${product.name}`}
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
         rightComponent={<CartIcon size="medium" color={theme.colors.white} />}
       />
-      
-      <ScrollView 
-        style={styles.scrollView} 
+
+      <ScrollView
+        style={styles.scrollView}
         bounces={false}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }>
 
-      {/* Error Message */}
-      {error && (
-        <View style={styles.errorBanner}>
-          <GlassCard style={styles.errorCard} variant="light">
-            <Text style={styles.errorBannerText}>⚠️ {error}</Text>
-          </GlassCard>
-        </View>
-      )}
-
-      {/* Clean Product Image */}
-      <View style={styles.imageSection}>
-        <Image 
-          source={{uri: product.images[selectedImageIndex] || product.images[0]}} 
-          style={styles.productImage} 
-        />
-        
-        {/* Simple Badges */}
-        <View style={styles.badgeContainer}>
-          {product.isBestseller && (
-            <View style={styles.bestsellerBadge}>
-              <Text style={styles.badgeText}>Bestseller</Text>
-            </View>
-          )}
-          {discount > 0 && (
-            <View style={styles.discountBadge}>
-              <Text style={styles.badgeText}>{discount}% OFF</Text>
-            </View>
-          )}
-        </View>
-        
-        {/* Wishlist Button */}
-        <TouchableOpacity 
-          style={styles.wishlistButton}
-          onPress={handleWishlistToggle}
-          disabled={togglingWishlist}>
-          {togglingWishlist ? (
-            <ActivityIndicator size="small" color="#ff6b6b" />
-          ) : (
-            <Text style={styles.heartIcon}>{isFavorite ? '❤️' : '🤍'}</Text>
-          )}
-        </TouchableOpacity>
-        
-        {/* Image Indicators */}
-        {product.images.length > 1 && (
-          <View style={styles.imageIndicators}>
-            {product.images.map((_, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.indicator,
-                  selectedImageIndex === index && styles.activeIndicator,
-                ]}
-                onPress={() => setSelectedImageIndex(index)}
-              />
-            ))}
+        {/* Error Message */}
+        {error && (
+          <View style={styles.errorBanner}>
+            <GlassCard style={styles.errorCard} variant="light">
+              <Text style={styles.errorBannerText}>⚠️ {error}</Text>
+            </GlassCard>
           </View>
         )}
-      </View>
 
-      {/* Thumbnail Gallery */}
-      {product.images.length > 1 && (
-        <View style={styles.thumbnailSection}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.thumbnailContainer}>
-            {product.images.map((image, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.thumbnail,
-                  selectedImageIndex === index && styles.activeThumbnail,
-                ]}
-                onPress={() => setSelectedImageIndex(index)}>
-                <Image source={{uri: image}} style={styles.thumbnailImage} />
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      )}
+        {/* Clean Product Image */}
+        <View style={styles.imageSection}>
+          <Image
+            source={{ uri: product.images[selectedImageIndex] || product.images[0] }}
+            style={styles.productImage}
+          />
 
-      {/* Clean Product Info */}
-      <View style={styles.productInfoSection}>
-        {/* Category Tag */}
-        <View style={styles.categoryTag}>
-          <Text style={styles.categoryText}>{product.category?.title || 'Premium Collection'}</Text>
-        </View>
-        
-        {/* Product Name */}
-        <Text style={styles.productName}>{product.name}</Text>
-        
-        {/* Rating */}
-        <View style={styles.ratingSection}>
-          <View style={styles.ratingBadge}>
-            <Text style={styles.ratingText}>⭐ {product.rating || 4.5}</Text>
+          {/* Simple Badges */}
+          <View style={styles.badgeContainer}>
+            {product.isBestseller && (
+              <View style={styles.bestsellerBadge}>
+                <Text style={styles.badgeText}>Bestseller</Text>
+              </View>
+            )}
+            {discount > 0 && (
+              <View style={styles.discountBadge}>
+                <Text style={styles.badgeText}>{discount}% OFF</Text>
+              </View>
+            )}
           </View>
-          <Text style={styles.reviewText}>({product.reviewCount || 0} reviews)</Text>
-        </View>
 
-        {/* Price Section */}
-        <View style={styles.priceSection}>
-          <Text style={styles.currentPrice}>₹{product.price?.toLocaleString()}</Text>
-          {product.originalPrice && product.originalPrice > product.price && (
-            <Text style={styles.originalPrice}>₹{product.originalPrice?.toLocaleString()}</Text>
-          )}
-          {discount > 0 && (
-            <View style={styles.savingsTag}>
-              <Text style={styles.savingsText}>Save ₹{((product.originalPrice || 0) - product.price).toLocaleString()}</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Description */}
-        <View style={styles.descriptionSection}>
-          <Text style={styles.sectionTitle}>About this product</Text>
-          <Text style={styles.description}>
-            {product.description || 'Premium quality product crafted with finest materials and attention to detail. Perfect for special occasions and daily elegance.'}
-          </Text>
-        </View>
-
-        {/* Quantity Selector */}
-        <View style={styles.quantitySection}>
-          <Text style={styles.sectionTitle}>Quantity</Text>
-          <View style={styles.quantitySelector}>
-            <TouchableOpacity
-              style={styles.quantityButton}
-              onPress={() => quantity > 1 && setQuantity(quantity - 1)}>
-              <Text style={styles.quantityButtonText}>−</Text>
-            </TouchableOpacity>
-            <View style={styles.quantityDisplay}>
-              <Text style={styles.quantityText}>{quantity}</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.quantityButton}
-              onPress={() => setQuantity(quantity + 1)}>
-              <Text style={styles.quantityButtonText}>+</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity 
-            style={[styles.addToCartButton, addingToCart && styles.disabledButton]} 
-            onPress={handleAddToCart}
-            disabled={addingToCart}>
-            {addingToCart ? (
-              <ActivityIndicator size="small" color="#fff" />
+          {/* Wishlist Button */}
+          <TouchableOpacity
+            style={styles.wishlistButton}
+            onPress={handleWishlistToggle}
+            disabled={togglingWishlist}>
+            {togglingWishlist ? (
+              <ActivityIndicator size="small" color="#ff6b6b" />
             ) : (
-              <>
-                <Text style={styles.addToCartText}>🛒 Add to Cart</Text>
-                <Text style={styles.cartSubText}>₹{(product.price * quantity).toLocaleString()}</Text>
-              </>
+              <Text style={styles.heartIcon}>{isFavorite ? '❤️' : '🤍'}</Text>
             )}
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.buyNowButton} 
-            onPress={handleBuyNow}>
-            <Text style={styles.buyNowText}>⚡ Buy Now</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
 
-      {/* Related Products */}
-      {relatedProducts.length > 0 && (
-        <View style={styles.relatedContainer}>
-          <Text style={styles.relatedTitle}>Related Products</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {relatedProducts.map((item, index) => (
-              <TouchableOpacity
-                key={item.id}
-                style={styles.relatedProduct}
-                onPress={() => navigation.push('ProductDetails', { productSlug: item.slug })}>
-                <Image source={{uri: item.images[0]}} style={styles.relatedImage} />
-                <Text style={styles.relatedName} numberOfLines={2}>{item.name}</Text>
-                <Text style={styles.relatedPrice}>₹{item.price}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          {/* Image Indicators */}
+          {product.images.length > 1 && (
+            <View style={styles.imageIndicators}>
+              {product.images.map((_, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.indicator,
+                    selectedImageIndex === index && styles.activeIndicator,
+                  ]}
+                  onPress={() => setSelectedImageIndex(index)}
+                />
+              ))}
+            </View>
+          )}
         </View>
-      )}
+
+        {/* Thumbnail Gallery */}
+        {product.images.length > 1 && (
+          <View style={styles.thumbnailSection}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.thumbnailContainer}>
+              {product.images.map((image, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.thumbnail,
+                    selectedImageIndex === index && styles.activeThumbnail,
+                  ]}
+                  onPress={() => setSelectedImageIndex(index)}>
+                  <Image source={{ uri: image }} style={styles.thumbnailImage} />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Clean Product Info */}
+        <View style={styles.productInfoSection}>
+          {/* Category Tag */}
+          <View style={styles.categoryTag}>
+            <Text style={styles.categoryText}>{product.category?.title || 'Premium Collection'}</Text>
+          </View>
+
+          {/* Product Name */}
+          <Text style={styles.productName}>{product.name}</Text>
+
+          {/* Rating */}
+          <View style={styles.ratingSection}>
+            <View style={styles.ratingBadge}>
+              <Text style={styles.ratingText}>⭐ {product.rating || 4.5}</Text>
+            </View>
+            <Text style={styles.reviewText}>({product.reviewCount || 0} reviews)</Text>
+          </View>
+
+          {/* Price Section */}
+          <View style={styles.priceSection}>
+            <Text style={styles.currentPrice}>₹{product.price?.toLocaleString()}</Text>
+            {product.originalPrice && product.originalPrice > product.price && (
+              <Text style={styles.originalPrice}>₹{product.originalPrice?.toLocaleString()}</Text>
+            )}
+            {discount > 0 && (
+              <View style={styles.savingsTag}>
+                <Text style={styles.savingsText}>Save ₹{((product.originalPrice || 0) - product.price).toLocaleString()}</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Description */}
+          <View style={styles.descriptionSection}>
+            <Text style={styles.sectionTitle}>About this product</Text>
+            <Text style={styles.description}>
+              {product.description || 'Premium quality product crafted with finest materials and attention to detail. Perfect for special occasions and daily elegance.'}
+            </Text>
+          </View>
+
+          {/* Quantity Selector */}
+          <View style={styles.quantitySection}>
+            <Text style={styles.sectionTitle}>Quantity</Text>
+            <View style={styles.quantitySelector}>
+              <TouchableOpacity
+                style={styles.quantityButton}
+                onPress={() => quantity > 1 && setQuantity(quantity - 1)}>
+                <Text style={styles.quantityButtonText}>−</Text>
+              </TouchableOpacity>
+              <View style={styles.quantityDisplay}>
+                <Text style={styles.quantityText}>{quantity}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.quantityButton}
+                onPress={() => setQuantity(quantity + 1)}>
+                <Text style={styles.quantityButtonText}>+</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={[styles.addToCartButton, addingToCart && styles.disabledButton]}
+              onPress={handleAddToCart}
+              disabled={addingToCart}>
+              {addingToCart ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <Text style={styles.addToCartText}>🛒 Add to Cart</Text>
+                  <Text style={styles.cartSubText}>₹{(product.price * quantity).toLocaleString()}</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.buyNowButton}
+              onPress={handleBuyNow}>
+              <Text style={styles.buyNowText}>⚡ Buy Now</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <View style={styles.relatedContainer}>
+            <Text style={styles.relatedTitle}>Related Products</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {relatedProducts.map((item, index) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.relatedProduct}
+                  onPress={() => navigation.push('ProductDetails', { productSlug: item.slug })}>
+                  <Image source={{ uri: item.images[0] }} style={styles.relatedImage} />
+                  <Text style={styles.relatedName} numberOfLines={2}>{item.name}</Text>
+                  <Text style={styles.relatedPrice}>₹{item.price}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -501,11 +501,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.white,
   },
+  backgroundGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: theme.spacing.xl,
+  },
+  loadingCard: {
+    padding: theme.spacing.xl,
+    alignItems: 'center',
+  },
+  scrollView: {
+    flex: 1,
   },
   loadingText: {
     marginTop: theme.spacing.md,
@@ -527,6 +541,10 @@ const styles = StyleSheet.create({
   },
   errorButton: {
     marginTop: theme.spacing.md,
+  },
+  errorCard: {
+    padding: theme.spacing.md,
+    alignItems: 'center',
   },
   errorBanner: {
     padding: theme.spacing.md,
@@ -644,20 +662,6 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontWeight: theme.typography.weight.bold,
   },
-  discountBadge: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    backgroundColor: theme.colors.success?.[500] || '#10b981',
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.spacing.sm,
-  },
-  discountText: {
-    fontSize: theme.typography.size.sm,
-    color: theme.colors.white,
-    fontWeight: theme.typography.weight.bold,
-  },
   favoriteButton: {
     position: 'absolute',
     bottom: 20,
@@ -743,11 +747,6 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginBottom: theme.spacing.sm,
   },
-  categoryText: {
-    fontSize: theme.typography.size.xs,
-    color: theme.colors.primary[700],
-    fontWeight: theme.typography.weight.medium,
-  },
   productName: {
     fontSize: 24,
     fontWeight: '700',
@@ -808,18 +807,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: theme.spacing.lg,
   },
-  ratingBadge: {
-    backgroundColor: theme.colors.success?.[100] || '#dcfce7',
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.spacing.sm,
-    marginRight: theme.spacing.sm,
-  },
-  ratingText: {
-    fontSize: theme.typography.size.sm,
-    color: theme.colors.success?.[700] || '#15803d',
-    fontWeight: theme.typography.weight.medium,
-  },
   reviewCount: {
     fontSize: theme.typography.size.sm,
     color: theme.colors.neutral[500],
@@ -827,29 +814,12 @@ const styles = StyleSheet.create({
   priceContainer: {
     marginBottom: theme.spacing.lg,
   },
-  currentPrice: {
-    fontSize: theme.typography.size['2xl'],
-    fontWeight: theme.typography.weight.bold,
-    color: theme.colors.primary[500],
-    marginBottom: theme.spacing.xs,
-  },
-  originalPrice: {
-    fontSize: theme.typography.size.lg,
-    color: theme.colors.neutral[500],
-    textDecorationLine: 'line-through',
-    marginBottom: theme.spacing.sm,
-  },
   savingsBadge: {
     backgroundColor: theme.colors.success?.[50] || '#f0fdf4',
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.xs,
     borderRadius: theme.spacing.sm,
     alignSelf: 'flex-start',
-  },
-  savingsText: {
-    fontSize: theme.typography.size.sm,
-    color: theme.colors.success?.[700] || '#15803d',
-    fontWeight: theme.typography.weight.medium,
   },
   descriptionSection: {
     marginBottom: 24,
@@ -905,31 +875,6 @@ const styles = StyleSheet.create({
   },
   quantityContainer: {
     marginBottom: theme.spacing.xl,
-  },
-  quantitySelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.md,
-  },
-  quantityButton: {
-    backgroundColor: theme.colors.neutral[100],
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quantityButtonText: {
-    fontSize: theme.typography.size.lg,
-    fontWeight: theme.typography.weight.bold,
-    color: theme.colors.neutral[600],
-  },
-  quantityText: {
-    fontSize: theme.typography.size.lg,
-    fontWeight: theme.typography.weight.semibold,
-    color: theme.colors.neutral[900],
-    minWidth: 40,
-    textAlign: 'center',
   },
   actionButtons: {
     flexDirection: 'row',

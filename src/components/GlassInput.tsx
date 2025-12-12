@@ -34,12 +34,12 @@ const GlassInput: React.FC<GlassInputProps> = ({
       {label && (
         <Text style={styles.label}>{label}</Text>
       )}
-      
-      <GlassCard 
+
+      <GlassCard
         style={[
           styles.inputContainer,
           isFocused && styles.focusedContainer,
-          error && styles.errorContainer,
+          !!error && styles.errorContainer,
         ]}
         variant={variant}
       >
@@ -47,7 +47,7 @@ const GlassInput: React.FC<GlassInputProps> = ({
           {icon && (
             <Text style={styles.icon}>{icon}</Text>
           )}
-          
+
           <TextInput
             style={[styles.input, style]}
             placeholderTextColor="rgba(255, 255, 255, 0.7)"
@@ -57,7 +57,7 @@ const GlassInput: React.FC<GlassInputProps> = ({
           />
         </View>
       </GlassCard>
-      
+
       {error && (
         <Text style={styles.errorText}>{error}</Text>
       )}
