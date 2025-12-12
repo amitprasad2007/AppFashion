@@ -10,16 +10,13 @@ import {
   ActivityIndicator,
   RefreshControl,
   TextInput,
+  StatusBar,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../theme';
 import GradientButton from '../components/GradientButton';
-import AnimatedCard from '../components/AnimatedCard';
 import EnhancedHeader from '../components/EnhancedHeader';
-import GlassCard from '../components/GlassCard';
-import FloatingElements from '../components/FloatingElements';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import { ApiCart, ApiCartItem } from '../services/api';
@@ -54,7 +51,6 @@ const CartScreenContent = () => {
         try {
           const parsedCart = JSON.parse(savedCart);
           setCart(parsedCart);
-          console.log('Cart loaded from local storage');
         } catch (e) {
           console.error('Error parsing local cart:', e);
         }
@@ -65,11 +61,9 @@ const CartScreenContent = () => {
 
       if (userData?.cart_items) {
         serverCart = userData.cart_items;
-        console.log('Cart loaded from user data:', serverCart.items.length, 'items');
       } else {
         // Fallback: fetch cart directly
         serverCart = await getCart();
-        console.log('Cart fetched directly:', serverCart?.items?.length || 0, 'items');
       }
 
       if (serverCart) {
@@ -266,61 +260,59 @@ const CartScreenContent = () => {
     const itemTotal = itemPrice * item.quantity;
 
     return (
-      <AnimatedCard delay={index * 100}>
-        <GlassCard style={styles.cartItem} variant="base">
-          <View style={styles.itemContent}>
-            <Image
-              source={{
-                uri: Array.isArray(item.image) ? item.image[0] : item.image || 'https://via.placeholder.com/100'
-              }}
-              style={styles.itemImage}
-            />
+      <View style={styles.cartItem}>
+        <View style={styles.itemContent}>
+          <Image
+            source={{
+              uri: Array.isArray(item.image) ? item.image[0] : item.image || 'https://via.placeholder.com/100'
+            }}
+            style={styles.itemImage}
+          />
 
-            <View style={styles.itemDetails}>
-              <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+          <View style={styles.itemDetails}>
+            <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
 
-              <View style={styles.priceContainer}>
-                <Text style={styles.currentPrice}>₹{item.price}</Text>
-              </View>
-
-              <Text style={styles.subtotal}>Subtotal: ₹{itemTotal.toFixed(2)}</Text>
+            <View style={styles.priceContainer}>
+              <Text style={styles.currentPrice}>₹{item.price}</Text>
             </View>
 
-            <View style={styles.itemActions}>
+            <Text style={styles.subtotal}>Subtotal: ₹{itemTotal.toFixed(2)}</Text>
+          </View>
+
+          <View style={styles.itemActions}>
+            <TouchableOpacity
+              style={styles.removeButton}
+              onPress={() => removeItem(item.cart_id, item.id)}
+              disabled={isUpdating}>
+              <Text style={styles.removeIcon}>🗑️</Text>
+            </TouchableOpacity>
+
+            <View style={styles.quantityContainer}>
               <TouchableOpacity
-                style={styles.removeButton}
-                onPress={() => removeItem(item.cart_id, item.id)}
-                disabled={isUpdating}>
-                <Text style={styles.removeIcon}>🗑️</Text>
+                style={[styles.quantityButton, isUpdating && styles.disabledButton]}
+                onPress={() => updateQuantity(item.cart_id, item.id, item.quantity - 1)}
+                disabled={isUpdating || item.quantity <= 1}>
+                <Text style={styles.quantityButtonText}>-</Text>
               </TouchableOpacity>
 
-              <View style={styles.quantityContainer}>
-                <TouchableOpacity
-                  style={[styles.quantityButton, isUpdating && styles.disabledButton]}
-                  onPress={() => updateQuantity(item.cart_id, item.id, item.quantity - 1)}
-                  disabled={isUpdating || item.quantity <= 1}>
-                  <Text style={styles.quantityButtonText}>-</Text>
-                </TouchableOpacity>
-
-                <View style={styles.quantityDisplay}>
-                  {isUpdating ? (
-                    <ActivityIndicator size="small" color={theme.colors.primary[500]} />
-                  ) : (
-                    <Text style={styles.quantityText}>{item.quantity}</Text>
-                  )}
-                </View>
-
-                <TouchableOpacity
-                  style={[styles.quantityButton, isUpdating && styles.disabledButton]}
-                  onPress={() => updateQuantity(item.cart_id, item.id, item.quantity + 1)}
-                  disabled={isUpdating}>
-                  <Text style={styles.quantityButtonText}>+</Text>
-                </TouchableOpacity>
+              <View style={styles.quantityDisplay}>
+                {isUpdating ? (
+                  <ActivityIndicator size="small" color={theme.colors.primary[500]} />
+                ) : (
+                  <Text style={styles.quantityText}>{item.quantity}</Text>
+                )}
               </View>
+
+              <TouchableOpacity
+                style={[styles.quantityButton, isUpdating && styles.disabledButton]}
+                onPress={() => updateQuantity(item.cart_id, item.id, item.quantity + 1)}
+                disabled={isUpdating}>
+                <Text style={styles.quantityButtonText}>+</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </GlassCard>
-      </AnimatedCard>
+        </View>
+      </View>
     );
   };
 
@@ -328,23 +320,16 @@ const CartScreenContent = () => {
   if (isLoading && !cart) {
     return (
       <View style={styles.container}>
-        <LinearGradient
-          colors={theme.glassGradients.aurora}
-          style={styles.backgroundGradient}
-        />
-        <FloatingElements count={6} />
-
+        <StatusBar barStyle="dark-content" />
         <EnhancedHeader
-          title="🛒 Shopping Cart"
+          title="Shopping Cart"
           showBackButton={true}
           onBackPress={() => navigation.goBack()}
         />
 
         <View style={styles.loadingContainer}>
-          <GlassCard style={styles.loadingCard}>
-            <ActivityIndicator size="large" color={theme.colors.white} />
-            <Text style={styles.loadingText}>Loading your cart...</Text>
-          </GlassCard>
+          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <Text style={styles.loadingText}>Loading your cart...</Text>
         </View>
       </View>
     );
@@ -352,14 +337,9 @@ const CartScreenContent = () => {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={theme.glassGradients.aurora}
-        style={styles.backgroundGradient}
-      />
-      <FloatingElements count={6} />
-
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.neutral[50]} />
       <EnhancedHeader
-        title={`🛒 Shopping Cart ${cart && cart.items ? `(${cart.items.reduce((sum, item) => sum + item.quantity, 0)})` : ''}`}
+        title={`Shopping Cart ${cart && cart.items ? `(${cart.items.reduce((sum, item) => sum + item.quantity, 0)})` : ''}`}
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
         rightComponent={
@@ -367,9 +347,7 @@ const CartScreenContent = () => {
             <TouchableOpacity
               style={styles.clearButton}
               onPress={clearCart}>
-              <GlassCard style={styles.clearIcon} variant="light">
-                <Text style={styles.clearIconText}>🗑️</Text>
-              </GlassCard>
+              <Text style={styles.clearIconText}>🗑️</Text>
             </TouchableOpacity>
           ) : null
         }
@@ -378,26 +356,22 @@ const CartScreenContent = () => {
       {/* Error Message */}
       {profileError && (
         <View style={styles.errorContainer}>
-          <GlassCard style={styles.errorCard} variant="light">
-            <Text style={styles.errorText}>⚠️ {profileError}</Text>
-          </GlassCard>
+          <Text style={styles.errorText}>⚠️ {profileError}</Text>
         </View>
       )}
 
       {/* Cart Content */}
       {!cart || !cart.items || cart.items.length === 0 ? (
         <View style={styles.emptyCart}>
-          <GlassCard style={styles.emptyCartCard} gradientColors={theme.glassGradients.sunset}>
-            <Text style={styles.emptyCartIcon}>🛒</Text>
-            <Text style={styles.emptyCartTitle}>Your cart is empty</Text>
-            <Text style={styles.emptyCartSubtitle}>Add some beautiful sarees to get started</Text>
-            <GradientButton
-              title="Continue Shopping"
-              onPress={continueShopping}
-              gradient={theme.colors.gradients.primary}
-              style={styles.continueButton}
-            />
-          </GlassCard>
+          <Text style={styles.emptyCartIcon}>🛒</Text>
+          <Text style={styles.emptyCartTitle}>Your cart is empty</Text>
+          <Text style={styles.emptyCartSubtitle}>Add some beautiful sarees to get started</Text>
+          <GradientButton
+            title="Continue Shopping"
+            onPress={continueShopping}
+            gradient={theme.colors.gradients.primary}
+            style={styles.continueButton}
+          />
         </View>
       ) : (
         <>
@@ -408,17 +382,18 @@ const CartScreenContent = () => {
             keyExtractor={item => item.id.toString()}
             contentContainerStyle={styles.cartList}
             refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.primary[600]]} />
             }
             ListFooterComponent={() => (
               <View style={styles.footer}>
                 {/* Coupon Section */}
-                <GlassCard style={styles.couponSection} variant="light">
-                  <Text style={styles.sectionTitle}>💳 Have a Coupon?</Text>
+                <View style={styles.couponSection}>
+                  <Text style={styles.sectionTitle}>Have a Coupon?</Text>
                   <View style={styles.couponContainer}>
                     <TextInput
                       style={styles.couponInput}
                       placeholder="Enter coupon code"
+                      placeholderTextColor={theme.colors.neutral[400]}
                       value={couponCode}
                       onChangeText={setCouponCode}
                       editable={!applyingCoupon}
@@ -434,11 +409,11 @@ const CartScreenContent = () => {
                       )}
                     </TouchableOpacity>
                   </View>
-                </GlassCard>
+                </View>
 
                 {/* Order Summary */}
-                <GlassCard style={styles.summarySection} variant="base">
-                  <Text style={styles.sectionTitle}>📊 Order Summary</Text>
+                <View style={styles.summarySection}>
+                  <Text style={styles.sectionTitle}>Order Summary</Text>
 
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Items ({cart.items ? cart.items.reduce((sum, item) => sum + item.quantity, 0) : 0})</Text>
@@ -470,7 +445,7 @@ const CartScreenContent = () => {
                     <Text style={styles.totalLabel}>Total</Text>
                     <Text style={styles.totalValue}>₹{cart.total}</Text>
                   </View>
-                </GlassCard>
+                </View>
 
                 {/* Checkout Button */}
                 <GradientButton
@@ -491,313 +466,249 @@ const CartScreenContent = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.light.background,
-  },
-  backgroundGradient: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: theme.spacing[12],
-    paddingBottom: theme.spacing[4],
-    paddingHorizontal: theme.spacing[5],
-  },
-  backButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    padding: theme.spacing[2],
-    borderRadius: theme.borderRadius.full,
-  },
-  backIcon: {
-    fontSize: 20,
-    color: theme.colors.white,
-  },
-  headerTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.white,
+    backgroundColor: theme.colors.neutral[50], // Cream background
   },
   clearButton: {
-    marginRight: theme.spacing[2],
-  },
-  clearIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.borderRadius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginRight: 8,
   },
   clearIconText: {
     fontSize: 18,
-  },
-  placeholder: {
-    width: 40,
-    height: 40,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing[4],
-  },
-  loadingCard: {
-    alignItems: 'center',
-    paddingVertical: theme.spacing[8],
-    paddingHorizontal: theme.spacing[6],
   },
   loadingText: {
-    marginTop: theme.spacing[4],
-    fontSize: theme.typography.body.large.fontSize,
-    color: theme.colors.white,
-    textAlign: 'center',
-    fontWeight: '600',
+    marginTop: 16,
+    fontSize: 14,
+    color: theme.colors.neutral[600],
   },
   errorContainer: {
-    marginHorizontal: theme.spacing[4],
-    marginVertical: theme.spacing[2],
-  },
-  errorCard: {
-    paddingVertical: theme.spacing[4],
-    paddingHorizontal: theme.spacing[4],
+    margin: 16,
+    padding: 16,
+    backgroundColor: theme.colors.error[50],
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.error[200],
   },
   errorText: {
-    color: theme.colors.white,
-    fontSize: theme.typography.body.medium.fontSize,
+    color: theme.colors.error[700],
+    fontSize: 14,
     textAlign: 'center',
-    fontWeight: '500',
   },
   emptyCart: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing[4],
-  },
-  emptyCartCard: {
-    alignItems: 'center',
-    paddingVertical: theme.spacing[10],
-    paddingHorizontal: theme.spacing[6],
+    padding: 24,
   },
   emptyCartIcon: {
-    fontSize: 80,
-    marginBottom: theme.spacing[6],
+    fontSize: 64,
+    marginBottom: 24,
   },
   emptyCartTitle: {
-    fontSize: theme.typography.heading.h2.fontSize,
-    fontWeight: theme.typography.heading.h2.fontWeight as any,
-    color: theme.colors.white,
-    marginBottom: theme.spacing[2],
-    textAlign: 'center',
+    fontSize: 24,
+    fontWeight: '700',
+    color: theme.colors.neutral[900],
+    marginBottom: 8,
   },
   emptyCartSubtitle: {
-    fontSize: theme.typography.body.large.fontSize,
-    color: theme.colors.white,
+    fontSize: 16,
+    color: theme.colors.neutral[500],
     textAlign: 'center',
-    marginBottom: theme.spacing[6],
-    opacity: 0.9,
+    marginBottom: 32,
   },
   continueButton: {
-    marginTop: theme.spacing.lg,
+    width: '100%',
+    maxWidth: 250,
   },
   cartList: {
-    paddingHorizontal: theme.spacing[4],
-    paddingBottom: theme.spacing[8],
+    padding: 16,
   },
   cartItem: {
-    marginHorizontal: theme.spacing[4],
-    marginBottom: theme.spacing[4],
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing[4],
+    backgroundColor: theme.colors.white,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
+    // Shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   itemContent: {
     flexDirection: 'row',
   },
   itemImage: {
     width: 80,
-    height: 80,
-    borderRadius: theme.spacing.md,
-    marginRight: theme.spacing.md,
+    height: 100,
+    borderRadius: 8,
+    marginRight: 12,
+    backgroundColor: theme.colors.neutral[100],
   },
   itemDetails: {
     flex: 1,
   },
   itemName: {
-    fontSize: theme.typography.size.base,
-    fontWeight: theme.typography.weight.semibold,
+    fontSize: 14,
+    fontWeight: '600',
     color: theme.colors.neutral[900],
-    marginBottom: theme.spacing.xs,
-  },
-  itemCategory: {
-    fontSize: theme.typography.size.sm,
-    color: theme.colors.neutral[500],
-    marginBottom: theme.spacing.sm,
+    marginBottom: 4,
   },
   priceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.sm,
-    flexWrap: 'wrap',
-    gap: theme.spacing.xs,
+    marginBottom: 4,
   },
   currentPrice: {
-    fontSize: theme.typography.size.lg,
-    fontWeight: theme.typography.weight.bold,
-    color: theme.colors.primary[500],
-  },
-  originalPrice: {
-    fontSize: theme.typography.size.sm,
-    color: theme.colors.neutral[500],
-    textDecorationLine: 'line-through',
-  },
-  discountBadge: {
-    backgroundColor: theme.colors.success?.[500] || '#10b981',
-    paddingHorizontal: theme.spacing.xs,
-    paddingVertical: 2,
-    borderRadius: theme.spacing.xs,
-  },
-  discountText: {
-    fontSize: theme.typography.size.xs,
-    color: theme.colors.white,
-    fontWeight: theme.typography.weight.bold,
-  },
-  selectedOption: {
-    fontSize: theme.typography.size.sm,
-    color: theme.colors.neutral[600],
-    marginBottom: theme.spacing.xs,
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.colors.primary[600],
   },
   subtotal: {
-    fontSize: theme.typography.size.sm,
-    fontWeight: theme.typography.weight.semibold,
-    color: theme.colors.neutral[800],
+    fontSize: 12,
+    color: theme.colors.neutral[500],
   },
   itemActions: {
-    alignItems: 'center',
-    gap: theme.spacing.md,
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    paddingLeft: 8,
   },
   removeButton: {
-    padding: theme.spacing.sm,
+    padding: 4,
   },
   removeIcon: {
-    fontSize: 18,
+    fontSize: 16,
   },
   quantityContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.neutral[100],
-    borderRadius: theme.spacing.lg,
-    padding: theme.spacing.xs,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[300],
+    borderRadius: 6,
+    overflow: 'hidden',
   },
   quantityButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: theme.colors.white,
+    width: 28,
+    height: 28,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: theme.colors.neutral[50],
   },
   quantityButtonText: {
-    fontSize: theme.typography.size.lg,
-    fontWeight: theme.typography.weight.bold,
+    fontSize: 16,
     color: theme.colors.neutral[600],
+    fontWeight: '600',
   },
   quantityDisplay: {
-    width: 40,
-    height: 32,
+    width: 32,
+    height: 28,
     alignItems: 'center',
     justifyContent: 'center',
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: theme.colors.neutral[300],
+    backgroundColor: theme.colors.white,
   },
   quantityText: {
-    fontSize: theme.typography.size.base,
-    fontWeight: theme.typography.weight.semibold,
+    fontSize: 14,
+    fontWeight: '600',
     color: theme.colors.neutral[900],
   },
   disabledButton: {
     opacity: 0.5,
   },
   footer: {
-    marginTop: theme.spacing[4],
-    paddingHorizontal: theme.spacing[4],
-  },
-  couponSection: {
-    marginBottom: theme.spacing[4],
-    padding: theme.spacing[4],
+    marginTop: 8,
   },
   sectionTitle: {
-    fontSize: theme.typography.heading.h3.fontSize,
-    fontWeight: theme.typography.heading.h3.fontWeight as any,
-    color: theme.colors.white,
-    marginBottom: theme.spacing[4],
-    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.colors.neutral[900],
+    marginBottom: 12,
+  },
+  couponSection: {
+    backgroundColor: theme.colors.white,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
   },
   couponContainer: {
     flexDirection: 'row',
-    gap: theme.spacing.md,
+    gap: 8,
   },
   couponInput: {
     flex: 1,
+    height: 44,
     borderWidth: 1,
     borderColor: theme.colors.neutral[300],
-    borderRadius: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    fontSize: theme.typography.size.base,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    color: theme.colors.neutral[900],
   },
   applyButton: {
-    backgroundColor: theme.colors.primary[500],
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.spacing.md,
+    backgroundColor: theme.colors.neutral[900],
+    paddingHorizontal: 16,
+    height: 44,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 80,
   },
   applyButtonText: {
     color: theme.colors.white,
-    fontWeight: theme.typography.weight.semibold,
+    fontWeight: '600',
+    fontSize: 14,
   },
   summarySection: {
-    marginBottom: theme.spacing[4],
-    padding: theme.spacing[4],
+    backgroundColor: theme.colors.white,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.sm,
+    marginBottom: 8,
   },
   summaryLabel: {
-    fontSize: theme.typography.body.medium.fontSize,
-    color: theme.colors.white,
-    opacity: 0.9,
+    fontSize: 14,
+    color: theme.colors.neutral[600],
   },
   summaryValue: {
-    fontSize: theme.typography.body.medium.fontSize,
-    color: theme.colors.white,
-    fontWeight: '600',
+    fontSize: 14,
+    color: theme.colors.neutral[900],
+    fontWeight: '500',
   },
   discountLabel: {
-    color: theme.colors.success?.[600] || '#059669',
+    color: theme.colors.success[700],
   },
   discountValue: {
-    color: theme.colors.success?.[600] || '#059669',
+    color: theme.colors.success[700],
   },
   totalRow: {
     borderTopWidth: 1,
     borderTopColor: theme.colors.neutral[200],
-    paddingTop: theme.spacing.md,
-    marginTop: theme.spacing.md,
+    paddingTop: 12,
+    marginTop: 8,
   },
   totalLabel: {
-    fontSize: theme.typography.size.lg,
-    fontWeight: theme.typography.weight.bold,
+    fontSize: 16,
+    fontWeight: '700',
     color: theme.colors.neutral[900],
   },
   totalValue: {
-    fontSize: theme.typography.size.lg,
-    fontWeight: theme.typography.weight.bold,
-    color: theme.colors.primary[500],
+    fontSize: 18,
+    fontWeight: '700',
+    color: theme.colors.primary[600],
   },
   checkoutButton: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: 24,
   },
 });
 

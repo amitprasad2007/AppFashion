@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { theme } from '../theme';
-import GlassCard from './GlassCard';
 
 interface EnhancedHeaderProps {
   title?: string;
@@ -26,22 +25,25 @@ const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
 }) => {
   return (
     <>
-      <StatusBar 
-        barStyle="light-content" 
-        backgroundColor="transparent"
-        translucent={true}
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#4A0404"
+        translucent={false}
       />
       <LinearGradient
-        colors={theme.glassGradients.aurora}
+        colors={['#4A0404', '#6B1515', '#8B4513', '#B8860B']}
         style={styles.container}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         <SafeAreaView style={styles.safeArea}>
-          <GlassCard style={styles.headerContent} variant="light">
+          <View style={styles.headerContent}>
+            {/* Decorative pattern overlay */}
+            <View style={styles.decorativePattern} />
+
             <View style={styles.headerRow}>
               {showBackButton ? (
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={onBackPress}
                   style={styles.backButton}
                   activeOpacity={0.7}
@@ -53,19 +55,19 @@ const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
               ) : (
                 <View style={styles.placeholder} />
               )}
-              
+
               <View style={styles.titleContainer}>
                 <Text style={styles.title} numberOfLines={1}>
                   {title}
                 </Text>
                 <View style={styles.titleUnderline} />
               </View>
-              
+
               <View style={styles.rightContainer}>
                 {rightComponent || <View style={styles.placeholder} />}
               </View>
             </View>
-          </GlassCard>
+          </View>
         </SafeAreaView>
       </LinearGradient>
     </>
@@ -74,7 +76,7 @@ const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: StatusBar.currentHeight || theme.spacing[12],
+    paddingTop: StatusBar.currentHeight || 0,
   },
   safeArea: {
     paddingBottom: theme.spacing[2],
@@ -82,6 +84,16 @@ const styles = StyleSheet.create({
   headerContent: {
     marginHorizontal: theme.spacing[4],
     marginTop: theme.spacing[2],
+    position: 'relative',
+  },
+  decorativePattern: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.1,
+    backgroundColor: 'transparent',
   },
   headerRow: {
     flexDirection: 'row',
@@ -106,7 +118,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 4,
     elevation: 5,
-    paddingBottom: 6,
   },
   backIcon: {
     fontSize: 20,

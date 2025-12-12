@@ -423,9 +423,17 @@ class ApiService {
         console.error('🚨 JSON Parse Error:', {
           url: `${BASE_URL}${endpoint}`,
           status: response.status,
-          responseText: responseText.substring(0, 500) + (responseText.length > 500 ? '...' : ''),
+          responseLength: responseText.length,
+          responseStart: responseText.substring(0, 200),
+          responseEnd: responseText.substring(responseText.length - 200),
           parseError: parseError
         });
+
+        // Log the full response for debugging (only for this specific endpoint)
+        if (endpoint === '/bestseller-products') {
+          console.log('Full response text:', responseText);
+        }
+
         throw new Error(`Invalid JSON response from ${endpoint}: ${parseError}`);
       }
 

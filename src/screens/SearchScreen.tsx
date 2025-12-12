@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,21 +6,15 @@ import {
   TextInput,
   FlatList,
   TouchableOpacity,
-  Image,
+  ScrollView,
+  StatusBar,
 } from 'react-native';
-import {RouteProp, useNavigation} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RootStackParamList} from '../types/navigation';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../types/navigation';
 import EnhancedImage from '../components/EnhancedImage';
-import BeautifulBackButton from '../components/BeautifulBackButton';
-import AnimatedCard from '../components/AnimatedCard';
 import EnhancedHeader from '../components/EnhancedHeader';
-import GlassCard from '../components/GlassCard';
-import FloatingElements from '../components/FloatingElements';
 import { theme } from '../theme';
-import LinearGradient from 'react-native-linear-gradient';
-
-type SearchScreenRouteProp = RouteProp<RootStackParamList, 'Search'>;
 
 type SearchResult = {
   id: string;
@@ -30,19 +24,19 @@ type SearchResult = {
   image: string;
   price?: string;
 };
-  
+
 const SearchScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [searchQuery, setSearchQuery] = useState('');
-  const [recentSearches] = useState(['dress', 'headphones', 'shoes', 'watch']);
-  const [popularSearches] = useState(['summer sale', 'wireless', 'nike', 'apple']);
+  const [recentSearches] = useState(['Banarasi Saree', 'Silk', 'Wedding Collection', 'Gold Jewelry']);
+  const [popularSearches] = useState(['Bridal', 'Katan Silk', 'Georgette', 'Offer']);
 
   const searchResults: SearchResult[] = [
-    {id: '1', name: 'Summer Dress Collection', type: 'category' as const, image: 'https://via.placeholder.com/60'},
-    {id: '2', name: 'Wireless Headphones Pro', type: 'product' as const, price: '₹89.99', image: 'https://via.placeholder.com/60'},
-    {id: '3', name: 'Running Shoes Nike', type: 'product' as const, price: '₹129.99', image: 'https://via.placeholder.com/60'},
-    {id: '4', name: 'Smart Watch Series 5', type: 'product' as const, price: '₹299.99', image: 'https://via.placeholder.com/60'},
-    {id: '5', name: 'Fashion Accessories', type: 'category' as const, image: 'https://via.placeholder.com/60'},
+    { id: '1', name: 'Summer Wedding Collection', type: 'category' as const, image: 'https://via.placeholder.com/60' },
+    { id: '2', name: 'Premium Silk Saree', type: 'product' as const, price: '₹8999', image: 'https://via.placeholder.com/60' },
+    { id: '3', name: 'Banarasi Dupatta', type: 'product' as const, price: '₹2499', image: 'https://via.placeholder.com/60' },
+    { id: '4', name: 'Gold Plated Necklace', type: 'product' as const, price: '₹4999', image: 'https://via.placeholder.com/60' },
+    { id: '5', name: 'Accessories', type: 'category' as const, image: 'https://via.placeholder.com/60' },
   ];
 
   const filteredResults = searchResults.filter(item =>
@@ -54,163 +48,134 @@ const SearchScreen = () => {
     // In a real app, you would make an API call here
   };
 
-  const renderSearchResult = ({item, index}: {item: SearchResult; index: number}) => (
-    <AnimatedCard delay={index * 50}>
-      <TouchableOpacity
-        style={styles.resultItem}
-        onPress={() => {
-          if (item.type === 'product') {
-            navigation.navigate('ProductDetails', {productSlug: item.slug || item.id.toString()});
-          } else {
-            navigation.navigate('ProductList', {categoryName: item.name});
+  const renderSearchResult = ({ item, index }: { item: SearchResult; index: number }) => (
+    <TouchableOpacity
+      key={index}
+      style={styles.resultItem}
+      onPress={() => {
+        if (item.type === 'product') {
+          navigation.navigate('ProductDetails', { productSlug: item.slug || item.id.toString() });
+        } else {
+          navigation.navigate('ProductList', { categoryName: item.name });
+        }
+      }}
+      activeOpacity={0.7}>
+      <EnhancedImage
+        source={{ uri: item.image }}
+        style={styles.resultImage}
+        borderRadius={8}
+        placeholder={item.name}
+        fallbackIcon={item.type === 'product' ? '👗' : '📂'}
+      />
+      <View style={styles.resultInfo}>
+        <Text style={styles.resultName}>{item.name}</Text>
+        <Text style={[
+          styles.resultType,
+          {
+            backgroundColor: item.type === 'product' ? theme.colors.primary[50] : theme.colors.secondary[50],
+            color: item.type === 'product' ? theme.colors.primary[700] : theme.colors.secondary[700]
           }
-        }}
-        activeOpacity={0.9}>
-        <GlassCard style={styles.resultItem} variant="light">
-          <EnhancedImage 
-            source={{uri: item.image}} 
-            style={styles.resultImage}
-            width={60}
-            height={60}
-            borderRadius={theme.borderRadius.lg}
-            placeholder={item.name}
-            fallbackIcon={item.type === 'product' ? '👗' : '📂'}
-          />
-          <View style={styles.resultInfo}>
-            <Text style={styles.resultName}>{item.name}</Text>
-            <Text style={styles.resultType}>{item.type === 'product' ? 'Product' : 'Category'}</Text>
-            {item.price && <Text style={styles.resultPrice}>{item.price}</Text>}
-          </View>
-          <View style={styles.arrow}>
-            <Text style={styles.arrow}>→</Text>
-          </View>
-        </GlassCard>
-      </TouchableOpacity>
-    </AnimatedCard>
+        ]}>{item.type === 'product' ? 'Product' : 'Category'}</Text>
+        {item.price && <Text style={styles.resultPrice}>{item.price}</Text>}
+      </View>
+      <Text style={styles.arrow}>→</Text>
+    </TouchableOpacity>
   );
 
-  const renderSearchTag = (text: string, onPress: (text: string) => void, index: number) => (
+  const renderSearchTag = (text: string, onPress: (text: string) => void) => (
     <TouchableOpacity
       key={text}
       style={styles.searchTag}
       onPress={() => onPress(text)}>
-      <GlassCard style={styles.searchTag} variant="light">
-        <Text style={styles.searchTagText}>{text}</Text>
-      </GlassCard>
+      <Text style={styles.searchTagText}>{text}</Text>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={theme.glassGradients.emerald}
-        style={StyleSheet.absoluteFillObject}
-      />
-      <FloatingElements count={8} />
-      
-      <EnhancedHeader 
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.neutral[50]} />
+      <EnhancedHeader
         title="🔍 Search"
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
       />
 
       {/* Search Input */}
-      <View>
-        <GlassCard style={styles.searchInput} variant="light">
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputWrapper}>
+          <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
             placeholder="Search products, brands, categories..."
-            placeholderTextColor="rgba(255,255,255,0.7)"
+            placeholderTextColor={theme.colors.neutral[400]}
             value={searchQuery}
             onChangeText={handleSearch}
             autoFocus
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <GlassCard style={styles.clearButton} variant="light">
-                <Text style={styles.clearButton}>✕</Text>
-              </GlassCard>
+              <Text style={styles.clearButton}>✕</Text>
             </TouchableOpacity>
           )}
-        </GlassCard>
+        </View>
       </View>
 
       {searchQuery.length === 0 ? (
-        <View style={styles.emptySearch}>
+        <ScrollView style={styles.contentContainer} showsVerticalScrollIndicator={false}>
           {/* Recent Searches */}
-          <AnimatedCard delay={100}>
-            <GlassCard style={styles.section} gradientColors={theme.glassGradients.aurora}>
-              <Text style={styles.sectionTitle}>⏰ Recent Searches</Text>
-              <View style={styles.tagsContainer}>
-                {recentSearches.map((search, index) =>
-                  renderSearchTag(search, handleSearch, index)
-                )}
-              </View>
-            </GlassCard>
-          </AnimatedCard>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>⏰ Recent Searches</Text>
+            <View style={styles.tagsContainer}>
+              {recentSearches.map((search) => renderSearchTag(search, handleSearch))}
+            </View>
+          </View>
 
           {/* Popular Searches */}
-          <AnimatedCard delay={200}>
-            <GlassCard style={styles.section} gradientColors={theme.glassGradients.sunset}>
-              <Text style={styles.sectionTitle}>🔥 Popular Searches</Text>
-              <View style={styles.tagsContainer}>
-                {popularSearches.map((search, index) =>
-                  renderSearchTag(search, handleSearch, index)
-                )}
-              </View>
-            </GlassCard>
-          </AnimatedCard>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>🔥 Popular Searches</Text>
+            <View style={styles.tagsContainer}>
+              {popularSearches.map((search) => renderSearchTag(search, handleSearch))}
+            </View>
+          </View>
 
           {/* Quick Categories */}
-          <AnimatedCard delay={300}>
-            <GlassCard style={styles.section} gradientColors={theme.glassGradients.purple}>
-              <Text style={styles.sectionTitle}>📂 Shop by Category</Text>
-              <View style={styles.quickCategories}>
-                <TouchableOpacity
-                  style={{ marginBottom: 15 }}
-                  onPress={() => navigation.navigate('ProductList', {categoryName: 'Fashion'})}>
-                  <GlassCard style={styles.categoryButton} variant="light">
-                    <Text style={styles.categoryEmoji}>👗</Text>
-                    <Text style={styles.categoryName}>Fashion</Text>
-                  </GlassCard>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={{ marginBottom: 15 }}
-                  onPress={() => navigation.navigate('ProductList', {categoryName: 'Electronics'})}>
-                  <GlassCard style={styles.categoryButton} variant="light">
-                    <Text style={styles.categoryEmoji}>📱</Text>
-                    <Text style={styles.categoryName}>Electronics</Text>
-                  </GlassCard>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={{ marginBottom: 15 }}
-                  onPress={() => navigation.navigate('ProductList', {categoryName: 'Sports'})}>
-                  <GlassCard style={styles.categoryButton} variant="light">
-                    <Text style={styles.categoryEmoji}>⚽</Text>
-                    <Text style={styles.categoryName}>Sports</Text>
-                  </GlassCard>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={{ marginBottom: 15 }}
-                  onPress={() => navigation.navigate('ProductList', {categoryName: 'Home'})}>
-                  <GlassCard style={styles.categoryButton} variant="light">
-                    <Text style={styles.categoryEmoji}>🏠</Text>
-                    <Text style={styles.categoryName}>Home</Text>
-                  </GlassCard>
-                </TouchableOpacity>
-              </View>
-            </GlassCard>
-          </AnimatedCard>
-        </View>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>📂 Shop by Category</Text>
+            <View style={styles.quickCategories}>
+              <TouchableOpacity
+                style={styles.categoryCard}
+                onPress={() => navigation.navigate('ProductList', { categoryName: 'Fashion' })}>
+                <Text style={styles.categoryEmoji}>👗</Text>
+                <Text style={styles.categoryName}>Fashion</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.categoryCard}
+                onPress={() => navigation.navigate('ProductList', { categoryName: 'Sarees' })}>
+                <Text style={styles.categoryEmoji}>👘</Text>
+                <Text style={styles.categoryName}>Sarees</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.categoryCard}
+                onPress={() => navigation.navigate('ProductList', { categoryName: 'Jewelry' })}>
+                <Text style={styles.categoryEmoji}>💍</Text>
+                <Text style={styles.categoryName}>Jewelry</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.categoryCard}
+                onPress={() => navigation.navigate('ProductList', { categoryName: 'Home' })}>
+                <Text style={styles.categoryEmoji}>🏠</Text>
+                <Text style={styles.categoryName}>Home</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
       ) : (
         <View style={styles.searchResults}>
-          <AnimatedCard delay={50}>
-            <GlassCard style={styles.resultsHeader} variant="light">
-              <Text style={styles.resultsHeader}>
-                🔍 {filteredResults.length} results for "{searchQuery}"
-              </Text>
-            </GlassCard>
-          </AnimatedCard>
+          <View style={styles.resultsHeader}>
+            <Text style={styles.resultsHeaderText}>
+              Found {filteredResults.length} result{filteredResults.length !== 1 ? 's' : ''} for "{searchQuery}"
+            </Text>
+          </View>
           <FlatList
             data={filteredResults}
             renderItem={renderSearchResult}
@@ -229,107 +194,123 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.neutral[50],
   },
-  header: {
+  searchContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: theme.colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.neutral[200],
+  },
+  searchInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing[4],
-    paddingTop: theme.spacing[12],
-    paddingBottom: theme.spacing[4],
-    backgroundColor: theme.colors.white,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    backgroundColor: theme.colors.neutral[100],
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    height: 48,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
+  },
+  searchIcon: {
+    fontSize: 16,
+    marginRight: 8,
+    color: theme.colors.neutral[500],
   },
   searchInput: {
     flex: 1,
-    marginLeft: theme.spacing[3],
-    borderWidth: 1,
-    borderColor: theme.colors.neutral[300],
-    borderRadius: 8,
-    padding: 12,
     fontSize: 16,
-    backgroundColor: '#fff',
+    color: theme.colors.neutral[900],
+    height: '100%',
   },
   clearButton: {
     fontSize: 18,
-    color: '#666',
-    marginLeft: 10,
-    padding: 5,
+    color: theme.colors.neutral[500],
+    padding: 4,
   },
-  emptySearch: {
+  contentContainer: {
     flex: 1,
-    padding: 20,
+    padding: 16,
   },
   section: {
-    marginBottom: 30,
+    marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 15,
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.colors.neutral[900],
+    marginBottom: 12,
   },
   tagsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 8,
   },
   searchTag: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: theme.colors.white,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    marginRight: 10,
-    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
   },
   searchTagText: {
     fontSize: 14,
-    color: '#333',
+    color: theme.colors.neutral[700],
   },
   quickCategories: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    gap: 12,
   },
-  categoryButton: {
+  categoryCard: {
     width: '48%',
-    backgroundColor: '#f8f9fa',
-    padding: 20,
+    backgroundColor: theme.colors.white,
+    padding: 16,
     borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   categoryEmoji: {
     fontSize: 32,
     marginBottom: 8,
   },
   categoryName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.neutral[900],
   },
   searchResults: {
     flex: 1,
-    padding: 15,
+    backgroundColor: theme.colors.white,
   },
   resultsHeader: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 15,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.neutral[100],
+  },
+  resultsHeaderText: {
+    fontSize: 14,
+    color: theme.colors.neutral[600],
   },
   resultItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: theme.colors.neutral[100],
   },
   resultImage: {
-    width: 60,
-    height: 60,
+    width: 50,
+    height: 50,
     borderRadius: 8,
-    marginRight: 15,
+    marginRight: 12,
   },
   resultInfo: {
     flex: 1,
@@ -337,28 +318,27 @@ const styles = StyleSheet.create({
   resultName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.neutral[900],
     marginBottom: 4,
   },
   resultType: {
     fontSize: 12,
-    color: '#007bff',
-    backgroundColor: '#e7f3ff',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 4,
     alignSelf: 'flex-start',
     marginBottom: 4,
+    fontWeight: '500',
   },
   resultPrice: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#ff6b6b',
+    fontWeight: '700',
+    color: theme.colors.primary[600],
   },
   arrow: {
     fontSize: 18,
-    color: '#ccc',
-    marginLeft: 10,
+    color: theme.colors.neutral[400],
+    marginLeft: 12,
   },
 });
 

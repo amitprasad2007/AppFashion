@@ -9,19 +9,15 @@ import {
   ScrollView,
   ActivityIndicator,
   Keyboard,
+  StatusBar,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../types/navigation';
 import { theme } from '../../theme';
-import AnimatedCard from '../../components/AnimatedCard';
 import GradientButton from '../../components/GradientButton';
 import OAuthButton from '../../components/OAuth/OAuthButton';
 import EnhancedHeader from '../../components/EnhancedHeader';
-import GlassCard from '../../components/GlassCard';
-import GlassInput from '../../components/GlassInput';
-import FloatingElements from '../../components/FloatingElements';
 import { useAuth } from '../../contexts/AuthContext';
 
 const LoginScreen = () => {
@@ -152,12 +148,7 @@ const LoginScreen = () => {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={theme.glassGradients.ocean}
-        style={styles.backgroundGradient}
-      />
-      <FloatingElements count={12} />
-
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.neutral[50]} />
       <EnhancedHeader
         title="🔐 Welcome Back"
         showBackButton={true}
@@ -169,177 +160,160 @@ const LoginScreen = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}>
         {/* Welcome Section */}
-        <AnimatedCard delay={100}>
-          <GlassCard style={styles.welcomeCard} gradientColors={theme.glassGradients.aurora}>
-            <Text style={styles.welcomeEmoji}>👋</Text>
-            <Text style={styles.welcomeTitle}>Hello Again!</Text>
-            <Text style={styles.welcomeSubtitle}>
-              Ready to discover amazing fashion at Samar Silk Palace?
-            </Text>
-          </GlassCard>
-        </AnimatedCard>
+        <View style={styles.welcomeSection}>
+          <Text style={styles.welcomeEmoji}>👋</Text>
+          <Text style={styles.welcomeTitle}>Hello Again!</Text>
+          <Text style={styles.welcomeSubtitle}>
+            Ready to discover amazing fashion at Samar Silk Palace?
+          </Text>
+        </View>
 
         {/* Login Form */}
-        <AnimatedCard delay={200}>
-          <GlassCard style={styles.formCard} gradientColors={theme.glassGradients.sunset}>
-            <Text style={styles.formTitle}>🔑 Sign In to Your Account</Text>
+        <View style={styles.formCard}>
+          <Text style={styles.formTitle}>Sign In to Your Account</Text>
 
-            {/* Show global error */}
-            {state.error && (
-              <GlassCard style={styles.errorContainer} variant="light">
-                <Text style={styles.errorText}>⚠️ {state.error}</Text>
-              </GlassCard>
-            )}
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>📧 Email Address</Text>
-              <GlassCard
-                style={[styles.inputWrapper, !!validationErrors.email && styles.inputError]}
-                variant="light">
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your email"
-                  placeholderTextColor="rgba(255,255,255,0.7)"
-                  value={email}
-                  onChangeText={(text) => {
-                    setEmail(text);
-                    // Clear validation error when user starts typing
-                    if (validationErrors.email) {
-                      setValidationErrors(prev => ({ ...prev, email: '' }));
-                    }
-                  }}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  editable={!isSubmitting && !state.isLoading}
-                />
-              </GlassCard>
-              {validationErrors.email && (
-                <Text style={styles.validationError}>{validationErrors.email}</Text>
-              )}
+          {/* Show global error */}
+          {state.error && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>⚠️ {state.error}</Text>
             </View>
+          )}
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>🔒 Password</Text>
-              <GlassCard
-                style={[styles.passwordContainer, !!validationErrors.password && styles.inputError]}
-                variant="light">
-                <TextInput
-                  style={styles.passwordInput}
-                  placeholder="Enter your password"
-                  placeholderTextColor="rgba(255,255,255,0.7)"
-                  value={password}
-                  onChangeText={(text) => {
-                    setPassword(text);
-                    // Clear validation error when user starts typing
-                    if (validationErrors.password) {
-                      setValidationErrors(prev => ({ ...prev, password: '' }));
-                    }
-                  }}
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  editable={!isSubmitting && !state.isLoading}
-                />
-                <TouchableOpacity
-                  style={styles.eyeButton}
-                  onPress={() => setShowPassword(!showPassword)}
-                  disabled={isSubmitting || state.isLoading}>
-                  <GlassCard style={styles.eyeIcon} variant="light">
-                    <Text style={styles.eyeIconText}>{showPassword ? '👁️' : '🙈'}</Text>
-                  </GlassCard>
-                </TouchableOpacity>
-              </GlassCard>
-              {validationErrors.password && (
-                <Text style={styles.validationError}>{validationErrors.password}</Text>
-              )}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Email Address</Text>
+            <View style={[styles.inputWrapper, !!validationErrors.email && styles.inputError]}>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your email"
+                placeholderTextColor={theme.colors.neutral[400]}
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  // Clear validation error when user starts typing
+                  if (validationErrors.email) {
+                    setValidationErrors(prev => ({ ...prev, email: '' }));
+                  }
+                }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!isSubmitting && !state.isLoading}
+              />
             </View>
-
-            <TouchableOpacity
-              onPress={handleForgotPassword}
-              disabled={isSubmitting || state.isLoading}>
-              <Text style={[styles.forgotPassword, (isSubmitting || state.isLoading) && styles.disabledText]}>
-                Forgot Password?
-              </Text>
-            </TouchableOpacity>
-
-            <GradientButton
-              title={isSubmitting || state.isLoading ? "Signing In..." : "🚀 Sign In to Samar Silk Palace"}
-              onPress={handleLogin}
-              gradient={theme.colors.gradients.primary}
-              size="large"
-              style={styles.loginButton}
-              disabled={isSubmitting || state.isLoading}
-            />
-
-            {(isSubmitting || state.isLoading) && (
-              <GlassCard style={styles.loadingContainer} variant="light">
-                <ActivityIndicator size="small" color={theme.colors.white} />
-                <Text style={styles.loadingText}>Authenticating...</Text>
-              </GlassCard>
+            {validationErrors.email && (
+              <Text style={styles.validationError}>{validationErrors.email}</Text>
             )}
-          </GlassCard>
-        </AnimatedCard>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Password</Text>
+            <View style={[styles.passwordContainer, !!validationErrors.password && styles.inputError]}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Enter your password"
+                placeholderTextColor={theme.colors.neutral[400]}
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  // Clear validation error when user starts typing
+                  if (validationErrors.password) {
+                    setValidationErrors(prev => ({ ...prev, password: '' }));
+                  }
+                }}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!isSubmitting && !state.isLoading}
+              />
+              <TouchableOpacity
+                style={styles.eyeButton}
+                onPress={() => setShowPassword(!showPassword)}
+                disabled={isSubmitting || state.isLoading}>
+                <Text style={styles.eyeIconText}>{showPassword ? '👁️' : '🙈'}</Text>
+              </TouchableOpacity>
+            </View>
+            {validationErrors.password && (
+              <Text style={styles.validationError}>{validationErrors.password}</Text>
+            )}
+          </View>
+
+          <TouchableOpacity
+            onPress={handleForgotPassword}
+            disabled={isSubmitting || state.isLoading}>
+            <Text style={[styles.forgotPassword, (isSubmitting || state.isLoading) && styles.disabledText]}>
+              Forgot Password?
+            </Text>
+          </TouchableOpacity>
+
+          <GradientButton
+            title={isSubmitting || state.isLoading ? "Signing In..." : "Sign In"}
+            onPress={handleLogin}
+            gradient={theme.colors.gradients.primary}
+            size="large"
+            style={styles.loginButton}
+            disabled={isSubmitting || state.isLoading}
+          />
+
+          {(isSubmitting || state.isLoading) && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={theme.colors.primary[600]} />
+              <Text style={styles.loadingText}>Authenticating...</Text>
+            </View>
+          )}
+        </View>
 
         {/* Social Login */}
-        <AnimatedCard delay={400}>
-          <GlassCard style={styles.socialCard} gradientColors={theme.glassGradients.emerald}>
-            <View style={styles.dividerContainer}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.orText}>or continue with</Text>
-              <View style={styles.dividerLine} />
-            </View>
+        <View style={styles.socialSection}>
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.orText}>or continue with</Text>
+            <View style={styles.dividerLine} />
+          </View>
 
-            <View style={styles.socialButtons}>
-              <OAuthButton
-                provider="google"
-                onSuccess={() => navigation.navigate('Home' as never)}
-                onError={(error) => console.error('Google OAuth Error:', error)}
-                disabled={isSubmitting || state.isLoading}
-                style={styles.socialButton}
-              />
+          <View style={styles.socialButtons}>
+            <OAuthButton
+              provider="google"
+              onSuccess={() => navigation.navigate('MainTabs' as never)}
+              onError={(error) => console.error('Google OAuth Error:', error)}
+              disabled={isSubmitting || state.isLoading}
+              style={styles.socialButton}
+            />
 
-              <OAuthButton
-                provider="facebook"
-                onSuccess={() => navigation.navigate('Home' as never)}
-                onError={(error) => console.error('Facebook OAuth Error:', error)}
-                disabled={isSubmitting || state.isLoading}
-                style={styles.socialButton}
-              />
+            <OAuthButton
+              provider="facebook"
+              onSuccess={() => navigation.navigate('MainTabs' as never)}
+              onError={(error) => console.error('Facebook OAuth Error:', error)}
+              disabled={isSubmitting || state.isLoading}
+              style={styles.socialButton}
+            />
 
-              <OAuthButton
-                provider="apple"
-                onSuccess={() => navigation.navigate('Home' as never)}
-                onError={(error) => console.error('Apple OAuth Error:', error)}
-                disabled={true}
-                style={styles.socialButton}
-              />
-            </View>
-          </GlassCard>
-        </AnimatedCard>
+            <OAuthButton
+              provider="apple"
+              onSuccess={() => navigation.navigate('MainTabs' as never)}
+              onError={(error) => console.error('Apple OAuth Error:', error)}
+              disabled={true}
+              style={styles.socialButton}
+            />
+          </View>
+        </View>
 
         {/* Sign Up Link */}
-        <AnimatedCard delay={500}>
-          <GlassCard style={styles.signupSection} variant="light">
-            <Text style={styles.signupText}>New to Samar Silk Palace? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text style={styles.signupLink}>✨ Create Account</Text>
-            </TouchableOpacity>
-          </GlassCard>
-        </AnimatedCard>
+        <View style={styles.signupSection}>
+          <Text style={styles.signupText}>New to Samar Silk Palace? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+            <Text style={styles.signupLink}>Create Account</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Guest Shopping */}
-        <AnimatedCard delay={600}>
-          <GlassCard style={styles.guestCard} gradientColors={theme.glassGradients.purple}>
-            <GradientButton
-              title="👤 Continue as Guest"
-              onPress={() => navigation.navigate('MainTabs')}
-              variant="outlined"
-              size="large"
-              style={styles.guestButton}
-            />
-          </GlassCard>
-        </AnimatedCard>
+        <View style={styles.guestSection}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('MainTabs')}
+            style={styles.guestButton}
+          >
+            <Text style={styles.guestButtonText}>Continue as Guest</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </View>
   );
@@ -350,260 +324,197 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.neutral[50],
   },
-  backgroundGradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: theme.spacing[8],
+    paddingBottom: 32,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  welcomeSection: {
+    padding: 24,
     alignItems: 'center',
-    paddingTop: theme.spacing[12],
-    paddingBottom: theme.spacing[4],
-    paddingHorizontal: theme.spacing[5],
-  },
-  backButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    padding: theme.spacing[2],
-    borderRadius: theme.borderRadius.full,
-  },
-  backIcon: {
-    fontSize: 20,
-    color: theme.colors.white,
-  },
-  headerTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.white,
-  },
-  placeholder: {
-    width: 24,
-  },
-  welcomeCard: {
-    margin: theme.spacing[5],
-    marginTop: -theme.spacing[8],
-    overflow: 'hidden',
-  },
-  welcomeGradient: {
-    padding: theme.spacing[8],
-    alignItems: 'center',
-    borderRadius: theme.borderRadius.lg,
+    marginBottom: 8,
   },
   welcomeEmoji: {
     fontSize: 48,
-    marginBottom: theme.spacing[4],
+    marginBottom: 16,
   },
   welcomeTitle: {
-    fontSize: theme.typography.fontSize['3xl'],
-    fontWeight: theme.typography.fontWeight.extrabold,
-    color: theme.colors.white,
-    marginBottom: theme.spacing[2],
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    fontSize: 24,
+    fontWeight: '800',
+    color: theme.colors.neutral[900],
+    marginBottom: 8,
   },
   welcomeSubtitle: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.white,
+    fontSize: 14,
+    color: theme.colors.neutral[600],
     textAlign: 'center',
-    lineHeight: 22,
-    opacity: 0.95,
+    lineHeight: 20,
+    maxWidth: '80%',
   },
   formCard: {
-    margin: theme.spacing[5],
-    padding: theme.spacing[6],
+    backgroundColor: theme.colors.white,
+    marginHorizontal: 16,
+    padding: 24,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    marginBottom: 24,
   },
   formTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.neutral[800],
-    marginBottom: theme.spacing[6],
+    fontSize: 18,
+    fontWeight: '700',
+    color: theme.colors.neutral[900],
+    marginBottom: 24,
     textAlign: 'center',
   },
   inputContainer: {
-    marginBottom: theme.spacing[5],
+    marginBottom: 16,
   },
   inputLabel: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
+    fontSize: 14,
+    fontWeight: '600',
     color: theme.colors.neutral[700],
-    marginBottom: theme.spacing[2],
+    marginBottom: 8,
   },
   inputWrapper: {
-    backgroundColor: theme.colors.neutral[100],
-    borderRadius: theme.borderRadius.base,
+    backgroundColor: theme.colors.neutral[50],
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: theme.colors.neutral[200],
+    borderColor: theme.colors.neutral[300],
   },
   input: {
-    padding: theme.spacing[4],
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.neutral[800],
+    padding: 12,
+    fontSize: 16,
+    color: theme.colors.neutral[900],
   },
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.neutral[100],
-    borderRadius: theme.borderRadius.base,
+    backgroundColor: theme.colors.neutral[50],
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: theme.colors.neutral[200],
+    borderColor: theme.colors.neutral[300],
   },
   passwordInput: {
     flex: 1,
-    padding: theme.spacing[4],
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.neutral[800],
+    padding: 12,
+    fontSize: 16,
+    color: theme.colors.neutral[900],
   },
   eyeButton: {
-    padding: theme.spacing[4],
-  },
-  eyeIcon: {
-    fontSize: 20,
+    padding: 12,
   },
   eyeIconText: {
-    fontSize: 20,
+    fontSize: 18,
   },
   forgotPassword: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.primary[500],
+    fontSize: 14,
+    color: theme.colors.primary[600],
     textAlign: 'right',
-    marginBottom: theme.spacing[6],
-    fontWeight: theme.typography.fontWeight.medium,
+    marginBottom: 24,
+    fontWeight: '500',
   },
   loginButton: {
-    marginTop: theme.spacing[2],
+    width: '100%',
   },
   // Error and validation styles
   errorContainer: {
-    backgroundColor: '#ffebee',
-    padding: theme.spacing[3],
-    borderRadius: theme.borderRadius.md,
-    marginBottom: theme.spacing[4],
+    backgroundColor: theme.colors.error[50],
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
     borderLeftWidth: 4,
-    borderLeftColor: '#f44336',
+    borderLeftColor: theme.colors.error[500],
   },
   errorText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: '#c62828',
-    fontWeight: theme.typography.fontWeight.medium,
+    fontSize: 14,
+    color: theme.colors.error[700],
+    fontWeight: '500',
   },
   inputError: {
-    borderColor: '#f44336',
-    borderWidth: 2,
+    borderColor: theme.colors.error[500],
   },
   validationError: {
-    fontSize: theme.typography.fontSize.xs,
-    color: '#f44336',
-    marginTop: theme.spacing[1],
-    fontWeight: theme.typography.fontWeight.medium,
+    fontSize: 12,
+    color: theme.colors.error[600],
+    marginTop: 4,
+    fontWeight: '500',
   },
   disabledText: {
     opacity: 0.5,
-  },
-  disabledButton: {
-    opacity: 0.7,
   },
   loadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: theme.spacing[4],
-    padding: theme.spacing[3],
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    borderRadius: theme.borderRadius.md,
+    marginTop: 16,
   },
   loadingText: {
-    fontSize: theme.typography.fontSize.sm,
+    fontSize: 14,
     color: theme.colors.neutral[600],
-    marginLeft: theme.spacing[2],
-    fontWeight: theme.typography.fontWeight.medium,
+    marginLeft: 8,
   },
-  socialCard: {
-    marginHorizontal: theme.spacing[5],
-    marginBottom: theme.spacing[5],
-    overflow: 'hidden',
+  socialSection: {
+    marginBottom: 24,
+    paddingHorizontal: 16,
   },
   dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: theme.spacing[6],
-    paddingHorizontal: theme.spacing[2],
+    marginBottom: 24,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: theme.colors.neutral[200],
   },
   orText: {
     textAlign: 'center',
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.white,
-    marginHorizontal: theme.spacing[4],
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    fontSize: 14,
+    color: theme.colors.neutral[500],
+    marginHorizontal: 16,
   },
   socialButtons: {
-    gap: theme.spacing[3],
+    gap: 12,
   },
   socialButton: {
     marginBottom: 0,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    elevation: 8,
-  },
-  socialGradient: {
-    width: 48,
-    height: 48,
-    borderRadius: theme.borderRadius.base,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: theme.spacing[2],
-  },
-  socialIcon: {
-    fontSize: 20,
-  },
-  socialText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.neutral[700],
-    fontWeight: theme.typography.fontWeight.medium,
+    backgroundColor: theme.colors.white,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
   },
   signupSection: {
     flexDirection: 'row',
     justifyContent: 'center',
-    paddingHorizontal: theme.spacing[5],
-    marginTop: theme.spacing[4],
+    marginBottom: 24,
   },
   signupText: {
-    fontSize: theme.typography.fontSize.base,
+    fontSize: 14,
     color: theme.colors.neutral[600],
   },
   signupLink: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.primary[500],
-    fontWeight: theme.typography.fontWeight.bold,
+    fontSize: 14,
+    color: theme.colors.primary[600],
+    fontWeight: '700',
   },
-  guestCard: {
-    margin: theme.spacing[5],
-    padding: theme.spacing[4],
+  guestSection: {
+    alignItems: 'center',
+    marginBottom: 24,
   },
   guestButton: {
-    marginTop: theme.spacing[2],
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+  },
+  guestButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.neutral[500],
   },
 });
 

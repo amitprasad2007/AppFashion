@@ -65,13 +65,13 @@ const BannerSlider: React.FC<BannerSliderProps> = ({
   // Convert API banner to component banner
   const convertApiBannerToComponentBanner = (apiBanner: ApiBannerData, index: number): BannerData => {
     // Truncate long subtitle for better display
-    const truncatedSubtitle = apiBanner.subtitle.length > 100 
+    const truncatedSubtitle = apiBanner.subtitle.length > 100
       ? apiBanner.subtitle.substring(0, 100) + '...'
       : apiBanner.subtitle;
-    
+
     // Extract call-to-action text or use default
     const buttonText = apiBanner.cta || 'Explore Collection';
-    
+
     return {
       id: apiBanner.id.toString(),
       title: apiBanner.title,
@@ -99,15 +99,15 @@ const BannerSlider: React.FC<BannerSliderProps> = ({
     try {
       setLoading(true);
       setError(null);
-      
+
       // Debug network connectivity
       getDeviceNetworkInfo();
       console.log('🚀 Attempting to fetch banners...');
-      
+
       const apiBanners = await apiService.getBanners();
-      
+
       if (apiBanners && apiBanners.length > 0) {
-        const convertedBanners = apiBanners.map((banner, index) => 
+        const convertedBanners = apiBanners.map((banner, index) =>
           convertApiBannerToComponentBanner(banner, index)
         );
         setBanners(convertedBanners);
@@ -148,16 +148,16 @@ const BannerSlider: React.FC<BannerSliderProps> = ({
       }
     } catch (err) {
       console.error('Failed to fetch banners:', err);
-      
+
       // Test alternative connections
       console.log('🔧 Testing alternative API connections...');
       const testResult = await testApiConnection();
-      
+
       if (testResult) {
         console.log('✅ Found working connection:', testResult.url);
         // You can update the API config here if needed
       }
-      
+
       setError('Failed to load banners - Check network connection');
       // Set fallback banners on error
       setBanners([
@@ -206,8 +206,8 @@ const BannerSlider: React.FC<BannerSliderProps> = ({
 
   const renderBanner = ({ item, index }: { item: BannerData; index: number }) => (
     <View style={styles.bannerContainer}>
-      <AnimatedCard 
-        style={styles.bannerCard} 
+      <AnimatedCard
+        style={styles.bannerCard}
         elevation="xl"
         animationType="fade"
         delay={index * 200}>
@@ -216,20 +216,20 @@ const BannerSlider: React.FC<BannerSliderProps> = ({
           style={styles.banner}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}>
-          
+
           {/* Luxury Overlay Pattern */}
           <View style={styles.luxuryOverlay} />
-          
+
           {/* Main Content */}
           <View style={styles.bannerContent}>
             {/* Premium Badge */}
             <View style={styles.premiumBadge}>
               <Text style={styles.premiumBadgeText}>✨ PREMIUM</Text>
             </View>
-            
+
             {/* Title with Elegant Typography */}
             <Text style={styles.bannerTitle}>{item.title}</Text>
-            
+
             {/* Subtitle with Gold Accent */}
             {item.subtitle && (
               <View style={styles.subtitleContainer}>
@@ -238,12 +238,12 @@ const BannerSlider: React.FC<BannerSliderProps> = ({
                 <View style={styles.goldAccent} />
               </View>
             )}
-            
+
             {/* Description */}
             <Text style={styles.bannerDescription} numberOfLines={2}>
               {item.description}
             </Text>
-            
+
             {/* Luxury CTA Button */}
             <TouchableOpacity style={styles.luxuryButton} onPress={item.onPress}>
               <LinearGradient
@@ -256,14 +256,14 @@ const BannerSlider: React.FC<BannerSliderProps> = ({
               </LinearGradient>
             </TouchableOpacity>
           </View>
-          
+
           {/* Enhanced Image/Visual Section */}
           <View style={styles.bannerImageContainer}>
             {item.image ? (
               <View style={styles.imageWrapper}>
                 <View style={styles.imageFrame}>
-                  <Image 
-                    source={{ uri: item.image }} 
+                  <Image
+                    source={{ uri: item.image }}
                     style={styles.bannerImage}
                     resizeMode="cover"
                   />
@@ -316,9 +316,9 @@ const BannerSlider: React.FC<BannerSliderProps> = ({
       ]}
       onPress={() => {
         setCurrentIndex(index);
-        flatListRef.current?.scrollToOffset({ 
-          offset: index * width, 
-          animated: true 
+        flatListRef.current?.scrollToOffset({
+          offset: index * width,
+          animated: true
         });
       }}
     />
@@ -346,12 +346,12 @@ const BannerSlider: React.FC<BannerSliderProps> = ({
           index,
         })}
       />
-      
-      {banners.length > 1 && (
+
+      {banners.length > 1 ? (
         <View style={styles.pagination}>
           {banners.map((_, index) => renderDot(index))}
         </View>
-      )}
+      ) : null}
     </View>
   );
 };

@@ -9,19 +9,15 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  StatusBar,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { theme } from '../theme';
 import GradientButton from '../components/GradientButton';
-import AnimatedCard from '../components/AnimatedCard';
 import EnhancedHeader from '../components/EnhancedHeader';
-import GlassCard from '../components/GlassCard';
-import FloatingElements from '../components/FloatingElements';
-import GlassInput from '../components/GlassInput';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
-import { apiService, Cart, ShippingAddress, PaymentMethod, Order } from '../services/api';
+import { apiService, ShippingAddress, PaymentMethod } from '../services/api';
 import ProtectedScreen from '../components/ProtectedScreen';
 import razorpayService from '../services/razorpayService';
 
@@ -44,7 +40,6 @@ const CheckoutScreenContent = () => {
   const [selectedAddress, setSelectedAddress] = useState<ShippingAddress | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
-  const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [orderNotes, setOrderNotes] = useState('');
 
   const [newAddress, setNewAddress] = useState<Omit<ShippingAddress, 'id'>>({
@@ -64,9 +59,9 @@ const CheckoutScreenContent = () => {
     loadCheckoutData();
     initializeRazorpay();
   }, []);
+
   const initializeRazorpay = () => {
     try {
-      // TODO: Replace with your actual Razorpay credentials
       razorpayService.initialize({
         key_id: 'rzp_test_kQ8xDx79gF13e2', // Replace with your Razorpay Test/Live Key ID
         key_secret: 'hAWjjASWTuj3SHs3G4Q2s871', // This should be kept on server only
@@ -92,11 +87,11 @@ const CheckoutScreenContent = () => {
         phone: apiAddr.phone,
         email: '',
         addressLine1: apiAddr.address,
-        addressLine2: '', // ApiAddress doesn't have addressLine2
+        addressLine2: '',
         city: apiAddr.city,
         state: apiAddr.state,
         pincode: apiAddr.postal,
-        landmark: '', // ApiAddress doesn't have landmark
+        landmark: '',
         isDefault: apiAddr.isDefault,
       }));
 
@@ -187,7 +182,6 @@ const CheckoutScreenContent = () => {
     }
   };
 
-  // Handle Cash on Delivery payment
   const handleCODPayment = async (
     items: any[],
     address: ShippingAddress,
@@ -199,22 +193,18 @@ const CheckoutScreenContent = () => {
     taxAmount: number
   ) => {
     try {
-      // Validate cart items before processing
       if (!items || items.length === 0) {
         throw new Error('No items found in cart');
       }
 
-      // Use the specific COD checkout API
       const codOrderData = {
         items: items.map((item: any) => {
-          // Handle different item structures from cart vs direct items
           const itemData = item.product || item;
           const itemImage = Array.isArray(itemData.images) ? itemData.images[0] :
             Array.isArray(itemData.image) ? itemData.image[0] :
               typeof itemData.image === 'string' ? itemData.image :
                 itemData.images?.[0] || '';
 
-          // Ensure all required fields are present
           const cartId = item.cart_id;
           const productId = itemData.id || item.id;
           const productName = itemData.name || item.name;
@@ -223,7 +213,6 @@ const CheckoutScreenContent = () => {
           const color = item.selectedColor || item.color || itemData.color || 'Default';
           const slug = itemData.slug || item.slug || `product-${productId}`;
 
-          // Validate required fields
           if (!productId || !productName || !productPrice) {
             console.error('Missing required item data:', {
               productId, productName, productPrice, item
@@ -293,7 +282,7 @@ const CheckoutScreenContent = () => {
           [{
             text: 'View Order',
             onPress: () => {
-              navigation.navigate('OrderConfirmation', {
+              navigation.replace('OrderConfirmation', {
                 orderId: orderId,
                 orderNumber: orderNumber,
                 orderTotal: orderDetails?.total_amount || finalTotal,
@@ -368,27 +357,24 @@ const CheckoutScreenContent = () => {
         phone: address.phone
       };
 
-      // Use Razorpay service to process payment
       const paymentResult = await razorpayService.processPayment(selectedPayment!, orderData, userInfo);
 
       if (paymentResult.success) {
         console.log('✅ Razorpay payment successful:', paymentResult);
 
-        // Clear cart after successful order
         try {
           await apiService.clearCart();
         } catch (clearError) {
           console.warn('Could not clear cart after order:', clearError);
         }
 
-        // Show success message
         Alert.alert(
           'Payment Successful! 🎉',
           `Your order has been placed successfully!\n\nPayment: ${selectedPayment!.name}\nAmount: ₹${finalTotal}`,
           [{
             text: 'View Order',
             onPress: () => {
-              navigation.navigate('OrderConfirmation', {
+              navigation.replace('OrderConfirmation', {
                 orderId: paymentResult.paymentData?.razorpay_order_id || '',
                 orderNumber: paymentResult.paymentData?.razorpay_order_id || '',
                 orderTotal: finalTotal,
@@ -414,7 +400,6 @@ const CheckoutScreenContent = () => {
     }
   };
 
-  // Place order (enhanced with Razorpay support)
   const placeOrder = async () => {
     try {
       if (!selectedAddress) {
@@ -429,7 +414,6 @@ const CheckoutScreenContent = () => {
 
       setLoading(true);
 
-      // Determine the items to process
       const items = cart?.items || cartItems || [];
 
       // Calculate totals
@@ -441,7 +425,6 @@ const CheckoutScreenContent = () => {
       const taxAmount = tax || 0;
       const finalTotal = cart?.finalAmount || total || 0;
 
-      // Validate required data
       if (items.length === 0) {
         Alert.alert('Error', 'No items found in cart. Please add items to cart first.');
         return;
@@ -471,15 +454,10 @@ const CheckoutScreenContent = () => {
     }
   };
 
-
-
-  // Render cart summary (handle both cart and individual items)
   const renderCartSummary = () => {
-    // Determine the items to display
     const items = cart?.items || cartItems || [];
     const itemsToShow = items.slice(0, 3);
 
-    // Calculate totals
     const itemsCount = cart?.totalItems ||
       (cartItems ? cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0) : 0);
     const itemsTotal = cart?.totalAmount || subtotal || 0;
@@ -489,574 +467,364 @@ const CheckoutScreenContent = () => {
     const finalTotal = cart?.finalAmount || total || 0;
 
     return (
-      <AnimatedCard delay={100}>
-        <GlassCard style={styles.section} gradientColors={theme.glassGradients.sunset}>
-          <Text style={styles.sectionTitle}>📦 Order Summary</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>📦 Order Summary</Text>
 
-          {itemsToShow.map((item: any, index: number) => (
-            <View key={item.id || index} style={styles.orderItem}>
-              <Image
-                source={{
-                  uri: item.product?.images?.[0] ||
-                    (Array.isArray(item.image) ? item.image[0] : item.image) ||
-                    item.images?.[0] ||
-                    'https://via.placeholder.com/50'
-                }}
-                style={styles.orderItemImage}
-              />
-              <View style={styles.orderItemDetails}>
-                <Text style={styles.orderItemName} numberOfLines={2}>
-                  {item.product?.name || item.name}
-                </Text>
-                <Text style={styles.orderItemInfo}>
-                  Qty: {item.quantity} • ₹{item.product?.price || item.price}
-                </Text>
-                {item.selectedSize && (
-                  <Text style={styles.orderItemOption}>Size: {item.selectedSize}</Text>
-                )}
-              </View>
-              <Text style={styles.orderItemPrice}>
-                ₹{item.subtotal || (parseFloat(item.price) * item.quantity)}
+        {itemsToShow.map((item: any, index: number) => (
+          <View key={item.id || index} style={styles.orderItem}>
+            <Image
+              source={{
+                uri: item.product?.images?.[0] ||
+                  (Array.isArray(item.image) ? item.image[0] : item.image) ||
+                  item.images?.[0] ||
+                  'https://via.placeholder.com/50'
+              }}
+              style={styles.orderItemImage}
+            />
+            <View style={styles.orderItemDetails}>
+              <Text style={styles.orderItemName} numberOfLines={2}>
+                {item.product?.name || item.name}
               </Text>
+              <Text style={styles.orderItemInfo}>
+                Qty: {item.quantity} • ₹{item.product?.price || item.price}
+              </Text>
+              {item.selectedSize && (
+                <Text style={styles.orderItemOption}>Size: {item.selectedSize}</Text>
+              )}
             </View>
-          ))}
-
-          {items.length > 3 && (
-            <Text style={styles.moreItems}>
-              +{items.length - 3} more item{items.length > 4 ? 's' : ''}
+            <Text style={styles.orderItemPrice}>
+              ₹{item.subtotal || (parseFloat(item.price) * item.quantity)}
             </Text>
+          </View>
+        ))}
+
+        {items.length > 3 && (
+          <Text style={styles.moreItems}>
+            +{items.length - 3} more item{items.length > 4 ? 's' : ''}
+          </Text>
+        )}
+
+        <View style={styles.orderSummary}>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Items ({itemsCount})</Text>
+            <Text style={styles.summaryValue}>₹{itemsTotal}</Text>
+          </View>
+
+          {discountAmount > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={[styles.summaryLabel, styles.discountLabel]}>Discount</Text>
+              <Text style={[styles.summaryValue, styles.discountValue]}>-₹{discountAmount}</Text>
+            </View>
           )}
 
-          <View style={styles.orderSummary}>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Items ({itemsCount})</Text>
-              <Text style={styles.summaryValue}>₹{itemsTotal}</Text>
-            </View>
-
-            {discountAmount > 0 && (
-              <View style={styles.summaryRow}>
-                <Text style={[styles.summaryLabel, styles.discountLabel]}>Discount</Text>
-                <Text style={[styles.summaryValue, styles.discountValue]}>-₹{discountAmount}</Text>
-              </View>
-            )}
-
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Delivery</Text>
-              <Text style={styles.summaryValue}>
-                {shippingAmount > 0 ? `₹${shippingAmount}` : 'FREE'}
-              </Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Tax</Text>
-              <Text style={styles.summaryValue}>
-                {taxAmount > 0 ? `₹${taxAmount}` : 'FREE'}
-              </Text>
-            </View>
-
-            <View style={[styles.summaryRow, styles.totalRow]}>
-              <Text style={styles.totalLabel}>Total Amount</Text>
-              <Text style={styles.totalValue}>₹{finalTotal}</Text>
-            </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Delivery</Text>
+            <Text style={styles.summaryValue}>
+              {shippingAmount > 0 ? `₹${shippingAmount}` : 'FREE'}
+            </Text>
           </View>
-        </GlassCard>
-      </AnimatedCard>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Tax</Text>
+            <Text style={styles.summaryValue}>
+              {taxAmount > 0 ? `₹${taxAmount}` : 'FREE'}
+            </Text>
+          </View>
+
+          <View style={[styles.summaryRow, styles.totalRow]}>
+            <Text style={styles.totalLabel}>Total Amount</Text>
+            <Text style={styles.totalValue}>₹{finalTotal}</Text>
+          </View>
+        </View>
+      </View>
     );
   };
 
-  // Render address selection
   const renderAddressSelection = () => (
-    <AnimatedCard delay={200}>
-      <GlassCard style={styles.section} gradientColors={theme.glassGradients.emerald}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>🏠 Delivery Address</Text>
-          <TouchableOpacity onPress={() => setShowAddressForm(!showAddressForm)}>
-            <GlassCard style={styles.addButtonCard} variant="light">
-              <Text style={styles.addButton}>+ Add New</Text>
-            </GlassCard>
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>🏠 Delivery Address</Text>
+        <TouchableOpacity onPress={() => setShowAddressForm(!showAddressForm)}>
+          <Text style={styles.addButton}>+ Add New</Text>
+        </TouchableOpacity>
+      </View>
+
+      {showAddressForm && (
+        <View style={styles.addressForm}>
+          <Text style={styles.formTitle}>📍 Add New Address</Text>
+
+          <View style={styles.formRow}>
+            <TextInput
+              style={[styles.input, styles.halfInput]}
+              placeholder="Full Name *"
+              value={newAddress.name}
+              onChangeText={(text) => setNewAddress(prev => ({ ...prev, name: text }))}
+            />
+            <TextInput
+              style={[styles.input, styles.halfInput]}
+              placeholder="Phone Number *"
+              value={newAddress.phone}
+              onChangeText={(text) => setNewAddress(prev => ({ ...prev, phone: text }))}
+              keyboardType="phone-pad"
+            />
+          </View>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Email (optional)"
+            value={newAddress.email}
+            onChangeText={(text) => setNewAddress(prev => ({ ...prev, email: text }))}
+            keyboardType="email-address"
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Address Line 1 *"
+            value={newAddress.addressLine1}
+            onChangeText={(text) => setNewAddress(prev => ({ ...prev, addressLine1: text }))}
+            multiline
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Address Line 2 (optional)"
+            value={newAddress.addressLine2}
+            onChangeText={(text) => setNewAddress(prev => ({ ...prev, addressLine2: text }))}
+          />
+
+          <View style={styles.formRow}>
+            <TextInput
+              style={[styles.input, styles.halfInput]}
+              placeholder="City *"
+              value={newAddress.city}
+              onChangeText={(text) => setNewAddress(prev => ({ ...prev, city: text }))}
+            />
+            <TextInput
+              style={[styles.input, styles.halfInput]}
+              placeholder="Pincode *"
+              value={newAddress.pincode}
+              onChangeText={(text) => setNewAddress(prev => ({ ...prev, pincode: text }))}
+              keyboardType="numeric"
+            />
+          </View>
+
+          <View style={styles.formRow}>
+            <TextInput
+              style={[styles.input, styles.halfInput]}
+              placeholder="State *"
+              value={newAddress.state}
+              onChangeText={(text) => setNewAddress(prev => ({ ...prev, state: text }))}
+            />
+            <TextInput
+              style={[styles.input, styles.halfInput]}
+              placeholder="Landmark"
+              value={newAddress.landmark}
+              onChangeText={(text) => setNewAddress(prev => ({ ...prev, landmark: text }))}
+            />
+          </View>
+
+          <View style={styles.formActions}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setShowAddressForm(false)}>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={saveAddress}
+              disabled={loading}>
+              {loading ? (
+                <ActivityIndicator size="small" color={theme.colors.white} />
+              ) : (
+                <Text style={styles.saveButtonText}>Save Address</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {addresses.map((address, index) => (
+        <TouchableOpacity
+          key={address.id}
+          style={[
+            styles.addressCard,
+            selectedAddress?.id === address.id && styles.selectedAddress
+          ]}
+          onPress={() => setSelectedAddress(address)}>
+          <View style={styles.addressHeader}>
+            <Text style={styles.addressName}>{address.name}</Text>
+            <Text style={styles.addressPhone}>{address.phone}</Text>
+            {address.isDefault && (
+              <View style={styles.defaultBadge}>
+                <Text style={styles.defaultBadgeText}>DEFAULT</Text>
+              </View>
+            )}
+          </View>
+          <Text style={styles.addressText}>
+            {address.addressLine1}
+            {address.addressLine2 ? `, ${address.addressLine2}` : ''}
+          </Text>
+          <Text style={styles.addressText}>
+            {address.city}, {address.state} - {address.pincode}
+          </Text>
+          {address.landmark && (
+            <Text style={styles.addressLandmark}>Near {address.landmark}</Text>
+          )}
+        </TouchableOpacity>
+      ))}
+
+      {addresses.length === 0 && !showAddressForm && (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyStateText}>📍 No saved addresses</Text>
+          <TouchableOpacity onPress={() => setShowAddressForm(true)}>
+            <Text style={styles.addFirstAddressText}>Add your first address</Text>
           </TouchableOpacity>
         </View>
-
-        {showAddressForm && (
-          <GlassCard style={styles.addressForm} variant="light">
-            <Text style={styles.formTitle}>📍 Add New Address</Text>
-
-            <View style={styles.formRow}>
-              <TextInput
-                style={[styles.input, styles.halfInput]}
-                placeholder="Full Name *"
-                value={newAddress.name}
-                onChangeText={(text) => setNewAddress(prev => ({ ...prev, name: text }))}
-              />
-              <TextInput
-                style={[styles.input, styles.halfInput]}
-                placeholder="Phone Number *"
-                value={newAddress.phone}
-                onChangeText={(text) => setNewAddress(prev => ({ ...prev, phone: text }))}
-                keyboardType="phone-pad"
-              />
-            </View>
-
-            <TextInput
-              style={styles.input}
-              placeholder="Email (optional)"
-              value={newAddress.email}
-              onChangeText={(text) => setNewAddress(prev => ({ ...prev, email: text }))}
-              keyboardType="email-address"
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Address Line 1 *"
-              value={newAddress.addressLine1}
-              onChangeText={(text) => setNewAddress(prev => ({ ...prev, addressLine1: text }))}
-              multiline
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Address Line 2 (optional)"
-              value={newAddress.addressLine2}
-              onChangeText={(text) => setNewAddress(prev => ({ ...prev, addressLine2: text }))}
-            />
-
-            <View style={styles.formRow}>
-              <TextInput
-                style={[styles.input, styles.halfInput]}
-                placeholder="City *"
-                value={newAddress.city}
-                onChangeText={(text) => setNewAddress(prev => ({ ...prev, city: text }))}
-              />
-              <TextInput
-                style={[styles.input, styles.halfInput]}
-                placeholder="Pincode *"
-                value={newAddress.pincode}
-                onChangeText={(text) => setNewAddress(prev => ({ ...prev, pincode: text }))}
-                keyboardType="numeric"
-              />
-            </View>
-
-            <View style={styles.formRow}>
-              <TextInput
-                style={[styles.input, styles.halfInput]}
-                placeholder="State *"
-                value={newAddress.state}
-                onChangeText={(text) => setNewAddress(prev => ({ ...prev, state: text }))}
-              />
-              <TextInput
-                style={[styles.input, styles.halfInput]}
-                placeholder="Landmark"
-                value={newAddress.landmark}
-                onChangeText={(text) => setNewAddress(prev => ({ ...prev, landmark: text }))}
-              />
-            </View>
-
-            <View style={styles.formActions}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setShowAddressForm(false)}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={saveAddress}
-                disabled={loading}>
-                {loading ? (
-                  <ActivityIndicator size="small" color={theme.colors.white} />
-                ) : (
-                  <Text style={styles.saveButtonText}>Save Address</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </GlassCard>
-        )}
-
-        {addresses.map((address, index) => (
-          <AnimatedCard key={address.id} delay={300 + index * 50}>
-            <TouchableOpacity
-              style={styles.addressCardContainer}
-              onPress={() => setSelectedAddress(address)}>
-              <GlassCard
-                style={[styles.addressCard, selectedAddress?.id === address.id && styles.selectedAddress]}
-                variant={selectedAddress?.id === address.id ? "base" : "light"}>
-                <View style={styles.addressHeader}>
-                  <Text style={styles.addressName}>{address.name}</Text>
-                  <Text style={styles.addressPhone}>{address.phone}</Text>
-                  {address.isDefault && (
-                    <View style={styles.defaultBadge}>
-                      <Text style={styles.defaultBadgeText}>DEFAULT</Text>
-                    </View>
-                  )}
-                </View>
-                <Text style={styles.addressText}>
-                  {address.addressLine1}
-                  {address.addressLine2 ? `, ${address.addressLine2}` : ''}
-                </Text>
-                <Text style={styles.addressText}>
-                  {address.city}, {address.state} - {address.pincode}
-                </Text>
-                {address.landmark && (
-                  <Text style={styles.addressLandmark}>Near {address.landmark}</Text>
-                )}
-              </GlassCard>
-            </TouchableOpacity>
-          </AnimatedCard>
-        ))}
-
-        {addresses.length === 0 && !showAddressForm && (
-          <GlassCard style={styles.emptyState} variant="light">
-            <Text style={styles.emptyStateText}>📍 No saved addresses</Text>
-            <TouchableOpacity onPress={() => setShowAddressForm(true)}>
-              <Text style={styles.addFirstAddressText}>Add your first address</Text>
-            </TouchableOpacity>
-          </GlassCard>
-        )}
-      </GlassCard>
-    </AnimatedCard>
+      )}
+    </View>
   );
 
-  // Render payment methods
   const renderPaymentMethods = () => {
 
     return (
-      <AnimatedCard delay={400}>
-        <GlassCard style={styles.section} gradientColors={theme.glassGradients.purple}>
-          <Text style={styles.sectionTitle}>💳 Payment Method</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>💳 Payment Method</Text>
 
-          {(paymentMethods || []).map((method, index) => (
-            <AnimatedCard key={method.id} delay={450 + index * 50}>
-              <TouchableOpacity
-                style={styles.paymentMethodContainer}
-                onPress={() => setSelectedPayment(method)}>
-                <GlassCard
-                  style={[styles.paymentMethod, selectedPayment?.id === method.id && styles.selectedPayment]}
-                  variant={selectedPayment?.id === method.id ? "base" : "light"}>
-                  <View style={styles.paymentMethodContent}>
-                    <Text style={styles.paymentMethodIcon}>
-                      {method.type === 'COD' ? '💵' :
-                        method.type === 'ONLINE' ? '📱 💳 🏦 💰' : '💰'}
-                    </Text>
-                    <View style={styles.paymentMethodDetails}>
-                      <Text style={styles.paymentMethodName}>{method.name}</Text>
-                      {method.details && (
-                        <Text style={styles.paymentMethodDetailsText}>{method.details}</Text>
-                      )}
-                      {['ONLINE'].includes(method.type) && (
-                        <View style={styles.razorpayBadge}>
-                          <Text style={styles.razorpayBadgeText}>Powered by Razorpay</Text>
-                        </View>
-                      )}
-                    </View>
+        {(paymentMethods || []).map((method, index) => (
+          <TouchableOpacity
+            key={method.id}
+            style={[
+              styles.paymentMethod,
+              selectedPayment?.id === method.id && styles.selectedPayment
+            ]}
+            onPress={() => setSelectedPayment(method)}>
+            <View style={styles.paymentMethodContent}>
+              <Text style={styles.paymentMethodIcon}>
+                {method.type === 'COD' ? '💵' :
+                  method.type === 'ONLINE' ? '📱 💳 🏦 💰' : '💰'}
+              </Text>
+              <View style={styles.paymentMethodDetails}>
+                <Text style={styles.paymentMethodName}>{method.name}</Text>
+                {method.details && (
+                  <Text style={styles.paymentMethodDetailsText}>{method.details}</Text>
+                )}
+                {['ONLINE'].includes(method.type) && (
+                  <View style={styles.razorpayBadge}>
+                    <Text style={styles.razorpayBadgeText}>Powered by Razorpay</Text>
                   </View>
-                  <View style={styles.radioButton}>
-                    {selectedPayment?.id === method.id && (
-                      <View style={styles.radioButtonSelected} />
-                    )}
-                  </View>
-                </GlassCard>
-              </TouchableOpacity>
-            </AnimatedCard>
-          ))}
+                )}
+              </View>
+            </View>
+            <View style={styles.radioButton}>
+              {selectedPayment?.id === method.id && (
+                <View style={styles.radioButtonSelected} />
+              )}
+            </View>
+          </TouchableOpacity>
+        ))}
 
-          {(!paymentMethods || paymentMethods.length === 0) && (
-            <GlassCard style={styles.emptyState} variant="light">
-              <Text style={styles.emptyStateText}>💳 No payment methods available</Text>
-              <Text style={styles.addFirstAddressText}>Loading payment options...</Text>
-            </GlassCard>
-          )}
-        </GlassCard>
-      </AnimatedCard>
+        {(!paymentMethods || paymentMethods.length === 0) && (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>💳 No payment methods available</Text>
+            <Text style={styles.addFirstAddressText}>Loading payment options...</Text>
+          </View>
+        )}
+      </View>
     );
   };
 
-  // Render order notes
   const renderOrderNotes = () => (
-    <AnimatedCard delay={500}>
-      <GlassCard style={styles.section} gradientColors={theme.glassGradients.ocean}>
-        <Text style={styles.sectionTitle}>📝 Order Notes (Optional)</Text>
-        <TextInput
-          style={styles.notesInput}
-          placeholder="Any special instructions for delivery..."
-          placeholderTextColor="rgba(255,255,255,0.7)"
-          value={orderNotes}
-          onChangeText={setOrderNotes}
-          multiline
-          numberOfLines={3}
-          textAlignVertical="top"
-        />
-      </GlassCard>
-    </AnimatedCard>
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>📝 Order Notes (Optional)</Text>
+      <TextInput
+        style={styles.notesInput}
+        placeholder="Any special instructions for delivery..."
+        placeholderTextColor={theme.colors.neutral[400]}
+        value={orderNotes}
+        onChangeText={setOrderNotes}
+        multiline
+        numberOfLines={3}
+        textAlignVertical="top"
+      />
+    </View>
   );
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={theme.glassGradients.aurora}
-        style={styles.backgroundGradient}
-      />
-      <FloatingElements count={8} />
-
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.neutral[50]} />
       <EnhancedHeader
-        title="💳 Checkout"
+        title="Checkout"
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
       />
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {renderCartSummary()}
+      <ScrollView
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}>
+
         {renderAddressSelection()}
         {renderPaymentMethods()}
+        {renderCartSummary()}
         {renderOrderNotes()}
 
-        <View style={styles.footer}>
-          <View style={styles.totalSummary}>
-            <Text style={styles.finalTotalLabel}>Total Amount:</Text>
-            <Text style={styles.finalTotalValue}>₹{cart?.finalAmount || total || 0}</Text>
-          </View>
-
-          <GradientButton
-            title={loading ? 'Placing Order...' : `Place Order - ₹${cart?.finalAmount || total || 0}`}
-            onPress={placeOrder}
-            gradient={theme.colors.gradients.primary}
-            style={styles.placeOrderButton}
-            disabled={loading || !selectedAddress || !selectedPayment}
-          />
-
-          <Text style={styles.secureText}>
-            🔒 Your payment information is secure and encrypted
-          </Text>
-        </View>
+        <GradientButton
+          title={loading ? 'Processing...' : `Place Order - ₹${params?.total || params?.cart?.total || 0}`}
+          onPress={placeOrder}
+          disabled={loading}
+          gradient={theme.colors.gradients.primary}
+          style={styles.placeOrderButton}
+        />
       </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  backgroundGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
   container: {
     flex: 1,
-    backgroundColor: theme.colors.neutral[50],
+    backgroundColor: theme.colors.neutral[50], // Cream background
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: theme.spacing[12],
-    paddingBottom: theme.spacing[4],
-    paddingHorizontal: theme.spacing[5],
-  },
-  backButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    padding: theme.spacing[2],
-    borderRadius: theme.borderRadius.full,
-  },
-  backIcon: {
-    fontSize: 20,
-    color: theme.colors.white,
-  },
-  headerTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.white,
-  },
-  placeholder: {
-    width: 40,
-    height: 40,
-  },
-  content: {
-    flex: 1,
-    padding: theme.spacing.lg,
+  contentContainer: {
+    padding: 16,
+    paddingBottom: 40,
   },
   section: {
     backgroundColor: theme.colors.white,
-    marginBottom: theme.spacing.lg,
-    borderRadius: theme.spacing.lg,
-    padding: theme.spacing.lg,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
+    // Shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.md,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: theme.typography.size.lg,
-    fontWeight: theme.typography.weight.semibold,
+    fontSize: 16,
+    fontWeight: '700',
     color: theme.colors.neutral[900],
-  },
-  addButtonCard: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.primary[50],
+    marginBottom: 12,
   },
   addButton: {
-    color: theme.colors.primary[500],
-    fontSize: theme.typography.size.sm,
-    fontWeight: theme.typography.weight.semibold,
-  },
-
-  // Order Summary Styles
-  orderItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
-    paddingBottom: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.neutral[100],
-  },
-  orderItemImage: {
-    width: 50,
-    height: 50,
-    borderRadius: theme.spacing.sm,
-    marginRight: theme.spacing.md,
-  },
-  orderItemDetails: {
-    flex: 1,
-  },
-  orderItemName: {
-    fontSize: theme.typography.size.base,
-    fontWeight: theme.typography.weight.medium,
-    color: theme.colors.neutral[900],
-    marginBottom: theme.spacing.xs,
-  },
-  orderItemInfo: {
-    fontSize: theme.typography.size.sm,
-    color: theme.colors.neutral[500],
-  },
-  orderItemOption: {
-    fontSize: theme.typography.size.sm,
-    color: theme.colors.neutral[600],
-    marginTop: 2,
-  },
-  orderItemPrice: {
-    fontSize: theme.typography.size.base,
-    fontWeight: theme.typography.weight.semibold,
-    color: theme.colors.primary[500],
-  },
-  moreItems: {
-    fontSize: theme.typography.size.sm,
-    color: theme.colors.primary[500],
-    fontWeight: theme.typography.weight.medium,
-    marginBottom: theme.spacing.md,
-    textAlign: 'center',
-  },
-  orderSummary: {
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.neutral[200],
-    paddingTop: theme.spacing.md,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: theme.spacing.sm,
-  },
-  summaryLabel: {
-    fontSize: theme.typography.size.base,
-    color: theme.colors.neutral[600],
-  },
-  summaryValue: {
-    fontSize: theme.typography.size.base,
-    fontWeight: theme.typography.weight.medium,
-    color: theme.colors.neutral[900],
-  },
-  discountLabel: {
-    color: theme.colors.success?.[600] || '#059669',
-  },
-  discountValue: {
-    color: theme.colors.success?.[600] || '#059669',
-  },
-  totalRow: {
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.neutral[200],
-    paddingTop: theme.spacing.md,
-    marginTop: theme.spacing.md,
-  },
-  totalLabel: {
-    fontSize: theme.typography.size.lg,
-    fontWeight: theme.typography.weight.bold,
-    color: theme.colors.neutral[900],
-  },
-  totalValue: {
-    fontSize: theme.typography.size.lg,
-    fontWeight: theme.typography.weight.bold,
-    color: theme.colors.primary[500],
-  },
-
-  // Address Form Styles
-  addressForm: {
-    backgroundColor: theme.colors.neutral[50],
-    padding: theme.spacing.lg,
-    borderRadius: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
-  },
-  formTitle: {
-    fontSize: theme.typography.size.lg,
-    fontWeight: theme.typography.weight.semibold,
-    color: theme.colors.neutral[900],
-    marginBottom: theme.spacing.lg,
-  },
-  formRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-  },
-  input: {
-    backgroundColor: theme.colors.white,
-    borderWidth: 1,
-    borderColor: theme.colors.neutral[300],
-    borderRadius: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    fontSize: theme.typography.size.base,
-    marginBottom: theme.spacing.md,
-  },
-  halfInput: {
-    flex: 1,
-  },
-  formActions: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    marginTop: theme.spacing.lg,
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: theme.colors.neutral[200],
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.spacing.md,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: theme.colors.neutral[700],
-    fontWeight: theme.typography.weight.semibold,
-  },
-  saveButton: {
-    flex: 1,
-    backgroundColor: theme.colors.primary[500],
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.spacing.md,
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    color: theme.colors.white,
-    fontWeight: theme.typography.weight.semibold,
-  },
-
-  // Address Card Styles
-  addressCardContainer: {
-    marginBottom: theme.spacing.md,
+    color: theme.colors.primary[600],
+    fontWeight: '600',
+    fontSize: 14,
   },
   addressCard: {
     backgroundColor: theme.colors.neutral[50],
-    padding: theme.spacing.lg,
-    borderRadius: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
   },
   selectedAddress: {
     borderColor: theme.colors.primary[500],
@@ -1065,106 +833,164 @@ const styles = StyleSheet.create({
   addressHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: theme.spacing.sm,
-    gap: theme.spacing.md,
+    marginBottom: 8,
+    flexWrap: 'wrap',
   },
   addressName: {
-    fontSize: theme.typography.size.base,
-    fontWeight: theme.typography.weight.semibold,
+    fontSize: 14,
+    fontWeight: '700',
     color: theme.colors.neutral[900],
+    marginRight: 8,
   },
   addressPhone: {
-    fontSize: theme.typography.size.sm,
+    fontSize: 14,
     color: theme.colors.neutral[600],
+    marginRight: 8,
   },
   defaultBadge: {
-    backgroundColor: theme.colors.primary[500],
-    paddingHorizontal: theme.spacing.sm,
+    backgroundColor: theme.colors.neutral[200],
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: theme.spacing.sm,
+    borderRadius: 4,
   },
   defaultBadgeText: {
-    fontSize: theme.typography.size.xs,
-    color: theme.colors.white,
-    fontWeight: theme.typography.weight.bold,
+    fontSize: 10,
+    fontWeight: '700',
+    color: theme.colors.neutral[600],
   },
   addressText: {
-    fontSize: theme.typography.size.base,
+    fontSize: 14,
     color: theme.colors.neutral[700],
+    marginBottom: 2,
     lineHeight: 20,
-    marginBottom: theme.spacing.xs,
   },
   addressLandmark: {
-    fontSize: theme.typography.size.sm,
+    fontSize: 13,
     color: theme.colors.neutral[500],
     fontStyle: 'italic',
+    marginTop: 4,
+  },
+  addressForm: {
+    marginBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.neutral[200],
+    paddingBottom: 16,
+  },
+  formTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.neutral[900],
+    marginBottom: 12,
+  },
+  formRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[300],
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
+    fontSize: 14,
+    color: theme.colors.neutral[900],
+    backgroundColor: theme.colors.white,
+  },
+  halfInput: {
+    flex: 1,
+  },
+  formActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[300],
+    borderRadius: 8,
+  },
+  cancelButtonText: {
+    color: theme.colors.neutral[700],
+    fontWeight: '600',
+  },
+  saveButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: theme.colors.neutral[900],
+    borderRadius: 8,
+  },
+  saveButtonText: {
+    color: theme.colors.white,
+    fontWeight: '600',
   },
   emptyState: {
     alignItems: 'center',
-    padding: theme.spacing.xl,
+    padding: 24,
   },
   emptyStateText: {
-    fontSize: theme.typography.size.base,
-    color: theme.colors.neutral[600],
-    marginBottom: theme.spacing.sm,
+    color: theme.colors.neutral[500],
+    fontSize: 14,
+    marginBottom: 8,
   },
   addFirstAddressText: {
-    color: theme.colors.primary[500],
-    fontWeight: theme.typography.weight.semibold,
-  },
-
-  // Payment Method Styles
-  paymentMethodContainer: {
-    marginBottom: theme.spacing.md,
+    color: theme.colors.primary[600],
+    fontWeight: '600',
+    fontSize: 14,
   },
   paymentMethod: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: theme.spacing.lg,
+    justifyContent: 'space-between',
     backgroundColor: theme.colors.neutral[50],
-    borderRadius: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
   },
   selectedPayment: {
     borderColor: theme.colors.primary[500],
     backgroundColor: theme.colors.primary[50],
   },
   paymentMethodContent: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   paymentMethodIcon: {
     fontSize: 24,
-    marginRight: theme.spacing.md,
+    marginRight: 12,
   },
   paymentMethodDetails: {
     flex: 1,
   },
   paymentMethodName: {
-    fontSize: theme.typography.size.base,
-    fontWeight: theme.typography.weight.semibold,
+    fontSize: 14,
+    fontWeight: '700',
     color: theme.colors.neutral[900],
-    marginBottom: theme.spacing.xs,
   },
   paymentMethodDetailsText: {
-    fontSize: theme.typography.size.sm,
-    color: theme.colors.neutral[600],
-    marginBottom: theme.spacing.xs,
+    fontSize: 12,
+    color: theme.colors.neutral[500],
+    marginTop: 2,
   },
   razorpayBadge: {
-    backgroundColor: '#3395FF',
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 2,
-    borderRadius: theme.spacing.xs,
+    marginTop: 4,
+    backgroundColor: '#3399cc15',
     alignSelf: 'flex-start',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
   razorpayBadgeText: {
-    fontSize: theme.typography.size.xs,
-    color: theme.colors.white,
-    fontWeight: theme.typography.weight.medium,
+    fontSize: 10,
+    color: '#3399cc',
+    fontWeight: '600',
   },
   radioButton: {
     width: 20,
@@ -1174,63 +1000,114 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.neutral[400],
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: 12,
   },
   radioButtonSelected: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: theme.colors.primary[500],
+    backgroundColor: theme.colors.primary[600],
   },
-
-  // Notes Input
-  notesInput: {
-    backgroundColor: theme.colors.neutral[50],
-    borderWidth: 1,
-    borderColor: theme.colors.neutral[300],
-    borderRadius: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    fontSize: theme.typography.size.base,
-    minHeight: 80,
-  },
-
-  // Footer
-  footer: {
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.xl,
-  },
-  totalSummary: {
+  orderItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing.lg,
-    borderRadius: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
+    marginBottom: 12,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.neutral[100],
   },
-  finalTotalLabel: {
-    fontSize: theme.typography.size.lg,
-    fontWeight: theme.typography.weight.bold,
+  orderItemImage: {
+    width: 50,
+    height: 65,
+    borderRadius: 4,
+    marginRight: 12,
+    backgroundColor: theme.colors.neutral[100],
+  },
+  orderItemDetails: {
+    flex: 1,
+  },
+  orderItemName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: theme.colors.neutral[900],
+    marginBottom: 4,
+  },
+  orderItemInfo: {
+    fontSize: 12,
+    color: theme.colors.neutral[500],
+  },
+  orderItemOption: {
+    fontSize: 11,
+    color: theme.colors.neutral[500],
+    marginTop: 2,
+  },
+  orderItemPrice: {
+    fontSize: 14,
+    fontWeight: '600',
     color: theme.colors.neutral[900],
   },
-  finalTotalValue: {
-    fontSize: theme.typography.size.xl,
-    fontWeight: theme.typography.weight.bold,
-    color: theme.colors.primary[500],
+  moreItems: {
+    textAlign: 'center',
+    fontSize: 12,
+    color: theme.colors.neutral[500],
+    marginBottom: 12,
+  },
+  orderSummary: {
+    paddingTop: 4,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: theme.colors.neutral[600],
+  },
+  summaryValue: {
+    fontSize: 14,
+    color: theme.colors.neutral[900],
+    fontWeight: '500',
+  },
+  discountLabel: {
+    color: theme.colors.success[700],
+  },
+  discountValue: {
+    color: theme.colors.success[700],
+  },
+  totalRow: {
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.neutral[200],
+    paddingTop: 12,
+    marginTop: 8,
+  },
+  totalLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.colors.neutral[900],
+  },
+  totalValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: theme.colors.primary[600],
+  },
+  notesInput: {
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[300],
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    color: theme.colors.neutral[900],
+    backgroundColor: theme.colors.white,
+    height: 80,
   },
   placeOrderButton: {
-    marginBottom: theme.spacing.md,
-  },
-  secureText: {
-    fontSize: theme.typography.size.sm,
-    color: theme.colors.neutral[500],
-    textAlign: 'center',
+    marginTop: 16,
   },
 });
 
 const CheckoutScreen = () => {
   return (
-    <ProtectedScreen fallbackMessage="Please sign in to proceed with checkout and place your order securely.">
+    <ProtectedScreen fallbackMessage="Please sign in to complete your purchase.">
       <CheckoutScreenContent />
     </ProtectedScreen>
   );

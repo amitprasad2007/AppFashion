@@ -8,19 +8,15 @@ import {
   Image,
   ActivityIndicator,
   RefreshControl,
+  StatusBar,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
-import AppHeader from '../components/AppHeader';
 import EnhancedHeader from '../components/EnhancedHeader';
-import GlassCard from '../components/GlassCard';
-import FloatingElements from '../components/FloatingElements';
-import AnimatedCard from '../components/AnimatedCard';
 import CartIcon from '../components/CartIcon';
 import { apiService, ApiCategory } from '../services/api';
 import { theme } from '../theme';
-import LinearGradient from 'react-native-linear-gradient';
 
 type Category = {
   id: string;
@@ -100,7 +96,6 @@ const CategoriesScreen = () => {
 
       if (categoriesData.length > 0) {
         setCategories(categoriesData);
-        console.log('Categories loaded successfully:', categoriesData.length);
       } else {
         console.log('No categories from API, using fallback data');
         setCategories(fallbackCategories as any);
@@ -140,30 +135,28 @@ const CategoriesScreen = () => {
   };
 
   const renderCategory = ({ item, index }: { item: ApiCategory; index: number }) => {
-    const gradients = [
-      theme.glassGradients.aurora,
-      theme.glassGradients.sunset,
-      theme.glassGradients.emerald,
-      theme.glassGradients.purple,
-      theme.glassGradients.rose,
-      theme.glassGradients.ocean,
-    ];
-
-    const gradient = gradients[index % gradients.length];
     const isExpanded = expandedItems.has(String(item.id));
-    const description = item.description || 'Explore this amazing category with a wide variety of products. Discover the latest trends and find exactly what you\'re looking for in our carefully curated collection.';
-    const shouldShowReadMore = description.length > 120;
+    const description = item.description || 'Explore this amazing category with a wide variety of products.';
+    const shouldShowReadMore = description.length > 80;
 
     return (
       <TouchableOpacity
         onPress={() => navigation.navigate('ProductList', { categoryId: String(item.id), categoryName: item.name })}
-        activeOpacity={0.9}>
-        <GlassCard style={styles.categoryCard} gradientColors={gradient}>
+        activeOpacity={0.9}
+        style={styles.categoryCardWrapper}
+      >
+        <View style={styles.categoryCard}>
           <Image source={{ uri: item.image }} style={styles.categoryImage} />
           <View style={styles.categoryInfo}>
-            <Text style={styles.categoryName}>{item.name}</Text>
+            <View style={styles.headerRow}>
+              <Text style={styles.categoryName}>{item.name}</Text>
+              <Text style={styles.itemCount}>
+                {(item as any).itemCount ? `${(item as any).itemCount}` : '0'} items
+              </Text>
+            </View>
+
             <View style={styles.descriptionContainer}>
-              <Text style={styles.categorySubtitle} numberOfLines={isExpanded ? undefined : 3}>
+              <Text style={styles.categorySubtitle} numberOfLines={isExpanded ? undefined : 2}>
                 {description}
               </Text>
               {shouldShowReadMore && (
@@ -172,29 +165,31 @@ const CategoriesScreen = () => {
                   style={styles.readMoreButton}
                 >
                   <Text style={styles.readMoreText}>
-                    {isExpanded ? 'Read Less' : 'Read More'}
+                    {isExpanded ? 'Show Less' : 'Show More'}
                   </Text>
                 </TouchableOpacity>
               )}
             </View>
-            <Text style={styles.itemCount}>
-              {(item as any).itemCount ? `${(item as any).itemCount} items` : 'Available items'}
-            </Text>
+
             {(item as any).subcategories && (item as any).subcategories.length > 0 && (
               <View style={styles.subcategoriesContainer}>
                 {(item as any).subcategories.slice(0, 3).map((sub: string, index: number) => (
-                  <Text key={index} style={styles.subcategory}>
-                    {sub}{index < Math.min((item as any).subcategories.length, 3) - 1 ? ' • ' : ''}
-                  </Text>
+                  <View key={index} style={styles.subcategoryBadge}>
+                    <Text style={styles.subcategoryText}>{sub}</Text>
+                  </View>
                 ))}
                 {(item as any).subcategories.length > 3 && (
-                  <Text style={styles.subcategory}> +{(item as any).subcategories.length - 3}</Text>
+                  <View style={styles.subcategoryBadge}>
+                    <Text style={styles.subcategoryText}>+{(item as any).subcategories.length - 3}</Text>
+                  </View>
                 )}
               </View>
             )}
           </View>
-          <Text style={styles.arrow}>→</Text>
-        </GlassCard>
+          <View style={styles.arrowContainer}>
+            <Text style={styles.arrow}>→</Text>
+          </View>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -203,23 +198,16 @@ const CategoriesScreen = () => {
   if (loading && !refreshing) {
     return (
       <View style={styles.container}>
-        <LinearGradient
-          colors={theme.glassGradients.ocean}
-          style={styles.backgroundGradient}
-        />
-        <FloatingElements count={6} />
-
+        <StatusBar barStyle="dark-content" backgroundColor={theme.colors.neutral[50]} />
         <EnhancedHeader
-          title="📂 Categories"
+          title="Categories"
           showBackButton={true}
           onBackPress={() => navigation.goBack()}
-          rightComponent={<CartIcon size="medium" color={theme.colors.white} />}
+          rightComponent={<CartIcon size="medium" color={theme.colors.neutral[900]} />}
         />
         <View style={styles.loadingContainer}>
-          <GlassCard style={styles.loadingCard}>
-            <ActivityIndicator size="large" color={theme.colors.white} />
-            <Text style={styles.loadingText}>Loading categories...</Text>
-          </GlassCard>
+          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <Text style={styles.loadingText}>Loading categories...</Text>
         </View>
       </View>
     );
@@ -227,24 +215,17 @@ const CategoriesScreen = () => {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={theme.glassGradients.ocean}
-        style={styles.backgroundGradient}
-      />
-      <FloatingElements count={6} />
-
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.neutral[50]} />
       <EnhancedHeader
-        title={`📂 Categories ${categories.length > 0 ? `(${categories.length})` : ''}`}
+        title={`Categories ${categories.length > 0 ? `(${categories.length})` : ''}`}
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
-        rightComponent={<CartIcon size="medium" color={theme.colors.white} />}
+        rightComponent={<CartIcon size="medium" color={theme.colors.neutral[900]} />}
       />
 
       {error && (
         <View style={styles.errorContainer}>
-          <GlassCard style={styles.errorCard} variant="light">
-            <Text style={styles.errorText}>⚠️ {error}</Text>
-          </GlassCard>
+          <Text style={styles.errorText}>⚠️ {error}</Text>
         </View>
       )}
 
@@ -257,15 +238,13 @@ const CategoriesScreen = () => {
           contentContainerStyle={styles.categoriesList}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.primary[600]]} />
           }
         />
       ) : (
         <View style={styles.emptyContainer}>
-          <GlassCard style={styles.emptyCard} gradientColors={theme.glassGradients.sunset}>
-            <Text style={styles.emptyText}>📦 No categories available</Text>
-            <Text style={styles.emptySubtext}>Pull down to refresh</Text>
-          </GlassCard>
+          <Text style={styles.emptyText}>📦 No categories available</Text>
+          <Text style={styles.emptySubtext}>Pull down to refresh</Text>
         </View>
       )}
     </View>
@@ -275,180 +254,144 @@ const CategoriesScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.neutral[50],
-  },
-  backgroundGradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
+    backgroundColor: theme.colors.neutral[50], // Cream background
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loadingCard: {
-    padding: theme.spacing[6],
-    alignItems: 'center',
-  },
   loadingText: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.white,
-    marginTop: theme.spacing[3],
-    fontWeight: theme.typography.fontWeight.medium,
-  },
-  errorCard: {
-    padding: theme.spacing[4],
-  },
-  emptyCard: {
-    padding: theme.spacing[6],
-    alignItems: 'center',
+    fontSize: 16,
+    color: theme.colors.neutral[600],
+    marginTop: 12,
   },
   errorContainer: {
-    backgroundColor: '#ffebee',
-    padding: theme.spacing[3],
-    marginHorizontal: theme.spacing[4],
-    marginTop: theme.spacing[2],
-    borderRadius: theme.borderRadius.md,
+    backgroundColor: theme.colors.error[50],
+    padding: 12,
+    marginHorizontal: 16,
+    marginTop: 8,
+    borderRadius: 8,
     borderLeftWidth: 4,
-    borderLeftColor: '#f44336',
+    borderLeftColor: theme.colors.error[500],
   },
   errorText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: '#c62828',
-    fontWeight: theme.typography.fontWeight.medium,
+    fontSize: 14,
+    color: theme.colors.error[700],
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: theme.spacing[6],
+    padding: 24,
   },
   emptyText: {
-    fontSize: theme.typography.fontSize.xl,
-    color: theme.colors.neutral[500],
-    textAlign: 'center',
-    fontWeight: theme.typography.fontWeight.medium,
-    marginBottom: theme.spacing[2],
+    fontSize: 18,
+    color: theme.colors.neutral[900],
+    marginBottom: 8,
+    fontWeight: '600',
   },
   emptySubtext: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.neutral[400],
-    textAlign: 'center',
-  },
-  searchButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 1)',
-  },
-  searchIconText: {
-    fontSize: 18,
-    color: '#333333',
-    fontWeight: 'bold',
+    fontSize: 14,
+    color: theme.colors.neutral[500],
   },
   categoriesList: {
-    padding: theme.spacing[4],
+    padding: 16,
+  },
+  categoryCardWrapper: {
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    borderRadius: 12,
+    backgroundColor: theme.colors.white,
   },
   categoryCard: {
     flexDirection: 'row',
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing[5],
-    marginBottom: theme.spacing[4],
-    marginHorizontal: theme.spacing[1],
-    alignItems: 'flex-start',
+    borderRadius: 12,
     overflow: 'hidden',
-    minHeight: 160,
+    backgroundColor: theme.colors.white,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
   },
   categoryImage: {
-    width: 130,
-    height: 160,
-    borderRadius: theme.borderRadius.xl,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    width: 100,
+    height: '100%',
+    backgroundColor: theme.colors.neutral[100],
   },
   categoryInfo: {
     flex: 1,
-    marginLeft: theme.spacing[5],
-    paddingVertical: theme.spacing[2],
+    padding: 12,
+    justifyContent: 'center',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
   },
   categoryName: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.white,
-    marginBottom: theme.spacing[2],
-    textShadowColor: 'rgba(0,0,0,0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
-  descriptionContainer: {
-    marginBottom: theme.spacing[2],
-  },
-  categorySubtitle: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.white,
-    fontWeight: '500',
-    opacity: 0.9,
-    lineHeight: 20,
-    textShadowColor: 'rgba(0,0,0,0.6)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-    minHeight: 60,
-  },
-  readMoreButton: {
-    marginTop: theme.spacing[1],
-    alignSelf: 'flex-start',
-  },
-  readMoreText: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.white,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
-    opacity: 0.8,
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.colors.neutral[900],
+    flex: 1,
+    marginRight: 8,
   },
   itemCount: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.white,
+    fontSize: 12,
+    color: theme.colors.neutral[500],
+    backgroundColor: theme.colors.neutral[100],
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  descriptionContainer: {
+    marginBottom: 8,
+  },
+  categorySubtitle: {
+    fontSize: 13,
+    color: theme.colors.neutral[600],
+    marginBottom: 4,
+    lineHeight: 18,
+  },
+  readMoreButton: {
+    marginTop: 2,
+  },
+  readMoreText: {
+    fontSize: 12,
+    color: theme.colors.primary[600],
     fontWeight: '600',
-    marginBottom: theme.spacing[2],
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: theme.spacing[2],
-    paddingVertical: theme.spacing[1],
-    borderRadius: theme.borderRadius.full,
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   subcategoriesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 4,
   },
-  subcategory: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.white,
-    fontWeight: '500',
-    opacity: 0.8,
+  subcategoryBadge: {
+    backgroundColor: theme.colors.neutral[50],
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
+  },
+  subcategoryText: {
+    fontSize: 11,
+    color: theme.colors.neutral[700],
+  },
+  arrowContainer: {
+    justifyContent: 'center',
+    paddingRight: 12,
+    paddingLeft: 4,
   },
   arrow: {
-    fontSize: 24,
-    color: theme.colors.white,
-    marginLeft: theme.spacing[4],
+    fontSize: 18,
+    color: theme.colors.neutral[400],
     fontWeight: 'bold',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    width: 40,
-    height: 40,
-    textAlign: 'center',
-    textAlignVertical: 'center',
-    borderRadius: 20,
-    lineHeight: 40,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
 });
 

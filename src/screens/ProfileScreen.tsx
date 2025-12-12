@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   Alert,
   ActivityIndicator,
   RefreshControl,
-  ViewStyle,
+  StatusBar,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -17,13 +17,9 @@ import { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import ProtectedScreen from '../components/ProtectedScreen';
-import AnimatedCard from '../components/AnimatedCard';
 import GradientButton from '../components/GradientButton';
 import EnhancedHeader from '../components/EnhancedHeader';
-import GlassCard from '../components/GlassCard';
-import FloatingElements from '../components/FloatingElements';
 import { theme } from '../theme';
-import LinearGradient from 'react-native-linear-gradient';
 
 const ProfileScreenContent = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -108,7 +104,7 @@ const ProfileScreenContent = () => {
           onPress: async () => {
             try {
               await logout();
-              navigation.navigate('Login');
+              navigation.replace('Login');
             } catch (error) {
               console.error('Logout error:', error);
             }
@@ -119,83 +115,33 @@ const ProfileScreenContent = () => {
   };
 
   const renderMenuItem = ({ item, index }: { item: typeof menuItems[0]; index: number }) => (
-    <AnimatedCard key={index} delay={300 + index * 50}>
-      <TouchableOpacity
-        style={styles.menuItem}
-        onPress={item.onPress}
-        activeOpacity={0.9}>
-        <GlassCard style={styles.menuItem} variant="light">
-          <View style={styles.menuIcon}>
-            <Text style={styles.menuIconText}>{item.icon}</Text>
-          </View>
-          <View style={styles.menuContent}>
-            <Text style={styles.menuTitle}>{item.title}</Text>
-            <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
-          </View>
-          <View style={styles.menuItem}>
-            <Text style={styles.arrow}>→</Text>
-          </View>
-        </GlassCard>
-      </TouchableOpacity>
-    </AnimatedCard>
-  );
-
-  if (!authState.isAuthenticated) {
-    return (
-      <View style={styles.container}>
-        <LinearGradient
-          colors={theme.glassGradients.sunset}
-          style={styles.backgroundGradient as ViewStyle}
-
-        />
-        <FloatingElements count={6} />
-
-        <EnhancedHeader
-          title="👤 Profile"
-          showBackButton={false}
-        />
-
-        <View style={styles.loginPrompt}>
-          <GlassCard gradientColors={theme.glassGradients.aurora}>
-            <Text style={styles.loginTitle}>✨ Welcome to Samar Silk Palace</Text>
-            <Text style={styles.loginSubtitle}>Sign in to access your profile and orders</Text>
-            <GradientButton
-              title="🔐 Sign In"
-              onPress={() => navigation.navigate('Login')}
-              gradient={theme.colors.gradients.primary}
-              style={styles.loginButton}
-            />
-            <GradientButton
-              title="📝 Create Account"
-              onPress={() => navigation.navigate('Register')}
-              gradient={theme.colors.gradients.secondary}
-              style={styles.signupButton}
-            />
-          </GlassCard>
-        </View>
+    <TouchableOpacity
+      key={index}
+      style={styles.menuItem}
+      onPress={item.onPress}
+      activeOpacity={0.7}>
+      <View style={styles.menuIconContainer}>
+        <Text style={styles.menuIconText}>{item.icon}</Text>
       </View>
-    );
-  }
+      <View style={styles.menuContent}>
+        <Text style={styles.menuTitle}>{item.title}</Text>
+        <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
+      </View>
+      <Text style={styles.arrow}>→</Text>
+    </TouchableOpacity>
+  );
 
   if (isLoading && !userData) {
     return (
       <View style={styles.container}>
-        <LinearGradient
-          colors={theme.glassGradients.sunset}
-          style={styles.backgroundGradient}
-        />
-        <FloatingElements count={6} />
-
+        <StatusBar barStyle="dark-content" backgroundColor={theme.colors.neutral[50]} />
         <EnhancedHeader
           title="👤 Profile"
           showBackButton={false}
         />
-
         <View style={styles.loadingContainer}>
-          <GlassCard>
-            <ActivityIndicator size="large" color={theme.colors.white} />
-            <Text style={styles.loadingText}>Loading your profile...</Text>
-          </GlassCard>
+          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <Text style={styles.loadingText}>Loading your profile...</Text>
         </View>
       </View>
     );
@@ -213,20 +159,13 @@ const ProfileScreenContent = () => {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={theme.glassGradients.sunset}
-        style={styles.backgroundGradient as any}
-      />
-      <FloatingElements count={8} />
-
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.neutral[50]} />
       <EnhancedHeader
         title="👤 Profile"
         showBackButton={false}
         rightComponent={
           <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton}>
-            <GlassCard style={styles.refreshButton} variant="light">
-              <Text style={styles.refreshText}>🔄</Text>
-            </GlassCard>
+            <Text style={styles.refreshText}>🔄</Text>
           </TouchableOpacity>
         }
       />
@@ -235,87 +174,59 @@ const ProfileScreenContent = () => {
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[theme.colors.primary[600]]} />
         }>
 
         {/* Error Message */}
         {error && (
           <View style={styles.errorContainer}>
-            <GlassCard style={styles.errorContainer} variant="light">
-              <Text style={styles.errorText}>⚠️ {error}</Text>
-              <TouchableOpacity onPress={refreshUserData} style={styles.retryButton}>
-                <Text style={styles.retryText}>Retry</Text>
-              </TouchableOpacity>
-            </GlassCard>
+            <Text style={styles.errorText}>⚠️ {error}</Text>
+            <TouchableOpacity onPress={refreshUserData} style={styles.retryButton}>
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
           </View>
         )}
 
         {/* User Info */}
-        <AnimatedCard delay={100}>
-          <GlassCard style={styles.userSection} gradientColors={theme.glassGradients.aurora}>
-            <View style={styles.userInfo}>
-              <Image
-                source={{
-                  uri: user?.avatar || 'https://via.placeholder.com/100/f43f5e/ffffff?text=' + (user?.name?.charAt(0) || 'U')
-                }}
-                style={styles.avatar}
-              />
-              <View style={styles.userDetails}>
-                <Text style={styles.userName}>{user?.name || 'User'}</Text>
-                <Text style={styles.userEmail}>{user?.email || 'No email'}</Text>
-                {user?.phone && <Text style={styles.userPhone}>📱 {user.phone}</Text>}
-                <Text style={styles.memberSince}>Member since {memberSince}</Text>
-              </View>
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => navigation.navigate('EditProfile')}>
-                <GlassCard style={styles.editButton} variant="light">
-                  <Text style={styles.editButtonText}>✏️ Edit</Text>
-                </GlassCard>
-              </TouchableOpacity>
+        <View style={styles.section}>
+          <View style={styles.userInfo}>
+            <Image
+              source={{
+                uri: user?.avatar || 'https://via.placeholder.com/100/f43f5e/ffffff?text=' + (user?.name?.charAt(0) || 'U')
+              }}
+              style={styles.avatar}
+            />
+            <View style={styles.userDetails}>
+              <Text style={styles.userName}>{user?.name || 'User'}</Text>
+              <Text style={styles.userEmail}>{user?.email || 'No email'}</Text>
+              {user?.phone && <Text style={styles.userPhone}>📱 {user.phone}</Text>}
+              <Text style={styles.memberSince}>Member since {memberSince}</Text>
             </View>
-          </GlassCard>
-        </AnimatedCard>
+          </View>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => navigation.navigate('EditProfile')}>
+            <Text style={styles.editButtonText}>✏️ Edit Profile</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Stats */}
-        <AnimatedCard delay={200}>
-          <GlassCard style={styles.statsSection} gradientColors={theme.glassGradients.emerald}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{stats?.totalOrders || 0}</Text>
-              <Text style={styles.statLabel}>📦 Orders</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{stats?.wishlistCount || 0}</Text>
-              <Text style={styles.statLabel}>❤️ Wishlist</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>₹{stats?.totalSpent?.toLocaleString() || '0'}</Text>
-              <Text style={styles.statLabel}>💰 Total Spent</Text>
-            </View>
-          </GlassCard>
-        </AnimatedCard>
-
-        {/* Additional Stats Row */}
-        <AnimatedCard delay={250}>
-          <GlassCard style={styles.statsSection} gradientColors={theme.glassGradients.purple}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{stats?.pendingOrders || 0}</Text>
-              <Text style={styles.statLabel}>⏳ Pending</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{stats?.cartItemsCount || 0}</Text>
-              <Text style={styles.statLabel}>🛒 Cart Items</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{stats?.addressCount || 0}</Text>
-              <Text style={styles.statLabel}>📍 Addresses</Text>
-            </View>
-          </GlassCard>
-        </AnimatedCard>
+        <View style={styles.statsSection}>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{stats?.totalOrders || 0}</Text>
+            <Text style={styles.statLabel}>📦 Orders</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{stats?.wishlistCount || 0}</Text>
+            <Text style={styles.statLabel}>❤️ Wishlist</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>₹{stats?.totalSpent?.toLocaleString() || '0'}</Text>
+            <Text style={styles.statLabel}>💰 Spent</Text>
+          </View>
+        </View>
 
         {/* Menu Items */}
         <View style={styles.menuSection}>
@@ -323,26 +234,23 @@ const ProfileScreenContent = () => {
         </View>
 
         {/* App Info */}
-        <AnimatedCard delay={650}>
-          <GlassCard style={styles.appInfo} gradientColors={theme.glassGradients.ocean}>
-            <Text style={styles.appVersion}>✨ Samar Silk Palace v1.0.0</Text>
+        <View style={styles.appInfo}>
+          <Text style={styles.appVersion}>✨ Samar Silk Palace v1.0.0</Text>
+          <View style={styles.linksRow}>
             <TouchableOpacity onPress={() => navigation.navigate('MainTabs')}>
-              <Text style={styles.aboutLink}>About Us</Text>
+              <Text style={styles.linkText}>About Us</Text>
             </TouchableOpacity>
+            <Text style={styles.linkSeparator}>•</Text>
             <TouchableOpacity onPress={() => navigation.navigate('MainTabs')}>
-              <Text style={styles.privacyLink}>Privacy Policy</Text>
+              <Text style={styles.linkText}>Privacy Policy</Text>
             </TouchableOpacity>
-          </GlassCard>
-        </AnimatedCard>
+          </View>
+        </View>
 
         {/* Logout Button */}
-        <AnimatedCard delay={700}>
-          <TouchableOpacity onPress={handleLogout}>
-            <GlassCard style={styles.logoutButton} variant="light">
-              <Text style={styles.logoutText}>🚪 Logout</Text>
-            </GlassCard>
-          </TouchableOpacity>
-        </AnimatedCard>
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+          <Text style={styles.logoutText}>🚪 Logout</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -351,55 +259,33 @@ const ProfileScreenContent = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  backgroundGradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-  },
-  header: {
-    padding: 15,
-    backgroundColor: '#f43f5e',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 50,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+    backgroundColor: theme.colors.neutral[50],
   },
   refreshButton: {
     padding: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   refreshText: {
     fontSize: 18,
+    color: theme.colors.neutral[900],
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 40,
+    padding: 24,
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    color: theme.colors.neutral[600],
   },
   errorContainer: {
-    backgroundColor: '#ffebee',
+    backgroundColor: theme.colors.error[50],
     margin: 16,
-    padding: 16,
+    padding: 12,
     borderRadius: 8,
     borderLeftWidth: 4,
-    borderLeftColor: '#f44336',
+    borderLeftColor: theme.colors.error[500],
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -407,112 +293,148 @@ const styles = StyleSheet.create({
   errorText: {
     flex: 1,
     fontSize: 14,
-    color: '#c62828',
-    fontWeight: '500',
+    color: theme.colors.error[700],
   },
   retryButton: {
-    backgroundColor: '#f44336',
+    backgroundColor: theme.colors.error[100],
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 4,
   },
   retryText: {
-    color: 'white',
+    color: theme.colors.error[700],
     fontSize: 12,
     fontWeight: '600',
   },
-  userSection: {
-    padding: 20,
-    backgroundColor: '#fff',
+  section: {
+    backgroundColor: theme.colors.white,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
+    // Shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 16,
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: theme.colors.neutral[200],
   },
   userDetails: {
     flex: 1,
-    marginLeft: 15,
+    marginLeft: 16,
   },
   userName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 18,
+    fontWeight: '700',
+    color: theme.colors.neutral[900],
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
+    color: theme.colors.neutral[600],
+    marginBottom: 2,
   },
   userPhone: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
+    fontSize: 13,
+    color: theme.colors.neutral[600],
+    marginBottom: 2,
   },
   memberSince: {
     fontSize: 12,
-    color: '#999',
+    color: theme.colors.neutral[400],
+    marginTop: 4,
   },
   editButton: {
-    backgroundColor: '#007bff',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
+    marginTop: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+    backgroundColor: theme.colors.neutral[50],
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
   },
   editButtonText: {
-    color: '#fff',
+    color: theme.colors.neutral[900],
     fontWeight: '600',
+    fontSize: 14,
   },
   statsSection: {
     flexDirection: 'row',
-    backgroundColor: '#f8f9fa',
-    padding: 20,
-    marginHorizontal: 15,
-    borderRadius: 8,
-    marginBottom: 20,
+    backgroundColor: theme.colors.white,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   statItem: {
     flex: 1,
     alignItems: 'center',
   },
   statNumber: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 18,
+    fontWeight: '700',
+    color: theme.colors.primary[600],
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
+    color: theme.colors.neutral[600],
   },
   statDivider: {
     width: 1,
-    backgroundColor: '#ddd',
-    marginHorizontal: 20,
+    backgroundColor: theme.colors.neutral[200],
+    height: '80%',
+    alignSelf: 'center',
   },
   menuSection: {
-    paddingHorizontal: 15,
+    backgroundColor: theme.colors.white,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 15,
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: theme.colors.neutral[100],
   },
-  menuIcon: {
-    width: 40,
-    height: 40,
+  menuIconContainer: {
+    width: 36,
+    height: 36,
     borderRadius: 8,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: theme.colors.neutral[50],
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 15,
+    marginRight: 12,
   },
   menuIconText: {
     fontSize: 18,
@@ -521,95 +443,55 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   menuTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.neutral[900],
     marginBottom: 2,
   },
   menuSubtitle: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 12,
+    color: theme.colors.neutral[500],
   },
   arrow: {
     fontSize: 18,
-    color: '#ccc',
+    color: theme.colors.neutral[400],
   },
   appInfo: {
     alignItems: 'center',
-    paddingVertical: 30,
+    marginTop: 24,
+    marginBottom: 16,
   },
   appVersion: {
     fontSize: 12,
-    color: '#999',
-    marginBottom: 10,
+    color: theme.colors.neutral[400],
+    marginBottom: 8,
   },
-  aboutLink: {
-    fontSize: 14,
-    color: '#007bff',
-    marginBottom: 5,
+  linksRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  privacyLink: {
-    fontSize: 14,
-    color: '#007bff',
+  linkText: {
+    fontSize: 13,
+    color: theme.colors.primary[600],
+  },
+  linkSeparator: {
+    marginHorizontal: 8,
+    color: theme.colors.neutral[400],
   },
   logoutButton: {
-    backgroundColor: '#ff6b6b',
-    margin: 20,
-    padding: 15,
-    borderRadius: 8,
+    marginHorizontal: 16,
+    marginBottom: 24,
+    padding: 16,
+    backgroundColor: theme.colors.error[50],
+    borderRadius: 12,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.error[200],
   },
   logoutText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  loginPrompt: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-  },
-  loginTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  loginSubtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 30,
-    textAlign: 'center',
-  },
-  loginButton: {
-    backgroundColor: '#ff6b6b',
-    paddingHorizontal: 40,
-    paddingVertical: 15,
-    borderRadius: 8,
-    marginBottom: 15,
-    width: '100%',
-    alignItems: 'center',
-  },
-  loginButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  signupButton: {
-    borderWidth: 1,
-    borderColor: '#ff6b6b',
-    paddingHorizontal: 40,
-    paddingVertical: 15,
-    borderRadius: 8,
-    width: '100%',
-    alignItems: 'center',
-  },
-  signupButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#ff6b6b',
+    fontWeight: '600',
+    color: theme.colors.error[600],
   },
 });
 

@@ -25,12 +25,14 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import { apiService, ApiProduct } from '../services/api';
 import { useUserProfile } from '../contexts/UserProfileContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const { width } = Dimensions.get('window');
 
 const ProductDetailsScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute();
+  const { state: authState } = useAuth();
   const {
     addToCart,
     addToWishlist,
@@ -168,6 +170,22 @@ const ProductDetailsScreen = () => {
   // Handle add to cart
   const handleAddToCart = async () => {
     if (!product) return;
+
+    // Check if user is authenticated
+    if (!authState.isAuthenticated) {
+      SafeAlert.show(
+        'Login Required',
+        'Please login to add items to your cart',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Login',
+            onPress: () => navigation.navigate('Login')
+          }
+        ]
+      );
+      return;
+    }
 
     try {
       setAddingToCart(true);
@@ -423,9 +441,9 @@ const ProductDetailsScreen = () => {
 
           {/* Description */}
           <View style={styles.descriptionSection}>
-            <Text style={styles.sectionTitle}>About this product</Text>
+            <Text style={styles.sectionTitle}>Product Details</Text>
             <Text style={styles.description}>
-              {product.description || 'Premium quality product crafted with finest materials and attention to detail. Perfect for special occasions and daily elegance.'}
+              {product.description || 'Experience the elegance of this premium saree, crafted with the finest materials. Perfect for weddings, festivals, and special occasions. The intricate design and superior quality fabric make it a must-have in your ethnic collection.'}
             </Text>
           </View>
 
@@ -459,8 +477,7 @@ const ProductDetailsScreen = () => {
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
                 <>
-                  <Text style={styles.addToCartText}>🛒 Add to Cart</Text>
-                  <Text style={styles.cartSubText}>₹{(product.price * quantity).toLocaleString()}</Text>
+                  <Text style={styles.addToCartText}>Add to Cart</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -468,7 +485,7 @@ const ProductDetailsScreen = () => {
             <TouchableOpacity
               style={styles.buyNowButton}
               onPress={handleBuyNow}>
-              <Text style={styles.buyNowText}>⚡ Buy Now</Text>
+              <Text style={styles.buyNowText}>Buy Now</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -476,7 +493,7 @@ const ProductDetailsScreen = () => {
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <View style={styles.relatedContainer}>
-            <Text style={styles.relatedTitle}>Related Products</Text>
+            <Text style={styles.relatedTitle}>You May Also Like</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {relatedProducts.map((item, index) => (
                 <TouchableOpacity
@@ -484,7 +501,7 @@ const ProductDetailsScreen = () => {
                   style={styles.relatedProduct}
                   onPress={() => navigation.push('ProductDetails', { productSlug: item.slug })}>
                   <Image source={{ uri: item.images[0] }} style={styles.relatedImage} />
-                  <Text style={styles.relatedName} numberOfLines={2}>{item.name}</Text>
+                  <Text style={styles.relatedName} numberOfLines={1}>{item.name}</Text>
                   <Text style={styles.relatedPrice}>₹{item.price}</Text>
                 </TouchableOpacity>
               ))}
@@ -499,65 +516,63 @@ const ProductDetailsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.neutral[50], // Cream background
   },
   backgroundGradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
+    display: 'none', // Remove the gradient background
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: theme.spacing.xl,
+    padding: theme.spacing[5],
+    backgroundColor: theme.colors.neutral[50],
   },
   loadingCard: {
-    padding: theme.spacing.xl,
+    padding: theme.spacing[5],
     alignItems: 'center',
+    backgroundColor: 'transparent',
   },
   scrollView: {
     flex: 1,
   },
   loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.typography.size.sm,
-    color: theme.colors.neutral[600],
+    marginTop: theme.spacing[3],
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.primary[800],
     textAlign: 'center',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: theme.spacing.xl,
+    padding: theme.spacing[5],
   },
   errorText: {
-    fontSize: theme.typography.size.lg,
-    color: theme.colors.error?.[600] || '#dc2626',
+    fontSize: theme.typography.fontSize.lg,
+    color: theme.colors.error[600],
     textAlign: 'center',
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing[4],
   },
   errorButton: {
-    marginTop: theme.spacing.md,
+    marginTop: theme.spacing[3],
   },
   errorCard: {
-    padding: theme.spacing.md,
+    padding: theme.spacing[3],
     alignItems: 'center',
   },
   errorBanner: {
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.error?.[50] || '#fef2f2',
-    marginHorizontal: theme.spacing.md,
-    marginVertical: theme.spacing.sm,
-    borderRadius: theme.spacing.sm,
+    padding: theme.spacing[3],
+    backgroundColor: theme.colors.error[50],
+    marginHorizontal: theme.spacing[3],
+    marginVertical: theme.spacing[2],
+    borderRadius: theme.borderRadius.sm,
     borderWidth: 1,
-    borderColor: theme.colors.error?.[200] || '#fecaca',
+    borderColor: theme.colors.error[200],
   },
   errorBannerText: {
-    color: theme.colors.error?.[700] || '#b91c1c',
-    fontSize: theme.typography.size.sm,
+    color: theme.colors.error[700],
+    fontSize: theme.typography.fontSize.sm,
     textAlign: 'center',
   },
   header: {
@@ -567,7 +582,7 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: theme.spacing[4],
     zIndex: 10,
   },
   backButton: {
@@ -577,32 +592,25 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    elevation: 2,
   },
   backIcon: {
     fontSize: 20,
     color: theme.colors.neutral[800],
   },
-  shareButton: {
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  shareIcon: {
-    fontSize: 18,
-  },
   // Image Section
   imageSection: {
     position: 'relative',
-    height: 400,
-    backgroundColor: '#f8f9fa',
-    marginBottom: 16,
+    height: 450,
+    backgroundColor: theme.colors.neutral[100],
+    marginBottom: 0,
   },
   productImage: {
     width: width,
-    height: 400,
+    height: 450,
     resizeMode: 'cover',
   },
   badgeContainer: {
@@ -613,21 +621,22 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   bestsellerBadge: {
-    backgroundColor: '#ff6b6b',
+    backgroundColor: theme.colors.secondary[500], // Gold
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: 4,
   },
   discountBadge: {
-    backgroundColor: '#22c55e',
+    backgroundColor: theme.colors.primary[600], // Maroon
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: 4,
   },
   badgeText: {
     color: '#fff',
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
   wishlistButton: {
     position: 'absolute',
@@ -683,7 +692,7 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: theme.spacing.xs,
+    gap: 6,
   },
   indicator: {
     width: 8,
@@ -693,26 +702,28 @@ const styles = StyleSheet.create({
   },
   activeIndicator: {
     backgroundColor: theme.colors.white,
+    width: 20,
   },
   // Thumbnail Section
   thumbnailSection: {
     paddingHorizontal: 16,
-    marginBottom: 20,
+    paddingVertical: 16,
+    backgroundColor: theme.colors.white,
   },
   thumbnailContainer: {
     gap: 12,
   },
   thumbnail: {
-    width: 70,
-    height: 70,
-    borderRadius: 12,
+    width: 60,
+    height: 60,
+    borderRadius: 8,
     overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: '#e5e7eb',
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
   },
   activeThumbnail: {
-    borderColor: '#8b5cf6',
-    borderWidth: 3,
+    borderColor: theme.colors.primary[600],
+    borderWidth: 2,
   },
   thumbnailImage: {
     width: '100%',
@@ -721,23 +732,25 @@ const styles = StyleSheet.create({
   },
   // Product Info Section
   productInfoSection: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.white,
     paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 20,
+    paddingTop: 8,
+    paddingBottom: 32,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    marginTop: -24, // Overlap the image slightly
   },
   categoryTag: {
-    backgroundColor: '#f3f4f6',
     alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginBottom: 12,
+    marginTop: 24,
+    marginBottom: 8,
   },
   categoryText: {
     fontSize: 14,
-    color: '#6b7280',
-    fontWeight: '500',
+    color: theme.colors.secondary[600],
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   categoryBadge: {
     backgroundColor: theme.colors.primary[100],
@@ -748,11 +761,12 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
   },
   productName: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: 16,
+    color: theme.colors.neutral[900],
+    marginBottom: 12,
     lineHeight: 32,
+    fontFamily: theme.typography.fontFamily.bold,
   },
   ratingSection: {
     flexDirection: 'row',
@@ -761,46 +775,49 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   ratingBadge: {
-    backgroundColor: '#fef3c7',
-    paddingHorizontal: 10,
+    backgroundColor: theme.colors.secondary[50],
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: theme.colors.secondary[200],
   },
   ratingText: {
     fontSize: 14,
-    color: '#d97706',
-    fontWeight: '600',
+    color: theme.colors.secondary[700],
+    fontWeight: '700',
   },
   reviewText: {
     fontSize: 14,
-    color: '#6b7280',
+    color: theme.colors.neutral[500],
   },
   priceSection: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
     marginBottom: 24,
   },
   currentPrice: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#059669',
-    marginBottom: 4,
+    color: theme.colors.primary[800], // Deep Maroon
+    marginRight: 12,
   },
   originalPrice: {
     fontSize: 18,
-    color: '#9ca3af',
+    color: theme.colors.neutral[400],
     textDecorationLine: 'line-through',
-    marginBottom: 8,
+    marginRight: 12,
   },
   savingsTag: {
-    backgroundColor: '#dcfce7',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    backgroundColor: theme.colors.success[50],
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
   },
   savingsText: {
-    fontSize: 14,
-    color: '#059669',
+    color: theme.colors.success[700],
     fontWeight: '600',
+    fontSize: 12,
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -823,55 +840,56 @@ const styles = StyleSheet.create({
   },
   descriptionSection: {
     marginBottom: 24,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.neutral[100],
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 8,
+    fontWeight: '700',
+    color: theme.colors.neutral[900],
+    marginBottom: 12,
   },
   description: {
     fontSize: 16,
-    color: '#4b5563',
+    color: theme.colors.neutral[600],
     lineHeight: 24,
   },
   quantitySection: {
-    marginBottom: 16,
+    marginBottom: 24,
   },
   quantitySelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[300],
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    height: 44,
   },
   quantityButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f3f4f6',
+    width: 44,
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
   },
   quantityButtonText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#374151',
+    fontSize: 20,
+    color: theme.colors.neutral[600],
   },
   quantityDisplay: {
-    backgroundColor: '#f9fafb',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#e5e7eb',
-    minWidth: 50,
+    width: 44,
+    height: '100%',
     alignItems: 'center',
+    justifyContent: 'center',
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: theme.colors.neutral[300],
   },
   quantityText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937',
+    color: theme.colors.neutral[900],
   },
   quantityContainer: {
     marginBottom: theme.spacing.xl,
@@ -879,30 +897,27 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: 'row',
     gap: 12,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#f3f4f6',
-    marginTop: 20,
+    marginTop: 8,
   },
   addToCartButton: {
     flex: 1,
-    backgroundColor: '#374151',
-    paddingVertical: 16,
-    borderRadius: 16,
+    height: 56,
+    backgroundColor: theme.colors.white,
+    borderWidth: 1,
+    borderColor: theme.colors.primary[600],
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   addToCartText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: '700',
+    color: theme.colors.primary[600],
   },
   cartSubText: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: 2,
+    color: theme.colors.white,
+    opacity: 0.8,
   },
   buyNowButton: {
     flex: 1,

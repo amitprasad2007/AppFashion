@@ -9,22 +9,16 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   ScrollView,
+  StatusBar,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { theme } from '../theme';
-import AnimatedCard from '../components/AnimatedCard';
-import GradientButton from '../components/GradientButton';
 import EnhancedHeader from '../components/EnhancedHeader';
-import GlassCard from '../components/GlassCard';
-import FloatingElements from '../components/FloatingElements';
-import GlassInput from '../components/GlassInput';
 import CartIcon from '../components/CartIcon';
 import SafeAlert from '../utils/safeAlert';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Product, RootStackParamList } from '../types/navigation';
+import { RootStackParamList } from '../types/navigation';
 import { apiService, ApiProduct, ApiCategory } from '../services/api';
 
 const ProductListScreen = () => {
@@ -63,7 +57,6 @@ const ProductListScreen = () => {
       let productsData: ApiProduct[] = [];
 
       if (categoryId) {
-        //console.log(categoryId);
         const searchType = 'category';
         // Load products for specific category
         productsData = await apiService.getProducts({ categoryId, type: searchType });
@@ -81,7 +74,6 @@ const ProductListScreen = () => {
       }
 
       setProducts(productsData);
-      console.log('Products loaded:', productsData.length);
 
     } catch (err) {
       console.error('Error loading product list data:', err);
@@ -122,7 +114,6 @@ const ProductListScreen = () => {
       if (category) {
         const categorySlug = (category.slug || category.name).toLowerCase().replace(/\s+/g, '-');
         setSelectedFilter(categorySlug);
-        console.log(`🎯 AUTO-SELECTED CATEGORY FILTER: "${categorySlug}" for category ID: ${categoryId}`);
       }
     } else if (!categoryId) {
       setSelectedFilter('all');
@@ -135,44 +126,17 @@ const ProductListScreen = () => {
     loadData();
   };
 
-  // Handle add to cart from product list
-  const handleAddToCartFromList = async (product: ApiProduct) => {
-    try {
-      await apiService.addToCart(product.id, 1);
-
-      SafeAlert.show(
-        'Added to Cart',
-        `${product.name} has been added to your cart.`,
-        [
-          { text: 'Continue Shopping', style: 'cancel' },
-          { text: 'View Cart', onPress: () => navigation.navigate('Cart') }
-        ]
-      );
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-      SafeAlert.error('Error', 'Failed to add item to cart. Please try again.');
-    }
-  };
-
   // Search functionality
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    // Just update the search query - filtering happens in filteredProducts
   };
 
-  // Simple search filtering only (since products are now fetched by category)
+  // Simple search filtering only
   const filteredProducts = products.filter(product => {
-    // Only apply search filtering, category filtering is now done server-side
     return searchQuery.trim() === '' ||
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.category?.title?.toLowerCase().includes(searchQuery.toLowerCase());
   });
-
-  console.log(`📊 CURRENT STATE:`);
-  console.log(`  Selected Filter: "${selectedFilter}"`);
-  console.log(`  Total Products: ${products.length}`);
-  console.log(`  Filtered Products (after search): ${filteredProducts.length}`);
-  console.log(`  Search Query: "${searchQuery}"`);
 
   const renderProduct = ({ item, index }: { item: ApiProduct; index: number }) => {
     return (
@@ -216,7 +180,6 @@ const ProductListScreen = () => {
   const loadProductsByCategory = async (filterKey: string) => {
     try {
       setLoading(true);
-      console.log(`🔄 LOADING PRODUCTS FOR CATEGORY: "${filterKey}"`);
 
       let productsData: ApiProduct[] = [];
 
@@ -227,8 +190,6 @@ const ProductListScreen = () => {
           apiService.getBestsellerProducts()
         ]);
         productsData = [...featured, ...bestsellers];
-
-        console.log(`📦 LOADED ALL PRODUCTS: ${productsData.length} (Featured: ${featured.length}, Bestsellers: ${bestsellers.length})`);
       } else {
         // Find the category by filter key
         const selectedCategory = categories.find(cat => {
@@ -237,17 +198,13 @@ const ProductListScreen = () => {
         });
 
         if (selectedCategory) {
-          console.log(`🎯 FOUND CATEGORY: "${selectedCategory.name}" (ID: ${selectedCategory.id})`);
-
           // Load products for specific category
           productsData = await apiService.getProducts({
             categoryId: selectedCategory.id,
             type: 'category'
           });
 
-          console.log(`📦 LOADED CATEGORY PRODUCTS: ${productsData.length} for "${selectedCategory.name}"`);
         } else {
-          console.log(`❌ CATEGORY NOT FOUND for filter: "${filterKey}"`);
           // If category not found, load all products
           const [featured, bestsellers] = await Promise.all([
             apiService.getFeaturedProducts(),
@@ -261,9 +218,6 @@ const ProductListScreen = () => {
 
     } catch (error) {
       console.error('❌ Error loading products by category:', error);
-
-      // Fallback to current products on error
-      console.log('🔄 KEEPING CURRENT PRODUCTS ON ERROR');
     } finally {
       setLoading(false);
     }
@@ -274,7 +228,6 @@ const ProductListScreen = () => {
       key={index}
       style={[styles.filterButton, selectedFilter === item && styles.activeFilter]}
       onPress={() => {
-        console.log(`🔄 FILTER SELECTED: "${item}"`);
         setSelectedFilter(item);
         loadProductsByCategory(item);
       }}>
@@ -283,24 +236,37 @@ const ProductListScreen = () => {
           styles.filterText,
           selectedFilter === item && styles.activeFilterText,
         ]}>
-        {item.charAt(0).toUpperCase() + item.slice(1)}
+        {item.charAt(0).toUpperCase() + item.slice(1).replace(/-/g, ' ')}
       </Text>
     </TouchableOpacity>
   );
 
+  if (loading && !refreshing && products.length === 0) {
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor={theme.colors.neutral[50]} />
+        <EnhancedHeader
+          title={`🛍️ Products`}
+          showBackButton={true}
+          onBackPress={() => navigation.goBack()}
+          rightComponent={<CartIcon size="medium" color={theme.colors.neutral[900]} />}
+        />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+          <Text style={styles.loadingText}>Loading collection...</Text>
+        </View>
+      </View>
+    )
+  }
+
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={theme.glassGradients.emerald}
-        style={styles.backgroundGradient}
-      />
-      <FloatingElements count={8} />
-
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.neutral[50]} />
       <EnhancedHeader
-        title={`🛍️ ${categoryName ? categoryName : type ? `${type.charAt(0).toUpperCase() + type.slice(1)} Products` : 'All Products'}`}
+        title={`🛍️ ${categoryName ? categoryName : type ? `${type.charAt(0).toUpperCase() + type.slice(1)} Products` : 'Collection'}`}
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
-        rightComponent={<CartIcon size="medium" color={theme.colors.white} />}
+        rightComponent={<CartIcon size="medium" color={theme.colors.neutral[900]} />}
       />
 
       {/* Search */}
@@ -309,84 +275,63 @@ const ProductListScreen = () => {
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search amazing products..."
-            placeholderTextColor="rgba(0,0,0,0.5)"
+            placeholder="Search our collection..."
+            placeholderTextColor={theme.colors.neutral[400]}
             value={searchQuery}
             onChangeText={handleSearch}
           />
         </View>
-        <TouchableOpacity
-          style={styles.filterIconContainer}
-          onPress={() => {
-            // Toggle between 'all' and first category filter
-            const nextFilter = selectedFilter === 'all' ? filters[1] || 'all' : 'all';
-            setSelectedFilter(nextFilter);
-          }}>
-          <View style={styles.filterIcon}>
-            <Text style={styles.filterIconText}>🎛️</Text>
-          </View>
-        </TouchableOpacity>
       </View>
 
       {/* Filters */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filtersContainer}
-        style={styles.filtersScrollView}>
-        {filters.map((filter, index) => renderFilter({ item: filter, index }))}
-      </ScrollView>
+      <View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filtersContainer}
+          style={styles.filtersScrollView}>
+          {filters.map((filter, index) => renderFilter({ item: filter, index }))}
+        </ScrollView>
+      </View>
 
 
       {/* Error Message */}
       {error && (
         <View style={styles.errorContainer}>
-          <GlassCard style={styles.errorCard} variant="light">
-            <Text style={styles.errorText}>⚠️ {error}</Text>
-          </GlassCard>
+          <Text style={styles.errorText}>⚠️ {error}</Text>
         </View>
       )}
 
       {/* Products List */}
-      {loading && !refreshing ? (
-        <View style={styles.loadingContainer}>
-          <GlassCard style={styles.loadingCard}>
-            <ActivityIndicator size="large" color={theme.colors.white} />
-            <Text style={styles.loadingText}>Loading amazing products...</Text>
-          </GlassCard>
-        </View>
-      ) : filteredProducts.length > 0 ? (
+      {filteredProducts.length > 0 ? (
         <FlatList
           data={filteredProducts}
           renderItem={renderProduct}
           keyExtractor={item => item.id.toString()}
           numColumns={2}
           contentContainerStyle={styles.productsList}
+          columnWrapperStyle={styles.columnWrapper}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.primary[600]]} />
           }
           ListHeaderComponent={() => (
             <View style={styles.resultsHeader}>
-              <GlassCard style={styles.resultsCard} variant="light">
-                <Text style={styles.resultsText}>
-                  {searchQuery ? `🔍 Found ${filteredProducts.length} results for "${searchQuery}"` :
-                    `📦 Showing ${filteredProducts.length} products`}
-                </Text>
-              </GlassCard>
+              <Text style={styles.resultsText}>
+                {searchQuery ? `Found ${filteredProducts.length} results for "${searchQuery}"` :
+                  `Showing ${filteredProducts.length} products`}
+              </Text>
             </View>
           )}
         />
       ) : (
         <View style={styles.emptyContainer}>
-          <GlassCard style={styles.emptyCard} gradientColors={theme.glassGradients.sunset}>
-            <Text style={styles.emptyText}>
-              {searchQuery ? `🔍 No products found for "${searchQuery}"` : '📦 No products available'}
-            </Text>
-            <Text style={styles.emptySubtext}>
-              {searchQuery ? 'Try adjusting your search terms' : 'Pull down to refresh'}
-            </Text>
-          </GlassCard>
+          <Text style={styles.emptyText}>
+            {searchQuery ? `No products found for "${searchQuery}"` : 'No products available'}
+          </Text>
+          <Text style={styles.emptySubtext}>
+            {searchQuery ? 'Try adjusting your search terms' : 'Pull down to refresh'}
+          </Text>
         </View>
       )}
     </View>
@@ -396,204 +341,147 @@ const ProductListScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.neutral[50],
+    backgroundColor: theme.colors.neutral[50], // Cream background
   },
-  backgroundGradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: theme.spacing[12],
-    paddingBottom: theme.spacing[4],
-    paddingHorizontal: theme.spacing[5],
   },
-  backButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    padding: theme.spacing[2],
-    borderRadius: theme.borderRadius.full,
+  loadingText: {
+    fontSize: 16,
+    color: theme.colors.neutral[600],
+    marginTop: 12,
   },
-  backIcon: {
-    fontSize: 20,
-    color: theme.colors.white,
-  },
-  headerTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.white,
-  },
-  cartButton: {
-    padding: theme.spacing[2],
-    borderRadius: theme.borderRadius.full,
-    position: 'relative',
-  },
-  cartIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+  errorContainer: {
+    padding: 12,
+    backgroundColor: theme.colors.error[50],
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
+    borderColor: theme.colors.error[200],
   },
-  cartIconText: {
+  errorText: {
+    color: theme.colors.error[700],
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  emptyText: {
     fontSize: 18,
-    color: '#333333',
-    fontWeight: 'bold',
+    color: theme.colors.neutral[900],
+    textAlign: 'center',
+    marginBottom: 8,
+    fontWeight: '600',
   },
-  cartBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: theme.colors.error[500],
-    borderRadius: theme.borderRadius.full,
-    width: 18,
-    height: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cartBadgeText: {
-    fontSize: 10,
-    color: theme.colors.white,
-    fontWeight: theme.typography.fontWeight.bold,
+  emptySubtext: {
+    fontSize: 14,
+    color: theme.colors.neutral[500],
+    textAlign: 'center',
   },
   searchContainer: {
-    flexDirection: 'row',
-    padding: theme.spacing[5],
-    alignItems: 'center',
-    gap: theme.spacing[3],
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   searchInputContainer: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: theme.borderRadius.xl,
-    paddingHorizontal: theme.spacing[4],
+    backgroundColor: theme.colors.white,
+    borderRadius: 8,
+    paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 1)',
-    ...theme.shadows.sm,
+    borderColor: theme.colors.neutral[300],
+    height: 48,
   },
   searchIcon: {
-    fontSize: 18,
-    marginRight: theme.spacing[2],
-    color: theme.colors.neutral[600],
+    fontSize: 16,
+    marginRight: 8,
+    color: theme.colors.neutral[500],
   },
   searchInput: {
     flex: 1,
-    paddingVertical: theme.spacing[3],
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.neutral[800],
-  },
-  filterIconContainer: {
-    marginLeft: theme.spacing[2],
-  },
-  filterIcon: {
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing[3],
-    borderRadius: theme.borderRadius.base,
-    ...theme.shadows.sm,
-
-  },
-  filterIconText: {
-    fontSize: 18,
-    color: '#333333',
+    fontSize: 16,
+    color: theme.colors.neutral[900],
+    height: '100%',
   },
   filtersScrollView: {
-    paddingBottom: theme.spacing[6],
+    maxHeight: 60,
   },
   filtersContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: theme.spacing[4],
-    paddingVertical: theme.spacing[2],
-    gap: theme.spacing[2],
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 8,
   },
   filterButton: {
-    paddingHorizontal: theme.spacing[5],
-    paddingVertical: theme.spacing[2],
-    borderRadius: 25,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 0,
-    minHeight: 44,
-    minWidth: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-    marginHorizontal: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: theme.colors.white,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[300],
+    marginRight: 8,
   },
   activeFilter: {
-    backgroundColor: '#6366f1',
-    shadowColor: '#6366f1',
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
+    backgroundColor: theme.colors.primary[600],
+    borderColor: theme.colors.primary[600],
   },
   filterText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    textAlign: 'center',
-    letterSpacing: 0.5,
+    fontWeight: '500',
+    color: theme.colors.neutral[700],
   },
   activeFilterText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    color: theme.colors.white,
+    fontWeight: '600',
   },
   productsList: {
-    padding: 16,
+    padding: 12,
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
   },
   productCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    margin: 6,
+    width: '48%',
+    backgroundColor: theme.colors.white,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
+    overflow: 'hidden',
+    // Shadow
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   imageContainer: {
     position: 'relative',
+    height: 180,
+    backgroundColor: theme.colors.neutral[100],
   },
   productImage: {
     width: '100%',
-    height: 160,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
+    height: '100%',
     resizeMode: 'cover',
   },
   badge: {
     position: 'absolute',
     top: 8,
     left: 8,
-    backgroundColor: '#FF6B6B',
+    backgroundColor: theme.colors.accent[500],
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 4,
   },
   badgeText: {
-    color: '#FFFFFF',
+    color: '#000',
     fontSize: 10,
     fontWeight: 'bold',
   },
@@ -603,157 +491,53 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
+    color: theme.colors.neutral[900],
     marginBottom: 4,
-    lineHeight: 18,
+    lineHeight: 20,
+    height: 40,
   },
-
+  productCategory: {
+    fontSize: 12,
+    color: theme.colors.neutral[500],
+    marginBottom: 8,
+  },
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
-    gap: 6,
+    marginBottom: 8,
+    gap: 8,
   },
   price: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#059669',
+    fontWeight: '700',
+    color: theme.colors.primary[600],
   },
-
+  originalPrice: {
+    fontSize: 12,
+    color: theme.colors.neutral[500],
+    textDecorationLine: 'line-through',
+  },
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
   },
   rating: {
     fontSize: 12,
     color: '#F59E0B',
-    fontWeight: '500',
-  },
-
-
-  // Loading and error states
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: theme.spacing.xl,
-  },
-  loadingCard: {
-    padding: theme.spacing.lg,
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.typography.size.sm,
-    color: theme.colors.neutral[600],
-    textAlign: 'center',
-  },
-  errorContainer: {
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.error?.[50] || '#fef2f2',
-    marginHorizontal: theme.spacing.md,
-    marginVertical: theme.spacing.sm,
-    borderRadius: theme.spacing.sm,
-    borderWidth: 1,
-    borderColor: theme.colors.error?.[200] || '#fecaca',
-  },
-  errorCard: {
-    padding: theme.spacing.md,
-  },
-  errorText: {
-    color: theme.colors.error?.[700] || '#b91c1c',
-    fontSize: theme.typography.size.sm,
-    textAlign: 'center',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: theme.spacing.xl,
-  },
-  emptyCard: {
-    padding: theme.spacing.lg,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: theme.typography.size.lg,
-    color: theme.colors.neutral[600],
-    textAlign: 'center',
-    marginBottom: theme.spacing.sm,
-  },
-  emptySubtext: {
-    fontSize: theme.typography.size.sm,
-    color: theme.colors.neutral[500],
-    textAlign: 'center',
-  },
-
-  // Enhanced product card styles
-  productCategory: {
-    fontSize: theme.typography.size.xs,
-    color: theme.colors.neutral[500],
-    marginBottom: theme.spacing.xs,
-  },
-  priceContainer: {
-    flex: 1,
-  },
-  originalPrice: {
-    fontSize: theme.typography.size.xs,
-    color: theme.colors.neutral[500],
-    textDecorationLine: 'line-through',
-    marginTop: 2,
-  },
-  discountBadge: {
-    backgroundColor: theme.colors.success?.[500] || '#10b981',
-    paddingHorizontal: theme.spacing.xs,
-    paddingVertical: 2,
-    borderRadius: theme.spacing.xs,
-    marginTop: 4,
-    alignSelf: 'flex-start',
-  },
-  discountText: {
-    fontSize: theme.typography.size.xs,
-    color: theme.colors.white,
-    fontWeight: theme.typography.weight.bold,
+    fontWeight: '700',
+    marginRight: 4,
   },
   reviewCount: {
-    fontSize: theme.typography.size.xs,
+    fontSize: 12,
     color: theme.colors.neutral[500],
-    marginLeft: theme.spacing.xs,
-  },
-  bestsellerBadge: {
-    width: 28,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: theme.borderRadius.full,
-  },
-  bestsellerText: {
-    fontSize: 14,
-  },
-  newBadge: {
-    width: 28,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: theme.borderRadius.full,
-  },
-  newText: {
-    fontSize: 14,
   },
   resultsHeader: {
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.neutral?.[50] || '#f9fafb',
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.neutral[200],
-  },
-  resultsCard: {
-    padding: theme.spacing.sm,
+    paddingBottom: 12,
+    paddingHorizontal: 4,
   },
   resultsText: {
-    fontSize: theme.typography.size.sm,
+    fontSize: 14,
     color: theme.colors.neutral[600],
-    textAlign: 'center',
   },
 });
 

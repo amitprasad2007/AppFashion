@@ -5,20 +5,16 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Image,
+  BackHandler,
+  StatusBar,
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
-import ScreenWrapper from '../components/ScreenWrapper';
 import EnhancedImage from '../components/EnhancedImage';
 import AnimatedCard from '../components/AnimatedCard';
-import GradientButton from '../components/GradientButton';
 import EnhancedHeader from '../components/EnhancedHeader';
-import GlassCard from '../components/GlassCard';
-import FloatingElements from '../components/FloatingElements';
 import { theme } from '../theme';
-import LinearGradient from 'react-native-linear-gradient';
 
 type OrderItem = {
   id: string;
@@ -47,6 +43,20 @@ const OrderConfirmationScreen = () => {
     orderItems = [],
     orderDetails: serverOrderDetails,
   } = route.params || {};
+
+  // Handle hardware back button
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        navigation.navigate('MainTabs');
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+      return () => subscription.remove();
+    }, [navigation])
+  );
 
   // Helper function to format currency
   const formatCurrency = (amount: number | string) => {
@@ -133,52 +143,44 @@ const OrderConfirmationScreen = () => {
         : 'https://via.placeholder.com/60';
 
     return (
-      <AnimatedCard key={item.id} delay={300 + index * 100}>
-        <GlassCard style={styles.orderItem} variant="light">
-          <EnhancedImage
-            source={{ uri: itemImageUrl }}
-            style={styles.itemImage}
-            width={60}
-            height={60}
-            borderRadius={theme.borderRadius.lg}
-            placeholder={item.name}
-            fallbackIcon="📦"
-          />
-          <View style={styles.itemDetails}>
-            <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
-            {item.color && item.color !== 'Default' && (
-              <Text style={styles.itemColor}>Color: {item.color}</Text>
-            )}
-            <Text style={styles.itemPrice}>
-              {formatCurrency(item.price)} × {item.quantity}
-            </Text>
-          </View>
-          <View style={styles.itemTotalContainer}>
-            <Text style={styles.itemTotal}>
-              {formatCurrency(item.amount || (item.price * item.quantity))}
-            </Text>
-          </View>
-        </GlassCard>
-      </AnimatedCard>
+      <View key={item.id} style={styles.orderItem}>
+        <EnhancedImage
+          source={{ uri: itemImageUrl }}
+          style={styles.itemImage}
+          width={60}
+          height={60}
+          borderRadius={theme.borderRadius.base}
+          placeholder={item.name}
+          fallbackIcon="📦"
+        />
+        <View style={styles.itemDetails}>
+          <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+          {!!item.color && item.color !== 'Default' && (
+            <Text style={styles.itemColor}>Color: {item.color}</Text>
+          )}
+          <Text style={styles.itemPrice}>
+            {formatCurrency(item.price)} × {item.quantity}
+          </Text>
+        </View>
+        <View style={styles.itemTotalContainer}>
+          <Text style={styles.itemTotal}>
+            {formatCurrency(item.amount || (item.price * item.quantity))}
+          </Text>
+        </View>
+      </View>
     );
   };
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={theme.glassGradients.aurora}
-        style={styles.backgroundGradient}
-      />
-      <FloatingElements count={10} />
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.success[50]} />
 
       <EnhancedHeader
-        title="✅ Order Confirmed"
+        title="Order Placed"
         showBackButton={false}
         rightComponent={
           <TouchableOpacity onPress={() => navigation.navigate('MainTabs')} style={styles.closeButton}>
-            <GlassCard style={styles.closeIcon} variant="light">
-              <Text style={styles.closeIconText}>✕</Text>
-            </GlassCard>
+            <Text style={styles.closeButtonText}>✕</Text>
           </TouchableOpacity>
         }
       />
@@ -187,76 +189,83 @@ const OrderConfirmationScreen = () => {
         <View style={styles.contentContainer}>
           {/* Success Header */}
           <View style={styles.successHeader}>
-            <Text style={styles.successIcon}>✅</Text>
+            <View style={styles.successIconContainer}>
+              <Text style={styles.successIcon}>✅</Text>
+            </View>
             <Text style={styles.successTitle}>Order Confirmed!</Text>
             <Text style={styles.successSubtitle}>
-              Thank you for your purchase. Your order has been placed successfully with {orderDetails.paymentMethod.type}.
+              Thank you for your purchase. We've received your order and it will be processed soon.
             </Text>
           </View>
 
           {/* Order Summary */}
-          <View style={styles.orderSummary}>
+          <View style={styles.section}>
             <Text style={styles.sectionTitle}>Order Summary</Text>
 
-            <View style={styles.orderInfo}>
+            <View style={styles.card}>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Order Number</Text>
                 <Text style={styles.infoValue}>#{orderDetails.orderNumber}</Text>
               </View>
+              <View style={styles.divider} />
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Order Date</Text>
+                <Text style={styles.infoLabel}>Date</Text>
                 <Text style={styles.infoValue}>{orderDetails.orderDate}</Text>
               </View>
+              <View style={styles.divider} />
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Estimated Delivery</Text>
+                <Text style={styles.infoLabel}>Est. Delivery</Text>
                 <Text style={styles.infoValue}>{orderDetails.estimatedDelivery}</Text>
               </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Order Status</Text>
-                <Text style={[styles.infoValue, styles.statusValue]}>
-                  {orderDetails.paymentMethod.orderStatus?.charAt(0).toUpperCase() +
-                    orderDetails.paymentMethod.orderStatus?.slice(1) || 'Pending'}
-                </Text>
-              </View>
+              <View style={styles.divider} />
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Payment Status</Text>
-                <Text style={[styles.infoValue, styles.paymentStatusValue]}>
-                  {orderDetails.paymentMethod.status?.charAt(0).toUpperCase() +
-                    orderDetails.paymentMethod.status?.slice(1) || 'Pending'}
-                </Text>
+                <View style={[
+                  styles.statusBadge,
+                  { backgroundColor: orderDetails.paymentMethod.status === 'paid' ? theme.colors.success[100] : theme.colors.warning[100] }
+                ]}>
+                  <Text style={[
+                    styles.statusText,
+                    { color: orderDetails.paymentMethod.status === 'paid' ? theme.colors.success[700] : theme.colors.warning[800] }
+                  ]}>
+                    {(orderDetails.paymentMethod.status || 'PENDING').toUpperCase()}
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
 
           {/* Order Items */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Items Ordered ({orderDetails.items.length})</Text>
+            <Text style={styles.sectionTitle}>Items ({orderDetails.items.length})</Text>
             {orderDetails.items.length > 0 ? (
-              orderDetails.items.map(renderOrderItem)
+              <View style={styles.itemsContainer}>
+                {orderDetails.items.map(renderOrderItem)}
+              </View>
             ) : (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyStateText}>No items to display</Text>
+                <Text style={styles.emptyStateText}>No items info available</Text>
               </View>
             )}
           </View>
 
           {/* Payment Method */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Payment Method</Text>
-            <View style={styles.paymentCard}>
+            <Text style={styles.sectionTitle}>Payment Info</Text>
+            <View style={styles.card}>
               <Text style={styles.paymentType}>{orderDetails.paymentMethod.type}</Text>
               <Text style={styles.paymentDetails}>
                 {orderDetails.paymentMethod.type === 'Cash on Delivery'
-                  ? 'Pay when your order is delivered to your doorstep'
-                  : `Payment Status: ${orderDetails.paymentMethod.status}`}
+                  ? 'Pay cash upon delivery at your doorstep.'
+                  : 'Payment processed successfully.'}
               </Text>
             </View>
           </View>
 
           {/* Order Total */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Order Total</Text>
-            <View style={styles.totalCard}>
+            <Text style={styles.sectionTitle}>Order Totals</Text>
+            <View style={styles.card}>
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabel}>Subtotal</Text>
                 <Text style={styles.totalValue}>{formatCurrency(orderDetails.subtotal)}</Text>
@@ -267,21 +276,17 @@ const OrderConfirmationScreen = () => {
                   {orderDetails.shipping_cost > 0 ? formatCurrency(orderDetails.shipping_cost) : 'Free'}
                 </Text>
               </View>
-              {orderDetails.tax > 0 && (
-                <View style={styles.totalRow}>
-                  <Text style={styles.totalLabel}>Tax</Text>
-                  <Text style={styles.totalValue}>{formatCurrency(orderDetails.tax)}</Text>
-                </View>
-              )}
-              {orderDetails.discount > 0 && (
+              {!!orderDetails.discount && orderDetails.discount > 0 && (
                 <View style={styles.totalRow}>
                   <Text style={styles.totalLabel}>Discount</Text>
-                  <Text style={styles.totalValue}>-{formatCurrency(orderDetails.discount)}</Text>
+                  <Text style={[styles.totalValue, styles.discountText]}>
+                    -{formatCurrency(orderDetails.discount)}
+                  </Text>
                 </View>
               )}
               <View style={styles.divider} />
               <View style={styles.totalRow}>
-                <Text style={styles.grandTotalLabel}>Total</Text>
+                <Text style={styles.grandTotalLabel}>Total Amount</Text>
                 <Text style={styles.grandTotalValue}>
                   {formatCurrency(orderDetails.total)}
                 </Text>
@@ -292,23 +297,23 @@ const OrderConfirmationScreen = () => {
           {/* What's Next */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>What's Next?</Text>
-            <View style={styles.nextStepsCard}>
+            <View style={styles.card}>
               <View style={styles.stepItem}>
                 <Text style={styles.stepIcon}>📧</Text>
                 <Text style={styles.stepText}>
-                  You'll receive an order confirmation email shortly
+                  Order confirmation email sent
                 </Text>
               </View>
               <View style={styles.stepItem}>
                 <Text style={styles.stepIcon}>📦</Text>
                 <Text style={styles.stepText}>
-                  We'll notify you when your order ships
+                  We'll notify you when it ships
                 </Text>
               </View>
               <View style={styles.stepItem}>
                 <Text style={styles.stepIcon}>🚚</Text>
                 <Text style={styles.stepText}>
-                  Track your delivery in real-time
+                  Track your delivery status anytime
                 </Text>
               </View>
             </View>
@@ -316,27 +321,24 @@ const OrderConfirmationScreen = () => {
 
           {/* Action Buttons */}
           <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.trackButton} onPress={handleTrackOrder}>
-              <Text style={styles.trackButtonText}>Track Your Order</Text>
+            <TouchableOpacity
+              style={[styles.button, styles.primaryButton]}
+              onPress={handleTrackOrder}
+              activeOpacity={0.9}
+            >
+              <Text style={styles.primaryButtonText}>Track Order</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.continueButton}
-              onPress={handleContinueShopping}>
-              <Text style={styles.continueButtonText}>Continue Shopping</Text>
+              style={[styles.button, styles.secondaryButton]}
+              onPress={handleContinueShopping}
+              activeOpacity={0.9}
+            >
+              <Text style={styles.secondaryButtonText}>Continue Shopping</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Help Section */}
-          <View style={styles.helpSection}>
-            <Text style={styles.helpTitle}>Need Help?</Text>
-            <Text style={styles.helpText}>
-              If you have any questions about your order, please contact our customer support.
-            </Text>
-            <TouchableOpacity style={styles.helpButton}>
-              <Text style={styles.helpButtonText}>Contact Support</Text>
-            </TouchableOpacity>
-          </View>
+          <View style={{ height: 40 }} />
         </View>
       </ScrollView>
     </View>
@@ -346,206 +348,226 @@ const OrderConfirmationScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  backgroundGradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
+    backgroundColor: theme.colors.neutral[50], // Cream background
   },
   scrollView: {
     flex: 1,
   },
+  contentContainer: {
+    paddingBottom: 24,
+  },
+  closeButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: theme.colors.neutral[100],
+  },
+  closeButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: theme.colors.neutral[600],
+  },
   successHeader: {
     alignItems: 'center',
-    padding: 40,
-    backgroundColor: '#f8fff8',
+    padding: 24,
+    paddingTop: 32,
+    backgroundColor: theme.colors.success[50],
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.success[100],
+    marginBottom: 16,
+  },
+  successIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: theme.colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: theme.colors.success[500],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   successIcon: {
-    fontSize: 64,
-    marginBottom: 20,
+    fontSize: 40,
   },
   successTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
+    fontSize: 24,
+    fontWeight: '700',
+    color: theme.colors.neutral[900],
+    marginBottom: 8,
+    textAlign: 'center',
   },
   successSubtitle: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: 15,
+    color: theme.colors.neutral[600],
     textAlign: 'center',
     lineHeight: 22,
-  },
-  orderSummary: {
-    backgroundColor: '#f8f9fa',
-    margin: 15,
-    padding: 20,
-    borderRadius: 8,
+    maxWidth: '90%',
   },
   section: {
-    margin: 15,
-    marginTop: 0,
+    paddingHorizontal: 16,
+    marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 15,
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.colors.neutral[800],
+    marginBottom: 12,
+    marginLeft: 4,
   },
-  orderInfo: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 6,
+  card: {
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.borderRadius.lg,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  itemsContainer: {
+    gap: 12,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    alignItems: 'center',
+    paddingVertical: 8,
   },
   infoLabel: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.neutral[500],
   },
   infoValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: theme.colors.neutral[900],
+  },
+  divider: {
+    height: 1,
+    backgroundColor: theme.colors.neutral[100],
+    marginVertical: 4,
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
   orderItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 10,
+    backgroundColor: theme.colors.white,
+    padding: 12,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
+    marginBottom: 8,
   },
   itemImage: {
     width: 60,
     height: 60,
-    borderRadius: 6,
-    marginRight: 15,
+    borderRadius: 8,
+    marginRight: 12,
+    backgroundColor: theme.colors.neutral[100],
   },
   itemDetails: {
     flex: 1,
   },
   itemName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  itemPrice: {
     fontSize: 14,
-    color: '#666',
-  },
-  itemTotal: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '600',
+    color: theme.colors.neutral[900],
+    marginBottom: 4,
+    lineHeight: 20,
   },
   itemColor: {
     fontSize: 12,
-    color: '#888',
-    marginBottom: 2,
+    color: theme.colors.neutral[500],
+    marginBottom: 4,
+  },
+  itemPrice: {
+    fontSize: 13,
+    color: theme.colors.neutral[600],
   },
   itemTotalContainer: {
     alignItems: 'flex-end',
+    justifyContent: 'center',
+    paddingLeft: 8,
+  },
+  itemTotal: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: theme.colors.neutral[900],
   },
   emptyState: {
-    backgroundColor: '#f8f9fa',
-    padding: 20,
+    backgroundColor: theme.colors.neutral[50],
+    padding: 24,
     borderRadius: 8,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[200],
+    borderStyle: 'dashed',
   },
   emptyStateText: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.neutral[500],
     fontStyle: 'italic',
-  },
-  statusValue: {
-    color: '#28a745',
-    fontWeight: '600',
-  },
-  paymentStatusValue: {
-    color: '#ffc107',
-    fontWeight: '600',
-  },
-  addressCard: {
-    backgroundColor: '#f8f9fa',
-    padding: 15,
-    borderRadius: 8,
-  },
-  addressName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  addressText: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-  },
-  paymentCard: {
-    backgroundColor: '#f8f9fa',
-    padding: 15,
-    borderRadius: 8,
   },
   paymentType: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
+    color: theme.colors.neutral[900],
+    marginBottom: 6,
   },
   paymentDetails: {
     fontSize: 14,
-    color: '#666',
-  },
-  totalCard: {
-    backgroundColor: '#f8f9fa',
-    padding: 15,
-    borderRadius: 8,
+    color: theme.colors.neutral[600],
+    lineHeight: 20,
   },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    paddingVertical: 6,
   },
   totalLabel: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.neutral[600],
   },
   totalValue: {
-    fontSize: 14,
-    color: '#333',
+    fontSize: 15,
+    color: theme.colors.neutral[900],
+    fontWeight: '500',
   },
-  divider: {
-    height: 1,
-    backgroundColor: '#ddd',
-    marginVertical: 8,
+  discountText: {
+    color: theme.colors.success[600],
   },
   grandTotalLabel: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '700',
+    color: theme.colors.neutral[900],
   },
   grandTotalValue: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#ff6b6b',
-  },
-  nextStepsCard: {
-    backgroundColor: '#f8f9fa',
-    padding: 15,
-    borderRadius: 8,
+    fontWeight: '700',
+    color: theme.colors.primary[600],
   },
   stepItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   stepIcon: {
     fontSize: 20,
@@ -554,99 +576,42 @@ const styles = StyleSheet.create({
   stepText: {
     flex: 1,
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.neutral[700],
     lineHeight: 20,
   },
   actionButtons: {
-    padding: 15,
-    gap: 10,
+    padding: 16,
+    gap: 12,
   },
-  trackButton: {
-    backgroundColor: '#ff6b6b',
-    padding: 18,
-    borderRadius: 8,
+  button: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: theme.borderRadius.base,
     alignItems: 'center',
-  },
-  trackButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  continueButton: {
-    borderWidth: 1,
-    borderColor: '#ff6b6b',
-    padding: 18,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  continueButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#ff6b6b',
-  },
-  helpSection: {
-    backgroundColor: '#f8f9fa',
-    margin: 15,
-    padding: 20,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  helpTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  helpText: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 15,
-  },
-  helpButton: {
-    backgroundColor: '#007bff',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 6,
-  },
-  helpButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#f0f0f0',
     justifyContent: 'center',
-    alignItems: 'center',
   },
-  closeIcon: {
-    fontSize: 18,
-    color: '#666',
-    fontWeight: 'bold',
+  primaryButton: {
+    backgroundColor: theme.colors.primary[600],
+    shadowColor: theme.colors.primary[600],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  closeIconText: {
-    fontSize: 18,
-    color: '#666',
-    fontWeight: 'bold',
+  primaryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.white,
   },
-  contentContainer: {
-    flex: 1,
+  secondaryButton: {
+    backgroundColor: theme.colors.white,
+    borderWidth: 1,
+    borderColor: theme.colors.neutral[300],
+  },
+  secondaryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.neutral[700],
   },
 });
 
