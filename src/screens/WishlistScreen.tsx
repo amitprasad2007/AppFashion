@@ -29,6 +29,7 @@ const WishlistScreenContent = () => {
     error: profileError,
     getWishlist,
     removeFromWishlistById,
+    removeFromWishlist,
     addToCart,
     refreshUserData
   } = useUserProfile();
@@ -73,17 +74,25 @@ const WishlistScreenContent = () => {
   // Refresh function
   const onRefresh = async () => {
     setRefreshing(true);
-    await refreshUserData();
+    if (userData) {
+      await refreshUserData();
+    } else {
+      await loadWishlist();
+    }
   };
 
-  const handleRemoveFromWishlist = (wishlistId: number, productName: string) => {
+  const handleRemoveFromWishlist = (productId: number, productName: string) => {
     SafeAlert.confirm(
       'Remove from Wishlist',
       `Are you sure you want to remove "${productName}" from your wishlist?`,
       async () => {
-        setRemoveLoading(wishlistId);
+        setRemoveLoading(productId);
         try {
-          await removeFromWishlistById(wishlistId);
+          await removeFromWishlist(productId);
+          // Manually reload if not using userData subscription (e.g. guest mode)
+          if (!userData) {
+            await loadWishlist();
+          }
         } catch (error) {
           console.error('Error removing from wishlist:', error);
           SafeAlert.error('Error', 'Failed to remove item from wishlist. Please try again.');
@@ -119,7 +128,7 @@ const WishlistScreenContent = () => {
     const discountPercentage = item.originalPrice
       ? Math.round(((item.originalPrice - parseFloat(item.price)) / item.originalPrice) * 100)
       : 0;
-    const isRemoving = removeLoading === item.wish_id;
+    const isRemoving = removeLoading === item.id;
     const isAdding = addLoading === item.id;
 
     return (
@@ -175,7 +184,7 @@ const WishlistScreenContent = () => {
 
           <TouchableOpacity
             style={[styles.actionButton, styles.removeButton, isRemoving && styles.disabledButton]}
-            onPress={() => handleRemoveFromWishlist(item.wish_id, item.name)}
+            onPress={() => handleRemoveFromWishlist(item.id, item.name)}
             disabled={isRemoving || isAdding}>
             {isRemoving ? (
               <ActivityIndicator size="small" color={theme.colors.neutral[600]} />
@@ -478,12 +487,6 @@ const styles = StyleSheet.create({
   },
 });
 
-const WishlistScreen = () => {
-  return (
-    <ProtectedScreen fallbackMessage="Please sign in to create and manage your personal wishlist of favorite items.">
-      <WishlistScreenContent />
-    </ProtectedScreen>
-  );
-};
+const WishlistScreen = WishlistScreenContent;
 
 export default WishlistScreen;

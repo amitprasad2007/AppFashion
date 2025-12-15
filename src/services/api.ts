@@ -325,7 +325,7 @@ class ApiService {
   }
 
   // Get or generate session token for guest API calls
-  private getSessionToken(): string {
+  public getSessionToken(): string {
     // Check if we already have a guest session token stored
     if (!this.guestSessionToken) {
       // Generate a new one and store it (matching website localStorage logic)
@@ -355,25 +355,9 @@ class ApiService {
         headers['Authorization'] = `Bearer ${this.authToken}`;
       }
 
-      // 🔍 Log network requests for debugging (after headers are constructed)
-      console.log('🌐 API Request:', {
-        url: `${BASE_URL}${endpoint}`,
-        method: options.method || 'GET',
-        headers: headers,
-        body: options.body ? JSON.parse(options.body as string) : undefined
-      });
 
-      // Additional logging for checkout requests
-      if (endpoint === '/order/checkout') {
-        console.log('🛒 COD Checkout Request Details:', {
-          endpoint,
-          method: options.method,
-          bodyString: options.body,
-          parsedBody: options.body ? JSON.parse(options.body as string) : undefined,
-          authToken: this.authToken ? 'Present' : 'Missing',
-          headers: headers
-        });
-      }
+
+
 
       const response = await fetch(`${BASE_URL}${endpoint}`, {
         headers,
@@ -429,21 +413,12 @@ class ApiService {
           parseError: parseError
         });
 
-        // Log the full response for debugging (only for this specific endpoint)
-        if (endpoint === '/bestseller-products') {
-          console.log('Full response text:', responseText);
-        }
+
 
         throw new Error(`Invalid JSON response from ${endpoint}: ${parseError}`);
       }
 
-      // 🔍 Log network responses for debugging
-      console.log('📡 API Response:', {
-        url: `${BASE_URL}${endpoint}`,
-        status: response.status,
-        statusText: response.statusText,
-        data: data
-      });
+
 
       return data;
     } catch (error) {
@@ -465,7 +440,7 @@ class ApiService {
       }
     } catch (error) {
       console.error('Error fetching banners:', error);
-      console.log('🔄 Using mock data for banners');
+
 
       // Return mock data as fallback
       return [
@@ -506,7 +481,7 @@ class ApiService {
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
-      console.log('🔄 Using mock data for categories');
+
 
       // Return mock data as fallback
       return [
@@ -553,7 +528,7 @@ class ApiService {
       }
     } catch (error) {
       console.error('Error fetching bestseller products:', error);
-      console.log('🔄 Using mock data for bestseller products');
+
 
       // Return mock data as fallback
       return [
@@ -796,7 +771,7 @@ class ApiService {
 
       // For category-based or general product requests, use featured as fallback
       // since /products endpoint doesn't exist in your backend
-      console.log('Using featured products as fallback for general product request');
+
       const featuredProducts = await this.getFeaturedProducts();
 
       // If categoryId is specified, try to filter (this may not work without proper endpoint)
@@ -1063,7 +1038,7 @@ class ApiService {
       console.error(`Error during ${provider} OAuth login:`, error);
 
       // Return mock success for development/testing
-      console.log('🔄 Using mock OAuth response for development');
+
       const mockResponse: AuthResponse = {
         success: true,
         message: `Mock ${provider} login successful`,
@@ -1476,7 +1451,7 @@ class ApiService {
       if (!this.authToken) {
         const sessionToken = this.getSessionToken();
         requestBody.session_token = sessionToken;
-        console.log('🔍 Checking wishlist for product:', productId, 'variant:', productVariantId || 'null', 'with session token:', sessionToken);
+
       }
 
       const response = await this.fetchApi<{ in_wishlist: boolean; wish_id?: number }>(endpoint, {
@@ -1605,13 +1580,10 @@ class ApiService {
     order?: any;
   }> {
     try {
-      console.log('🛒 Starting COD Checkout Process...');
+
 
       // Send the checkout request with original payload structure
-      console.log('💳 Processing checkout with original payload...');
       const checkoutPayload = orderData;
-
-      console.log('🔍 Final checkout payload:', JSON.stringify(checkoutPayload, null, 2));
 
       const response = await this.fetchApi<{
         message: string;
@@ -1637,7 +1609,7 @@ class ApiService {
         body: JSON.stringify(checkoutPayload),
       });
 
-      console.log('✅ Checkout successful:', response);
+
 
       // Transform response to match expected format
       return {
@@ -1840,7 +1812,7 @@ class ApiService {
       if (!this.authToken) {
         const sessionToken = this.getSessionToken();
         requestBody.session_token = sessionToken;
-        console.log('🔍 Adding to recently viewed for product:', productId, 'with session token:', sessionToken);
+
       }
 
       const response = await this.fetchApi<{ success: boolean; message: string }>(endpoint, {
@@ -2082,13 +2054,13 @@ class ApiService {
 
   async getCollectionTypes(): Promise<ApiCollectionType[]> {
     try {
-      console.log('🔍 Fetching collection types...');
+
 
       const externalUrl = 'https://superadmin.samarsilkpalace.com/api/collection-types';
       const response = await fetch(externalUrl);
       const data = await response.json();
 
-      console.log('✅ Successfully fetched collection types:', data);
+
       return data;
     } catch (error) {
       console.error('❌ Error fetching collection types:', error);
@@ -2100,7 +2072,7 @@ class ApiService {
 
   async getFeaturedCollections(): Promise<ApiCollection[]> {
     try {
-      console.log('🔍 Fetching featured collections...');
+
       const response = await this.fetchApi<ApiCollection[]>('/featured-collections');
 
       // Handle both direct array and wrapped response
@@ -2114,7 +2086,7 @@ class ApiService {
       }
     } catch (error) {
       console.error('Error fetching featured collections:', error);
-      console.log('🔄 Using mock data for featured collections');
+
 
       // Return mock data as fallback
       return [
@@ -2152,7 +2124,7 @@ class ApiService {
 
   async getAllCollections(): Promise<ApiCollection[]> {
     try {
-      console.log('🔍 Fetching all collections...');
+
       const response = await this.fetchApi<ApiCollection[]>('/collections');
 
       // Handle both direct array and wrapped response
@@ -2166,7 +2138,7 @@ class ApiService {
       }
     } catch (error) {
       console.error('Error fetching all collections:', error);
-      console.log('🔄 Using mock data for all collections');
+
 
       // Return mock data as fallback
       return [
@@ -2204,13 +2176,13 @@ class ApiService {
 
   async getCollectionBySlug(slug: string): Promise<ApiCollection | null> {
     try {
-      console.log('🔍 Fetching collection by slug:', slug);
+
 
       const externalUrl = `https://superadmin.samarsilkpalace.com/api/collections/${slug}`;
       const response = await fetch(externalUrl);
       const data = await response.json();
 
-      console.log('✅ Successfully fetched collection:', data);
+
       return data;
     } catch (error) {
       console.error('❌ Error fetching collection by slug:', error);
@@ -2429,7 +2401,7 @@ class ApiService {
     currency?: string;
   }> {
     try {
-      console.log('💳 Starting Razorpay Checkout Process...');
+
 
       const response = await this.fetchApi<{
         success: boolean;
@@ -2446,7 +2418,7 @@ class ApiService {
         body: JSON.stringify(orderData),
       });
 
-      console.log('✅ Razorpay order created:', response);
+
       return response;
     } catch (error) {
       console.error('Error in Razorpay checkout:', error);
@@ -2459,7 +2431,7 @@ class ApiService {
   // Create Razorpay order (matching web app)
   async createRazorpayOrder(orderData: any): Promise<any> {
     try {
-      console.log('💳 Creating Razorpay Order:', orderData);
+
       const response = await this.fetchApi<any>('/createrazorpayorder', {
         method: 'POST',
         body: JSON.stringify(orderData),
@@ -2474,7 +2446,7 @@ class ApiService {
   // Save Razorpay payment (matching web app)
   async saveRazorpayPayment(userData: { response: any; orderData: any }): Promise<any> {
     try {
-      console.log('✅ Saving Razorpay Payment:', userData);
+
       const response = await this.fetchApi<any>('/paychecksave', {
         method: 'POST',
         body: JSON.stringify(userData),
@@ -2482,6 +2454,79 @@ class ApiService {
       return response;
     } catch (error) {
       console.error('Error saving Razorpay payment:', error);
+      throw error;
+    }
+  }
+  // Guest Wishlist APIs
+  async guestAddToWishlist(sessionToken: string, productId: number, variantId?: number): Promise<any> {
+    try {
+      const response = await this.fetchApi<any>('/guest/wishlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          session_token: sessionToken,
+          product_id: productId,
+          product_variant_id: variantId
+        }),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error adding to guest wishlist:', error);
+      throw error;
+    }
+  }
+
+  async guestRemoveFromWishlist(sessionToken: string, productId: number, variantId?: number): Promise<any> {
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append('session_token', sessionToken);
+      if (variantId) {
+        queryParams.append('product_variant_id', variantId.toString());
+      }
+
+      const response = await this.fetchApi<any>(`/guest/wishlist/${productId}?${queryParams.toString()}`, {
+        method: 'DELETE',
+      });
+      return response;
+    } catch (error) {
+      console.error('Error removing from guest wishlist:', error);
+      throw error;
+    }
+  }
+
+  async guestGetWishlist(sessionToken: string): Promise<any> {
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append('session_token', sessionToken);
+
+      const response = await this.fetchApi<any>(`/guest/wishlist?${queryParams.toString()}`, {
+        method: 'GET',
+      });
+      return response;
+    } catch (error) {
+      console.error('Error fetching guest wishlist:', error);
+      throw error;
+    }
+  }
+
+  async guestCheckWishlist(sessionToken: string, productId: number, variantId?: number): Promise<any> {
+    try {
+      const response = await this.fetchApi<any>('/guest/checkwishlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          session_token: sessionToken,
+          product_id: productId,
+          product_variant_id: variantId
+        }),
+      });
+      return response;
+    } catch (error) {
+      console.error('Error checking guest wishlist:', error);
       throw error;
     }
   }

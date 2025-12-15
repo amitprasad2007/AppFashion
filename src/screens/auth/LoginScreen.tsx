@@ -287,13 +287,6 @@ const LoginScreen = () => {
               style={styles.socialButton}
             />
 
-            <OAuthButton
-              provider="apple"
-              onSuccess={() => navigation.navigate('MainTabs' as never)}
-              onError={(error) => console.error('Apple OAuth Error:', error)}
-              disabled={true}
-              style={styles.socialButton}
-            />
           </View>
         </View>
 
@@ -308,7 +301,7 @@ const LoginScreen = () => {
         {/* Guest Shopping */}
         <View style={styles.guestSection}>
           <TouchableOpacity
-            onPress={() => navigation.navigate('MainTabs')}
+            onPress={() => navigation.navigate('Home')}
             style={styles.guestButton}
           >
             <Text style={styles.guestButtonText}>Continue as Guest</Text>
@@ -328,34 +321,34 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 32,
+    paddingBottom: 16, // Reduced from 32
   },
   welcomeSection: {
-    padding: 24,
+    padding: 16, // Reduced from 24
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 0, // Reduced from 8
   },
   welcomeEmoji: {
-    fontSize: 48,
-    marginBottom: 16,
+    fontSize: 32, // Reduced from 48
+    marginBottom: 8, // Reduced from 16
   },
   welcomeTitle: {
-    fontSize: 24,
+    fontSize: 20, // Reduced from 24
     fontWeight: '800',
     color: theme.colors.neutral[900],
-    marginBottom: 8,
+    marginBottom: 4, // Reduced from 8
   },
   welcomeSubtitle: {
-    fontSize: 14,
+    fontSize: 13, // Reduced from 14
     color: theme.colors.neutral[600],
     textAlign: 'center',
-    lineHeight: 20,
-    maxWidth: '80%',
+    lineHeight: 18, // Reduced from 20
+    maxWidth: '85%', // Increased width to reduce height
   },
   formCard: {
     backgroundColor: theme.colors.white,
     marginHorizontal: 16,
-    padding: 24,
+    padding: 16, // Reduced from 24
     borderRadius: 16,
     borderWidth: 1,
     borderColor: theme.colors.neutral[200],
@@ -364,23 +357,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
-    marginBottom: 24,
+    marginBottom: 16, // Reduced from 24
   },
   formTitle: {
-    fontSize: 18,
+    fontSize: 16, // Reduced from 18
     fontWeight: '700',
     color: theme.colors.neutral[900],
-    marginBottom: 24,
+    marginBottom: 16, // Reduced from 24
     textAlign: 'center',
   },
   inputContainer: {
-    marginBottom: 16,
+    marginBottom: 12, // Reduced from 16
   },
   inputLabel: {
-    fontSize: 14,
+    fontSize: 13, // Reduced from 14
     fontWeight: '600',
     color: theme.colors.neutral[700],
-    marginBottom: 8,
+    marginBottom: 6, // Reduced from 8
   },
   inputWrapper: {
     backgroundColor: theme.colors.neutral[50],
@@ -389,8 +382,8 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.neutral[300],
   },
   input: {
-    padding: 12,
-    fontSize: 16,
+    padding: 10, // Reduced from 12
+    fontSize: 14, // Reduced from 16
     color: theme.colors.neutral[900],
   },
   passwordContainer: {
@@ -403,37 +396,38 @@ const styles = StyleSheet.create({
   },
   passwordInput: {
     flex: 1,
-    padding: 12,
-    fontSize: 16,
+    padding: 10, // Reduced from 12
+    fontSize: 14, // Reduced from 16
     color: theme.colors.neutral[900],
   },
   eyeButton: {
-    padding: 12,
+    padding: 10, // Reduced from 12
   },
   eyeIconText: {
-    fontSize: 18,
+    fontSize: 16, // Reduced from 18
   },
   forgotPassword: {
-    fontSize: 14,
+    fontSize: 13, // Reduced from 14
     color: theme.colors.primary[600],
     textAlign: 'right',
-    marginBottom: 24,
+    marginBottom: 16, // Reduced from 24
     fontWeight: '500',
   },
   loginButton: {
     width: '100%',
+    height: 48, // Explicit height control
   },
   // Error and validation styles
   errorContainer: {
     backgroundColor: theme.colors.error[50],
-    padding: 12,
+    padding: 10, // Reduced from 12
     borderRadius: 8,
-    marginBottom: 16,
+    marginBottom: 12, // Reduced from 16
     borderLeftWidth: 4,
     borderLeftColor: theme.colors.error[500],
   },
   errorText: {
-    fontSize: 14,
+    fontSize: 13, // Reduced from 14
     color: theme.colors.error[700],
     fontWeight: '500',
   },
@@ -441,9 +435,9 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.error[500],
   },
   validationError: {
-    fontSize: 12,
+    fontSize: 11, // Reduced from 12
     color: theme.colors.error[600],
-    marginTop: 4,
+    marginTop: 2, // Reduced from 4
     fontWeight: '500',
   },
   disabledText: {
@@ -453,21 +447,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 16,
+    marginTop: 12, // Reduced from 16
   },
   loadingText: {
-    fontSize: 14,
+    fontSize: 13, // Reduced from 14
     color: theme.colors.neutral[600],
     marginLeft: 8,
   },
   socialSection: {
-    marginBottom: 24,
+    marginBottom: 16, // Reduced from 24
     paddingHorizontal: 16,
   },
   dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16, // Reduced from 24
   },
   dividerLine: {
     flex: 1,
@@ -476,43 +470,47 @@ const styles = StyleSheet.create({
   },
   orText: {
     textAlign: 'center',
-    fontSize: 14,
+    fontSize: 12, // Reduced from 14
     color: theme.colors.neutral[500],
-    marginHorizontal: 16,
+    marginHorizontal: 12, // Reduced from 16
   },
   socialButtons: {
-    gap: 12,
+    flexDirection: 'row', // Horizontal layout for social buttons
+    justifyContent: 'center',
+    gap: 16, // Spacing between horizontal buttons
   },
   socialButton: {
+    flex: 1, // Share width
     marginBottom: 0,
     backgroundColor: theme.colors.white,
-    borderWidth: 1,
     borderColor: theme.colors.neutral[200],
+    height: 44, // Reduced height
   },
   signupSection: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 24,
+    marginBottom: 16, // Reduced from 24
+    marginTop: 16,
   },
   signupText: {
-    fontSize: 14,
+    fontSize: 13, // Reduced from 14
     color: theme.colors.neutral[600],
   },
   signupLink: {
-    fontSize: 14,
+    fontSize: 13, // Reduced from 14
     color: theme.colors.primary[600],
     fontWeight: '700',
   },
   guestSection: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16, // Reduced from 24
   },
   guestButton: {
-    paddingVertical: 12,
+    paddingVertical: 8, // Reduced from 12
     paddingHorizontal: 24,
   },
   guestButtonText: {
-    fontSize: 14,
+    fontSize: 13, // Reduced from 14
     fontWeight: '600',
     color: theme.colors.neutral[500],
   },

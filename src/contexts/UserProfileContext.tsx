@@ -123,6 +123,15 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Get wishlist items
   const getWishlist = async (): Promise<ApiWishlistItem[]> => {
     try {
+      if (!authState.isAuthenticated) {
+        const sessionToken = apiService.getSessionToken();
+        const response = await apiService.guestGetWishlist(sessionToken);
+        // Map guest response to ApiWishlistItem if needed, or assume backend returns compatible format
+        // The backend returns a list of items directly or wrapped?
+        // User provided: api.get(...) -> res.data.
+        // Assuming the structure is compatible with ApiWishlistItem
+        return Array.isArray(response) ? response : (response.data || []);
+      }
       return await apiService.getWishlist();
     } catch (error) {
       console.error('Error fetching wishlist:', error);
@@ -189,6 +198,12 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Add to wishlist
   const addToWishlist = async (productId: number): Promise<void> => {
     try {
+      if (!authState.isAuthenticated) {
+        const sessionToken = apiService.getSessionToken();
+        await apiService.guestAddToWishlist(sessionToken, productId);
+        // For guest, we don't have userData to refresh, but the UI might re-fetch
+        return;
+      }
       await apiService.addToWishlist(productId);
       // Refresh user data to update wishlist
       await refreshUserData();
@@ -201,6 +216,11 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Remove from wishlist (by product ID)
   const removeFromWishlist = async (productId: number): Promise<void> => {
     try {
+      if (!authState.isAuthenticated) {
+        const sessionToken = apiService.getSessionToken();
+        await apiService.guestRemoveFromWishlist(sessionToken, productId);
+        return;
+      }
       await apiService.removeFromWishlist(productId);
       // Refresh user data to update wishlist
       await refreshUserData();
@@ -225,6 +245,19 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Check if product is in wishlist
   const checkWishlist = async (productId: number): Promise<{ in_wishlist: boolean; wishlist_id?: number }> => {
     try {
+      if (!authState.isAuthenticated) {
+        const sessionToken = apiService.getSessionToken();
+        const response = await apiService.guestCheckWishlist(sessionToken, productId);
+        // The API returns true/false or an object?
+        // User provided: api.post(...) -> res.data
+        // Typically check APIs return { success: true, in_wishlist: true/false } or simply boolean
+        // We'll assume consistency with auth checkWishlist which returns { in_wishlist: boolean, ... }
+        // If response is just true/false (boolean), wrap it
+        if (typeof response === 'boolean') {
+          return { in_wishlist: response };
+        }
+        return response;
+      }
       return await apiService.checkWishlist(productId);
     } catch (error) {
       console.error('Error checking wishlist:', error);

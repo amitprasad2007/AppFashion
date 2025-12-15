@@ -112,6 +112,7 @@ const AppNavigator = () => {
         
         {/* Main Tab Navigator */}
         <Stack.Screen name="MainTabs" component={TabNavigator} />
+        <Stack.Screen name="Home" component={HomeScreen} />
         
         {/* Product Screens */}
         <Stack.Screen name="ProductList" component={ProductListScreen} />

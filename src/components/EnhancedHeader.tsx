@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { theme } from '../theme';
+import GlassCard from './GlassCard';
 
 interface EnhancedHeaderProps {
   title?: string;
@@ -27,20 +28,17 @@ const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
     <>
       <StatusBar
         barStyle="light-content"
-        backgroundColor="#4A0404"
-        translucent={false}
+        backgroundColor="transparent"
+        translucent={true}
       />
       <LinearGradient
-        colors={['#4A0404', '#6B1515', '#8B4513', '#B8860B']}
+        colors={theme.glassGradients.aurora}
         style={styles.container}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
         <SafeAreaView style={styles.safeArea}>
-          <View style={styles.headerContent}>
-            {/* Decorative pattern overlay */}
-            <View style={styles.decorativePattern} />
-
+          <GlassCard style={styles.headerContent} variant="secondary">
             <View style={styles.headerRow}>
               {showBackButton ? (
                 <TouchableOpacity
@@ -67,7 +65,7 @@ const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
                 {rightComponent || <View style={styles.placeholder} />}
               </View>
             </View>
-          </View>
+          </GlassCard>
         </SafeAreaView>
       </LinearGradient>
     </>
@@ -76,7 +74,7 @@ const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: StatusBar.currentHeight || 0,
+    paddingTop: StatusBar.currentHeight || theme.spacing[12],
   },
   safeArea: {
     paddingBottom: theme.spacing[2],
@@ -84,16 +82,6 @@ const styles = StyleSheet.create({
   headerContent: {
     marginHorizontal: theme.spacing[4],
     marginTop: theme.spacing[2],
-    position: 'relative',
-  },
-  decorativePattern: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    opacity: 0.1,
-    backgroundColor: 'transparent',
   },
   headerRow: {
     flexDirection: 'row',
@@ -118,6 +106,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 4,
     elevation: 5,
+    paddingBottom: 6,
   },
   backIcon: {
     fontSize: 20,
@@ -130,21 +119,23 @@ const styles = StyleSheet.create({
     marginHorizontal: theme.spacing[4],
   },
   title: {
-    fontSize: theme.typography.heading.h3.fontSize,
-    fontWeight: theme.typography.heading.h3.fontWeight as any,
-    color: theme.colors.white,
+    fontSize: theme.typography.heading.h4.fontSize,
+    fontWeight: '800',
+    color: theme.colors.primary[900],
     textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   titleUnderline: {
-    width: 60,
-    height: 2,
-    backgroundColor: theme.colors.white,
+    width: 100,
+    height: 3,
+    backgroundColor: '#D4AF37', // Gold accent
     marginTop: theme.spacing[1],
-    borderRadius: 1,
-    opacity: 0.7,
+    borderRadius: 2,
+    opacity: 1,
   },
   rightContainer: {
     width: 40,

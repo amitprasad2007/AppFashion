@@ -152,8 +152,8 @@ const OAuthButton: React.FC<OAuthButtonProps> = ({
         )}
         <Text
           style={{
-            color: config.textColor,
-            fontSize: 16,
+            color: config.textColor,  
+            fontSize: 18,
             fontWeight: '600',
             marginLeft: isLoading ? 8 : 0,
             flex: 1,
@@ -161,8 +161,8 @@ const OAuthButton: React.FC<OAuthButtonProps> = ({
           }}
         >
           {isLoading
-            ? `Signing in with ${config.name}...`
-            : `Continue with ${config.name}`}
+            ? `${config.name}...`
+            : `${config.name}`}
         </Text>
       </LinearGradient>
     </TouchableOpacity>

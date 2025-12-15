@@ -29,6 +29,7 @@ export type RootStackParamList = {
   Settings: undefined;
   Support: undefined;
   Notifications: undefined;
+  Home: undefined;
 };
 
 export type Product = {
