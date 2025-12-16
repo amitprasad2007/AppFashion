@@ -26,10 +26,11 @@ interface UserProfileContextType {
   getCartSummary: () => Promise<{ total_items: number; subtotal: number; total: number; discount: number; shipping: number; tax: number; }>;
 
   // Wishlist operations
-  addToWishlist: (productId: number) => Promise<void>;
-  removeFromWishlist: (productId: number) => Promise<void>;
+  // Wishlist operations
+  addToWishlist: (productId: number, variantId?: number) => Promise<void>;
+  removeFromWishlist: (productId: number, variantId?: number) => Promise<void>;
   removeFromWishlistById: (wishlistId: number) => Promise<void>;
-  checkWishlist: (productId: number) => Promise<{ in_wishlist: boolean; wishlist_id?: number }>;
+  checkWishlist: (productId: number, variantId?: number) => Promise<{ in_wishlist: boolean; wishlist_id?: number }>;
 
   // Address operations
   createAddress: (address: { name: string; type: string; address: string; city: string; state: string; postal: string; phone: string; isDefault?: boolean; }) => Promise<void>;
@@ -196,15 +197,15 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   // Add to wishlist
-  const addToWishlist = async (productId: number): Promise<void> => {
+  const addToWishlist = async (productId: number, variantId?: number): Promise<void> => {
     try {
       if (!authState.isAuthenticated) {
         const sessionToken = apiService.getSessionToken();
-        await apiService.guestAddToWishlist(sessionToken, productId);
+        await apiService.guestAddToWishlist(sessionToken, productId, variantId);
         // For guest, we don't have userData to refresh, but the UI might re-fetch
         return;
       }
-      await apiService.addToWishlist(productId);
+      await apiService.addToWishlist(productId, variantId);
       // Refresh user data to update wishlist
       await refreshUserData();
     } catch (error) {
@@ -214,14 +215,14 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   // Remove from wishlist (by product ID)
-  const removeFromWishlist = async (productId: number): Promise<void> => {
+  const removeFromWishlist = async (productId: number, variantId?: number): Promise<void> => {
     try {
       if (!authState.isAuthenticated) {
         const sessionToken = apiService.getSessionToken();
-        await apiService.guestRemoveFromWishlist(sessionToken, productId);
+        await apiService.guestRemoveFromWishlist(sessionToken, productId, variantId);
         return;
       }
-      await apiService.removeFromWishlist(productId);
+      await apiService.removeFromWishlist(productId, variantId);
       // Refresh user data to update wishlist
       await refreshUserData();
     } catch (error) {
@@ -243,11 +244,11 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   // Check if product is in wishlist
-  const checkWishlist = async (productId: number): Promise<{ in_wishlist: boolean; wishlist_id?: number }> => {
+  const checkWishlist = async (productId: number, variantId?: number): Promise<{ in_wishlist: boolean; wishlist_id?: number }> => {
     try {
       if (!authState.isAuthenticated) {
         const sessionToken = apiService.getSessionToken();
-        const response = await apiService.guestCheckWishlist(sessionToken, productId);
+        const response = await apiService.guestCheckWishlist(sessionToken, productId, variantId);
         // The API returns true/false or an object?
         // User provided: api.post(...) -> res.data
         // Typically check APIs return { success: true, in_wishlist: true/false } or simply boolean
@@ -258,7 +259,7 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
         return response;
       }
-      return await apiService.checkWishlist(productId);
+      return await apiService.checkWishlist(productId, variantId);
     } catch (error) {
       console.error('Error checking wishlist:', error);
       return { in_wishlist: false };

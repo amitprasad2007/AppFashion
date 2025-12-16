@@ -44,6 +44,7 @@ const ProductDetailsScreen = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [selectedVariant, setSelectedVariant] = useState<any>(null);
   const [selectedSize, setSelectedSize] = useState('');
   const [addingToCart, setAddingToCart] = useState(false);
   const [togglingWishlist, setTogglingWishlist] = useState(false);
@@ -87,13 +88,27 @@ const ProductDetailsScreen = () => {
 
       // Load product details using slug-based API (matching your frontend)
       const productData = await apiService.getProductBySlug(slugToUse);
+      console.log('Product data:', productData);
 
       if (productData) {
         setProduct(productData);
 
+        // Initialize variant selection
+        if (productData.variants && productData.variants.length > 0) {
+          // Find default variant or first one
+          const defaultVar = productData.variants.find(v => v.id === productData.defaultVariantId) || productData.variants[0];
+          setSelectedVariant(defaultVar);
+          console.log('Initialized variant:', defaultVar.color?.name);
+        }
+
         // Check if product is in wishlist
         try {
-          const wishlistStatus = await checkWishlist(productData.id);
+          // Determine variant to check
+          const variantToCheck = (productData.variants && productData.variants.length > 0)
+            ? (productData.variants.find((v: any) => v.id === productData.defaultVariantId) || productData.variants[0])
+            : null;
+
+          const wishlistStatus = await checkWishlist(productData.id, variantToCheck?.id);
           setIsFavorite(wishlistStatus.in_wishlist);
         } catch (error) {
           console.log('Error checking wishlist status:', error);
@@ -167,6 +182,24 @@ const ProductDetailsScreen = () => {
     loadProductData();
   };
 
+  // Re-check wishlist when selected variant changes
+  useEffect(() => {
+    const checkStatus = async () => {
+      if (product) {
+        try {
+          const status = await checkWishlist(product.id, selectedVariant?.id);
+          setIsFavorite(status.in_wishlist);
+        } catch (error) {
+          console.error('Error re-checking wishlist status:', error);
+        }
+      }
+    };
+
+    if (product) {
+      checkStatus();
+    }
+  }, [selectedVariant, product]);
+
   // Handle add to cart
   const handleAddToCart = async () => {
     if (!product) return;
@@ -189,8 +222,13 @@ const ProductDetailsScreen = () => {
 
     try {
       setAddingToCart(true);
-      await addToCart(product.id, quantity, {
+
+      const variantId = selectedVariant ? selectedVariant.id : product.id;
+
+      await addToCart(variantId, quantity, {
         size: selectedSize,
+        variant_id: selectedVariant ? selectedVariant.id : undefined,
+        color: selectedVariant ? selectedVariant.color?.name : undefined
       });
 
       SafeAlert.show(
@@ -217,11 +255,11 @@ const ProductDetailsScreen = () => {
       setTogglingWishlist(true);
 
       if (isFavorite) {
-        await removeFromWishlist(product.id);
+        await removeFromWishlist(product.id, selectedVariant?.id);
         setIsFavorite(false);
         SafeAlert.success('Removed', 'Item removed from wishlist');
       } else {
-        await addToWishlist(product.id);
+        await addToWishlist(product.id, selectedVariant?.id);
         setIsFavorite(true);
         SafeAlert.success('Added', 'Item added to wishlist');
       }
@@ -237,21 +275,20 @@ const ProductDetailsScreen = () => {
   const handleBuyNow = () => {
     if (!product) return;
 
-    // Create cart item format for checkout - ensure image is always an array of strings
-    const productImages = Array.isArray(product.images)
-      ? product.images
-      : typeof product.images === 'string'
-        ? [product.images]
-        : ['https://via.placeholder.com/50'];
+    const currentImages = (selectedVariant && selectedVariant.images && selectedVariant.images.length > 0)
+      ? selectedVariant.images
+      : (Array.isArray(product.images) ? product.images : [product.images as any]);
+
+    const productImages = Array.isArray(currentImages) ? currentImages : [currentImages];
 
     const cartItem = {
-      id: product.id.toString(),
+      id: (selectedVariant ? selectedVariant.id : product.id).toString(),
       name: product.name,
-      price: product.price,
-      originalPrice: product.originalPrice,
+      price: selectedVariant ? selectedVariant.price : product.price,
+      originalPrice: selectedVariant ? selectedVariant.originalPrice : product.originalPrice,
       quantity: quantity,
       size: selectedSize || null,
-      color: '',
+      color: selectedVariant?.color?.name || '',
       image: productImages[0], // Use first image as string
     };
 
@@ -303,8 +340,18 @@ const ProductDetailsScreen = () => {
     );
   }
 
-  const discount = product.originalPrice && product.originalPrice > product.price
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+  // Derived values based on selection
+  const currentImages = (selectedVariant && selectedVariant.images && selectedVariant.images.length > 0)
+    ? selectedVariant.images
+    : (product ? (Array.isArray(product.images) ? product.images : []) : []);
+
+  const currentPrice = selectedVariant ? selectedVariant.price : (product ? product.price : 0);
+  const currentOriginalPrice = selectedVariant ? selectedVariant.originalPrice : (product ? product.originalPrice : 0);
+  const currentStock = selectedVariant ? selectedVariant.stock : (product ? product.stock : 0);
+
+  // Calculate discount based on current prices
+  const discount = currentOriginalPrice && currentOriginalPrice > currentPrice
+    ? Math.round(((currentOriginalPrice - currentPrice) / currentOriginalPrice) * 100)
     : 0;
 
   return (
@@ -342,7 +389,7 @@ const ProductDetailsScreen = () => {
         {/* Clean Product Image */}
         <View style={styles.imageSection}>
           <Image
-            source={{ uri: product.images[selectedImageIndex] || product.images[0] }}
+            source={{ uri: currentImages[selectedImageIndex] || currentImages[0] }}
             style={styles.productImage}
           />
 
@@ -373,9 +420,9 @@ const ProductDetailsScreen = () => {
           </TouchableOpacity>
 
           {/* Image Indicators */}
-          {product.images.length > 1 && (
+          {currentImages.length > 1 && (
             <View style={styles.imageIndicators}>
-              {product.images.map((_, index) => (
+              {currentImages.map((_: string, index: number) => (
                 <TouchableOpacity
                   key={index}
                   style={[
@@ -390,10 +437,10 @@ const ProductDetailsScreen = () => {
         </View>
 
         {/* Thumbnail Gallery */}
-        {product.images.length > 1 && (
+        {currentImages.length > 1 && (
           <View style={styles.thumbnailSection}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.thumbnailContainer}>
-              {product.images.map((image, index) => (
+              {currentImages.map((image: string, index: number) => (
                 <TouchableOpacity
                   key={index}
                   style={[
@@ -428,13 +475,13 @@ const ProductDetailsScreen = () => {
 
           {/* Price Section */}
           <View style={styles.priceSection}>
-            <Text style={styles.currentPrice}>₹{product.price?.toLocaleString()}</Text>
-            {product.originalPrice && product.originalPrice > product.price && (
-              <Text style={styles.originalPrice}>₹{product.originalPrice?.toLocaleString()}</Text>
+            <Text style={styles.currentPrice}>₹{currentPrice?.toLocaleString()}</Text>
+            {currentOriginalPrice && currentOriginalPrice > currentPrice && (
+              <Text style={styles.originalPrice}>₹{currentOriginalPrice?.toLocaleString()}</Text>
             )}
             {discount > 0 && (
               <View style={styles.savingsTag}>
-                <Text style={styles.savingsText}>Save ₹{((product.originalPrice || 0) - product.price).toLocaleString()}</Text>
+                <Text style={styles.savingsText}>Save ₹{((currentOriginalPrice || 0) - currentPrice).toLocaleString()}</Text>
               </View>
             )}
           </View>
@@ -446,6 +493,43 @@ const ProductDetailsScreen = () => {
               {product.description || 'Experience the elegance of this premium saree, crafted with the finest materials. Perfect for weddings, festivals, and special occasions. The intricate design and superior quality fabric make it a must-have in your ethnic collection.'}
             </Text>
           </View>
+
+          {/* Variants / Colors Section */}
+          {product.variants && product.variants.length > 0 && (
+            <View style={styles.colorSection}>
+              <Text style={styles.sectionTitle}>Available Colors</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.colorContainer}>
+                {product.variants.map((variant) => {
+                  const isSelected = selectedVariant && selectedVariant.id === variant.id;
+                  return (
+                    <TouchableOpacity
+                      key={variant.id}
+                      style={[
+                        styles.colorOption,
+                        isSelected && styles.selectedColorOption,
+                        { backgroundColor: variant.color?.value || '#eee' }
+                      ]}
+                      onPress={() => {
+                        setSelectedVariant(variant);
+                        setSelectedImageIndex(0);
+                      }}
+                    >
+                      {isSelected && (
+                        <View style={styles.checkIcon}>
+                          <Text style={{ color: '#fff', fontSize: 10 }}>✓</Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+              {selectedVariant && (
+                <Text style={styles.selectedColorText}>
+                  Selected: {selectedVariant.color?.name || 'Standard'}
+                </Text>
+              )}
+            </View>
+          )}
 
           {/* Quantity Selector */}
           <View style={styles.quantitySection}>
@@ -968,6 +1052,40 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.6,
+  },
+  // Color Selection Styles
+  colorSection: {
+    marginBottom: 24,
+  },
+  colorContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingVertical: 8,
+  },
+  colorOption: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: theme.colors.neutral[200],
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  selectedColorOption: {
+    borderColor: theme.colors.primary[600],
+    borderWidth: 2,
+    transform: [{ scale: 1.1 }],
+  },
+  checkIcon: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  selectedColorText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: theme.colors.neutral[600],
+    fontWeight: '500',
   },
 });
 

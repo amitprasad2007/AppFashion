@@ -402,13 +402,7 @@ const RegisterScreen = () => {
               style={styles.socialButton}
             />
 
-            <OAuthButton
-              provider="apple"
-              onSuccess={() => navigation.navigate('MainTabs')}
-              onError={(error) => console.error('Apple OAuth Error:', error)}
-              disabled={true}
-              style={styles.socialButton}
-            />
+
           </View>
         </View>
 
@@ -448,11 +442,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   welcomeSubtitle: {
-    fontSize: 14,
+    fontSize: 16,
     color: theme.colors.neutral[600],
     textAlign: 'center',
-    lineHeight: 20,
-    maxWidth: '80%',
+    lineHeight: 22,
+    maxWidth: '85%',
   },
   formSection: {
     backgroundColor: theme.colors.white,
@@ -480,7 +474,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   inputLabel: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
     color: theme.colors.neutral[700],
     marginBottom: 8,
@@ -500,7 +494,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.error[500],
   },
   validationError: {
-    fontSize: 12,
+    fontSize: 13,
     color: theme.colors.error[600],
     marginTop: 4,
     fontWeight: '500',
@@ -514,7 +508,7 @@ const styles = StyleSheet.create({
     borderLeftColor: theme.colors.error[500],
   },
   errorText: {
-    fontSize: 14,
+    fontSize: 15,
     color: theme.colors.error[700],
     fontWeight: '500',
   },
@@ -525,7 +519,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   loadingText: {
-    fontSize: 14,
+    fontSize: 15,
     color: theme.colors.neutral[600],
     marginLeft: 8,
   },
@@ -550,7 +544,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   passwordHint: {
-    fontSize: 12,
+    fontSize: 13,
     color: theme.colors.neutral[500],
     marginTop: 6,
   },
@@ -572,9 +566,9 @@ const styles = StyleSheet.create({
   },
   termsText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 15,
     color: theme.colors.neutral[600],
-    lineHeight: 20,
+    lineHeight: 22,
   },
   termsLink: {
     color: theme.colors.primary[600],
@@ -604,13 +598,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
   socialButtons: {
-    gap: 12,
+    flexDirection: 'row', // Horizontal layout for social buttons
+    justifyContent: 'center',
+    gap: 16, // Spacing between horizontal buttons
   },
   socialButton: {
+    flex: 1, // Share width
     marginBottom: 0,
     backgroundColor: theme.colors.white,
-    borderWidth: 1,
     borderColor: theme.colors.neutral[200],
+    height: 44, // Reduced height
   },
   signinSection: {
     flexDirection: 'row',
@@ -618,11 +615,11 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   signinText: {
-    fontSize: 14,
+    fontSize: 16,
     color: theme.colors.neutral[600],
   },
   signinLink: {
-    fontSize: 14,
+    fontSize: 16,
     color: theme.colors.primary[600],
     fontWeight: '700',
   },

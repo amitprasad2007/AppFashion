@@ -67,7 +67,10 @@ export interface ApiProduct {
   defaultVariantId: number;
   variants: Array<{
     id: number;
-    color: string;
+    color: {
+      name: string;
+      value: string;
+    };
     sku: string;
     images: string[];
     stock: number;
@@ -1261,7 +1264,9 @@ class ApiService {
       const payload = {
         product_id: productId,
         quantity,
-        ...options,
+        variant_id: options?.variant_id,
+        size: options?.size,
+        color: options?.color,
       };
 
       const response = await this.fetchApi<{ success: boolean; message: string; cart?: ApiCart }>('/cart/add', {
@@ -1393,11 +1398,15 @@ class ApiService {
   }
 
   // Add item to wishlist
-  async addToWishlist(productId: number): Promise<{ success: boolean; message: string }> {
+  async addToWishlist(productId: number, variantId?: number): Promise<{ success: boolean; message: string }> {
     try {
+      const payload: any = { product_id: productId };
+      if (variantId) {
+        payload.product_variant_id = variantId;
+      }
       const response = await this.fetchApi<{ success: boolean; message: string }>('/wishlist', {
         method: 'POST',
-        body: JSON.stringify({ product_id: productId }),
+        body: JSON.stringify(payload),
       });
       return response;
     } catch (error) {
@@ -1407,9 +1416,13 @@ class ApiService {
   }
 
   // Remove item from wishlist by product ID
-  async removeFromWishlist(productId: number): Promise<{ success: boolean; message: string }> {
+  async removeFromWishlist(productId: number, variantId?: number): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await this.fetchApi<{ success: boolean; message: string }>(`/wishlist/${productId}`, {
+      let endpoint = `/wishlist/${productId}`;
+      if (variantId) {
+        endpoint += `?product_variant_id=${variantId}`;
+      }
+      const response = await this.fetchApi<{ success: boolean; message: string }>(endpoint, {
         method: 'DELETE',
       });
       return response;
@@ -1496,7 +1509,9 @@ class ApiService {
       const payload = {
         product_id: productId,
         quantity,
-        ...options,
+        variant_id: options?.variant_id,
+        size: options?.size,
+        color: options?.color,
       };
 
       const response = await this.fetchApi<{

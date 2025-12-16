@@ -339,11 +339,11 @@ const styles = StyleSheet.create({
     marginBottom: 4, // Reduced from 8
   },
   welcomeSubtitle: {
-    fontSize: 13, // Reduced from 14
+    fontSize: 16, // Increased from 13
     color: theme.colors.neutral[600],
     textAlign: 'center',
-    lineHeight: 18, // Reduced from 20
-    maxWidth: '85%', // Increased width to reduce height
+    lineHeight: 22,
+    maxWidth: '85%',
   },
   formCard: {
     backgroundColor: theme.colors.white,
@@ -360,20 +360,20 @@ const styles = StyleSheet.create({
     marginBottom: 16, // Reduced from 24
   },
   formTitle: {
-    fontSize: 16, // Reduced from 18
+    fontSize: 20, // Increased from 16
     fontWeight: '700',
     color: theme.colors.neutral[900],
-    marginBottom: 16, // Reduced from 24
+    marginBottom: 16,
     textAlign: 'center',
   },
   inputContainer: {
     marginBottom: 12, // Reduced from 16
   },
   inputLabel: {
-    fontSize: 13, // Reduced from 14
+    fontSize: 16, // Increased from 13
     fontWeight: '600',
     color: theme.colors.neutral[700],
-    marginBottom: 6, // Reduced from 8
+    marginBottom: 8,
   },
   inputWrapper: {
     backgroundColor: theme.colors.neutral[50],
@@ -382,8 +382,8 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.neutral[300],
   },
   input: {
-    padding: 10, // Reduced from 12
-    fontSize: 14, // Reduced from 16
+    padding: 12,
+    fontSize: 16, // Increased from 14
     color: theme.colors.neutral[900],
   },
   passwordContainer: {
@@ -396,8 +396,8 @@ const styles = StyleSheet.create({
   },
   passwordInput: {
     flex: 1,
-    padding: 10, // Reduced from 12
-    fontSize: 14, // Reduced from 16
+    padding: 12,
+    fontSize: 16, // Increased from 14
     color: theme.colors.neutral[900],
   },
   eyeButton: {
@@ -407,10 +407,10 @@ const styles = StyleSheet.create({
     fontSize: 16, // Reduced from 18
   },
   forgotPassword: {
-    fontSize: 13, // Reduced from 14
+    fontSize: 15, // Increased from 13
     color: theme.colors.primary[600],
     textAlign: 'right',
-    marginBottom: 16, // Reduced from 24
+    marginBottom: 20,
     fontWeight: '500',
   },
   loginButton: {
@@ -435,9 +435,9 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.error[500],
   },
   validationError: {
-    fontSize: 11, // Reduced from 12
+    fontSize: 13, // Increased from 11
     color: theme.colors.error[600],
-    marginTop: 2, // Reduced from 4
+    marginTop: 4,
     fontWeight: '500',
   },
   disabledText: {
@@ -470,9 +470,9 @@ const styles = StyleSheet.create({
   },
   orText: {
     textAlign: 'center',
-    fontSize: 12, // Reduced from 14
+    fontSize: 14, // Increased from 12
     color: theme.colors.neutral[500],
-    marginHorizontal: 12, // Reduced from 16
+    marginHorizontal: 16,
   },
   socialButtons: {
     flexDirection: 'row', // Horizontal layout for social buttons
@@ -493,11 +493,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   signupText: {
-    fontSize: 13, // Reduced from 14
+    fontSize: 16, // Increased from 13
     color: theme.colors.neutral[600],
   },
   signupLink: {
-    fontSize: 13, // Reduced from 14
+    fontSize: 16, // Increased from 13
     color: theme.colors.primary[600],
     fontWeight: '700',
   },
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   guestButtonText: {
-    fontSize: 13, // Reduced from 14
+    fontSize: 16, // Increased from 13
     fontWeight: '600',
     color: theme.colors.neutral[500],
   },
