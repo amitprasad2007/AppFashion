@@ -219,15 +219,20 @@ const ProductDetailsScreen = () => {
       );
       return;
     }
-
     try {
       setAddingToCart(true);
 
-      const variantId = selectedVariant ? selectedVariant.id : product.id;
+      let variantId = undefined;
+      if (selectedVariant) {
+        variantId = selectedVariant.id;
+      } else if (product.variants && product.variants.length > 0) {
+        variantId = product.variants[0].id;
+      }
 
-      await addToCart(variantId, quantity, {
+      const productId = product.id;
+      await addToCart(productId, quantity, {
         size: selectedSize,
-        variant_id: selectedVariant ? selectedVariant.id : undefined,
+        variant_id: variantId,
         color: selectedVariant ? selectedVariant.color?.name : undefined
       });
 

@@ -1084,6 +1084,7 @@ class ApiService {
   async getCart(): Promise<ApiCart> {
     try {
       const userData = await this.getUserData();
+      console.log(userData);
       return userData.cart_items;
     } catch (error) {
       console.error('Error fetching cart:', error);
