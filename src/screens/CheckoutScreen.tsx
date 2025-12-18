@@ -206,7 +206,8 @@ const CheckoutScreenContent = () => {
                 itemData.images?.[0] || '';
 
           const cartId = item.cart_id;
-          const productId = itemData.id || item.id;
+          const productId = item.id || item.product_id;
+          const variantId = item.variant_id;
           const productName = itemData.name || item.name;
           const productPrice = (itemData.price || item.price || 0).toString();
           const quantity = item.quantity || 1;
@@ -223,6 +224,7 @@ const CheckoutScreenContent = () => {
           return {
             cart_id: cartId,
             id: productId,
+            variant_id: variantId,
             name: productName,
             price: productPrice,
             quantity: quantity,
@@ -330,7 +332,8 @@ const CheckoutScreenContent = () => {
 
           return {
             cart_id: item.cart_id,
-            id: itemData.id || item.id,
+            id: item.id || item.product_id,
+            variant_id: item.variant_id,
             name: itemData.name || item.name,
             price: (itemData.price || item.price || 0).toString(),
             quantity: item.quantity || 1,
@@ -362,6 +365,10 @@ const CheckoutScreenContent = () => {
       if (paymentResult.success) {
         console.log('✅ Razorpay payment successful:', paymentResult);
 
+        const orderDetails = paymentResult.paymentData?.order;
+        const orderId = orderDetails?.order_id || paymentResult.paymentData?.razorpay_order_id || '';
+        const orderNumber = orderDetails?.order_number || orderDetails?.order_id || paymentResult.paymentData?.razorpay_order_id || '';
+
         try {
           await apiService.clearCart();
         } catch (clearError) {
@@ -375,14 +382,14 @@ const CheckoutScreenContent = () => {
             text: 'View Order',
             onPress: () => {
               navigation.replace('OrderConfirmation', {
-                orderId: paymentResult.paymentData?.razorpay_order_id || '',
-                orderNumber: paymentResult.paymentData?.razorpay_order_id || '',
+                orderId: orderId,
+                orderNumber: orderNumber,
                 orderTotal: finalTotal,
                 paymentMethod: selectedPayment!.name,
                 paymentStatus: 'paid',
-                orderStatus: 'confirmed',
-                orderItems: items,
-                orderDetails: null
+                orderStatus: orderDetails?.status || 'confirmed',
+                orderItems: orderDetails?.cart_items || items,
+                orderDetails: orderDetails
               });
             }
           }]
@@ -439,7 +446,7 @@ const CheckoutScreenContent = () => {
       if (selectedPayment.type === 'COD' || selectedPayment.id === 'cod') {
         // Handle Cash on Delivery
         await handleCODPayment(items, selectedAddress, finalTotal, itemsCount, itemsTotal, discountAmount, shippingAmount, taxAmount);
-      } else if (['UPI', 'CARD', 'NETBANKING', 'WALLET'].includes(selectedPayment.type)) {
+      } else if (['UPI', 'CARD', 'NETBANKING', 'WALLET', 'ONLINE'].includes(selectedPayment.type)) {
         // Handle Razorpay payments
         await handleRazorpayPayment(items, selectedAddress, finalTotal, itemsCount, itemsTotal, discountAmount, shippingAmount, taxAmount);
       } else {
@@ -532,7 +539,7 @@ const CheckoutScreenContent = () => {
 
           <View style={[styles.summaryRow, styles.totalRow]}>
             <Text style={styles.totalLabel}>Total Amount</Text>
-            <Text style={styles.totalValue}>₹{finalTotal}</Text>
+            <Text style={styles.totalValue}>₹{finalTotal.toFixed(2)}</Text>
           </View>
         </View>
       </View>
@@ -767,7 +774,7 @@ const CheckoutScreenContent = () => {
         {renderOrderNotes()}
 
         <GradientButton
-          title={loading ? 'Processing...' : `Place Order - ₹${params?.total || params?.cart?.total || 0}`}
+          title={loading ? 'Processing...' : `Place Order - ₹${params?.total.toFixed(2) || params?.cart?.total.toFixed(2) || 0}`}
           onPress={placeOrder}
           disabled={loading}
           gradient={theme.colors.gradients.primary}

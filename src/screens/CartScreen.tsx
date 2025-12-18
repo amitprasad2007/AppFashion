@@ -88,7 +88,7 @@ const CartScreenContent = () => {
       setRefreshing(false);
     }
   };
-
+  
   // Load cart when user data changes
   useEffect(() => {
     if (userData?.cart_items) {
@@ -255,8 +255,6 @@ const CartScreenContent = () => {
 
   // Render cart item
   const renderCartItem = ({ item, index }: { item: ApiCartItem; index: number }) => {
-
-    console.log(item);
 
     const isUpdating = updatingItems.has(item.id);
     const itemPrice = parseFloat(item.price);
@@ -446,13 +444,13 @@ const CartScreenContent = () => {
 
                   <View style={[styles.summaryRow, styles.totalRow]}>
                     <Text style={styles.totalLabel}>Total</Text>
-                    <Text style={styles.totalValue}>₹{cart.total}</Text>
+                    <Text style={styles.totalValue}>₹{cart.total.toFixed(2)}</Text>
                   </View>
                 </View>
 
                 {/* Checkout Button */}
                 <GradientButton
-                  title={`Proceed to Checkout - ₹${cart.total}`}
+                  title={`Proceed to Checkout - ₹${cart.total.toFixed(2)}`}
                   onPress={proceedToCheckout}
                   gradient={theme.colors.gradients.primary}
                   style={styles.checkoutButton}
@@ -489,7 +487,7 @@ const styles = StyleSheet.create({
   },
   errorContainer: {
     margin: 16,
-    padding: 16,
+    padding: 12,
     backgroundColor: theme.colors.error[50],
     borderRadius: 8,
     borderWidth: 1,
@@ -504,7 +502,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: 20,
   },
   emptyCartIcon: {
     fontSize: 64,
@@ -527,12 +525,12 @@ const styles = StyleSheet.create({
     maxWidth: 250,
   },
   cartList: {
-    padding: 16,
+    padding: 14,
   },
   cartItem: {
     backgroundColor: theme.colors.white,
     borderRadius: 12,
-    padding: 12,
+    padding: 10,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: theme.colors.neutral[200],
@@ -634,7 +632,7 @@ const styles = StyleSheet.create({
   },
   couponSection: {
     backgroundColor: theme.colors.white,
-    padding: 16,
+    padding: 12,
     borderRadius: 12,
     marginBottom: 16,
     borderWidth: 1,
@@ -668,7 +666,7 @@ const styles = StyleSheet.create({
   },
   summarySection: {
     backgroundColor: theme.colors.white,
-    padding: 16,
+    padding: 12,
     borderRadius: 12,
     marginBottom: 24,
     borderWidth: 1,
@@ -711,7 +709,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary[600],
   },
   checkoutButton: {
-    marginBottom: 24,
+    marginBottom: 2,
   },
 });
 
