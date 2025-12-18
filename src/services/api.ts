@@ -1162,6 +1162,17 @@ class ApiService {
   // Clear entire cart
   async clearCart(): Promise<{ success: boolean; message: string }> {
     try {
+      // Try to clear server-side cart first (keeps app/server in sync)
+      try {
+        await this.fetchApi<{ success: boolean; message: string }>('/cart/clear', {
+          method: 'POST',
+          body: JSON.stringify({}),
+        });
+      } catch (serverError) {
+        console.warn('Failed to clear server cart, proceeding to clear local cart only:', serverError);
+      }
+
+      // Always clear local cache as well
       await AsyncStorage.removeItem('cart');
       return { success: true, message: 'Cart cleared successfully' };
     } catch (error) {
@@ -1350,7 +1361,7 @@ class ApiService {
   }
 
   // Get cart summary
-  async getCartSummary(): Promise<{
+  async getCartSummary(addressId?: number | string): Promise<{
     total_items: number;
     subtotal: number;
     total: number;
@@ -1359,6 +1370,7 @@ class ApiService {
     tax: number;
   }> {
     try {
+      const qs = addressId ? `?address_id=${addressId}` : '';
       const response = await this.fetchApi<{
         total_items: number;
         subtotal: number;
@@ -1366,7 +1378,7 @@ class ApiService {
         discount: number;
         shipping: number;
         tax: number;
-      }>('/cart/summary');
+      }>(`/cart/summary${qs}`);
       return response;
     } catch (error) {
       console.error('Error fetching cart summary:', error);

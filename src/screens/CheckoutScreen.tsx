@@ -41,6 +41,14 @@ const CheckoutScreenContent = () => {
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [orderNotes, setOrderNotes] = useState('');
+  const [summary, setSummary] = useState<{
+    total_items: number;
+    subtotal: number;
+    total: number;
+    discount: number;
+    shipping: number;
+    tax: number;
+  } | null>(null);
 
   const [newAddress, setNewAddress] = useState<Omit<ShippingAddress, 'id'>>({
     name: '',
@@ -55,31 +63,35 @@ const CheckoutScreenContent = () => {
     isDefault: false,
   });
 
+  const [addressErrors, setAddressErrors] = useState<{
+    name?: string;
+    phone?: string;
+    addressLine1?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+  }>({});
+
   useEffect(() => {
     loadCheckoutData();
-    initializeRazorpay();
   }, []);
-
-  const initializeRazorpay = () => {
-    try {
-      razorpayService.initialize({
-        key_id: 'rzp_test_kQ8xDx79gF13e2', // Replace with your Razorpay Test/Live Key ID
-        key_secret: 'hAWjjASWTuj3SHs3G4Q2s871', // This should be kept on server only
-      });
-      console.log('🔧 Razorpay initialized successfully');
-    } catch (error) {
-      console.error('❌ Failed to initialize Razorpay:', error);
-    }
-  };
+  
+  // Razorpay is initialized per-payment using server-provided key in razorpayService.createOrder()
+  // No secrets are stored on the client.
 
   const loadCheckoutData = async () => {
     try {
       setLoading(true);
 
-      const [addressesData, paymentMethodsData] = await Promise.all([
+      const [addressesData, paymentMethodsData, cartSummary] = await Promise.all([
         apiService.getAddresses(),
-        apiService.getPaymentMethods()
+        apiService.getPaymentMethods(),
+        apiService.getCartSummary().catch(err => {
+          console.warn('Cart summary not available, falling back to client totals:', err);
+          return null;
+        })
       ]);
+      setSummary(cartSummary);
 
       const transformedAddresses: ShippingAddress[] = addressesData.map(apiAddr => ({
         id: apiAddr.id.toString(),
@@ -127,11 +139,23 @@ const CheckoutScreenContent = () => {
     }
   };
 
+  const validateAddress = (addr: typeof newAddress): boolean => {
+    const errors: typeof addressErrors = {};
+    if (!addr.name.trim()) errors.name = 'Full name is required';
+    const phone = addr.phone.replace(/\D/g, '');
+    if (phone.length !== 10) errors.phone = 'Enter a valid 10-digit phone number';
+    if (!addr.addressLine1.trim()) errors.addressLine1 = 'Address Line 1 is required';
+    if (!addr.city.trim()) errors.city = 'City is required';
+    if (!addr.state.trim()) errors.state = 'State is required';
+    const pincode = addr.pincode.replace(/\D/g, '');
+    if (pincode.length !== 6) errors.pincode = 'Enter a valid 6-digit pincode';
+    setAddressErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const saveAddress = async () => {
     try {
-      if (!newAddress.name || !newAddress.phone || !newAddress.addressLine1 ||
-        !newAddress.city || !newAddress.state || !newAddress.pincode) {
-        Alert.alert('Error', 'Please fill in all required fields');
+      if (!validateAddress(newAddress)) {
         return;
       }
 
@@ -394,7 +418,25 @@ const CheckoutScreenContent = () => {
       console.error('❌ Razorpay payment failed:', error);
       Alert.alert(
         'Payment Failed',
-        `Payment could not be completed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Payment could not be completed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        [
+          {
+            text: 'Retry',
+            onPress: () => {
+              handleRazorpayPayment(items, address, finalTotal, itemsCount, itemsTotal, discountAmount, shippingAmount, taxAmount)
+                .catch(() => {});
+            }
+          },
+          {
+            text: 'Use COD',
+            onPress: () => {
+              setSelectedPayment({ id: 'cod', type: 'COD', name: 'Cash on Delivery' });
+              handleCODPayment(items, address, finalTotal, itemsCount, itemsTotal, discountAmount, shippingAmount, taxAmount)
+                .catch(() => {});
+            }
+          },
+          { text: 'Cancel', style: 'cancel' }
+        ]
       );
       throw error;
     }
@@ -416,14 +458,14 @@ const CheckoutScreenContent = () => {
 
       const items = cart?.items || cartItems || [];
 
-      // Calculate totals
-      const itemsCount = cart?.totalItems ||
-        (cartItems ? cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0) : 0);
-      const itemsTotal = cart?.totalAmount || subtotal || 0;
-      const discountAmount = cart?.discount || discount || 0;
-      const shippingAmount = cart?.deliveryCharge || shipping || 0;
-      const taxAmount = tax || 0;
-      const finalTotal = cart?.finalAmount || total || 0;
+      // Calculate totals (prefer server summary if available)
+      const itemsCount = summary?.total_items ?? (cart?.totalItems ||
+        (cartItems ? cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0) : 0));
+      const itemsTotal = summary?.subtotal ?? (cart?.totalAmount || subtotal || 0);
+      const discountAmount = summary?.discount ?? (cart?.discount || discount || 0);
+      const shippingAmount = summary?.shipping ?? (cart?.deliveryCharge || shipping || 0);
+      const taxAmount = summary?.tax ?? (tax || 0);
+      const finalTotal = summary?.total ?? (cart?.finalAmount || total || 0);
 
       if (items.length === 0) {
         Alert.alert('Error', 'No items found in cart. Please add items to cart first.');
@@ -437,10 +479,8 @@ const CheckoutScreenContent = () => {
 
       // Handle different payment methods
       if (selectedPayment.type === 'COD' || selectedPayment.id === 'cod') {
-        // Handle Cash on Delivery
         await handleCODPayment(items, selectedAddress, finalTotal, itemsCount, itemsTotal, discountAmount, shippingAmount, taxAmount);
-      } else if (['UPI', 'CARD', 'NETBANKING', 'WALLET'].includes(selectedPayment.type)) {
-        // Handle Razorpay payments
+      } else if (selectedPayment.type === 'ONLINE' || selectedPayment.id === 'online') {
         await handleRazorpayPayment(items, selectedAddress, finalTotal, itemsCount, itemsTotal, discountAmount, shippingAmount, taxAmount);
       } else {
         throw new Error(`Unsupported payment method: ${selectedPayment.type}`);
@@ -458,13 +498,13 @@ const CheckoutScreenContent = () => {
     const items = cart?.items || cartItems || [];
     const itemsToShow = items.slice(0, 3);
 
-    const itemsCount = cart?.totalItems ||
-      (cartItems ? cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0) : 0);
-    const itemsTotal = cart?.totalAmount || subtotal || 0;
-    const discountAmount = cart?.discount || discount || 0;
-    const shippingAmount = cart?.deliveryCharge || shipping || 0;
-    const taxAmount = cart?.tax || tax || 0;
-    const finalTotal = cart?.finalAmount || total || 0;
+    const itemsCount = summary?.total_items ?? (cart?.totalItems ||
+      (cartItems ? cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0) : 0));
+    const itemsTotal = summary?.subtotal ?? (cart?.totalAmount || subtotal || 0);
+    const discountAmount = summary?.discount ?? (cart?.discount || discount || 0);
+    const shippingAmount = summary?.shipping ?? (cart?.deliveryCharge || shipping || 0);
+    const taxAmount = summary?.tax ?? (cart?.tax || tax || 0);
+    const finalTotal = summary?.total ?? (cart?.finalAmount || total || 0);
 
     return (
       <View style={styles.section}>
@@ -554,18 +594,27 @@ const CheckoutScreenContent = () => {
 
           <View style={styles.formRow}>
             <TextInput
-              style={[styles.input, styles.halfInput]}
+              style={[styles.input, styles.halfInput, addressErrors.name ? styles.inputError : null]}
               placeholder="Full Name *"
               value={newAddress.name}
-              onChangeText={(text) => setNewAddress(prev => ({ ...prev, name: text }))}
+              onChangeText={(text) => {
+                setNewAddress(prev => ({ ...prev, name: text }));
+                if (addressErrors.name) setAddressErrors(prev => ({ ...prev, name: undefined }));
+              }}
             />
+            {addressErrors.name ? <Text style={styles.errorText}>{addressErrors.name}</Text> : null
             <TextInput
-              style={[styles.input, styles.halfInput]}
+              style={[styles.input, styles.halfInput, addressErrors.phone ? styles.inputError : null]}
               placeholder="Phone Number *"
               value={newAddress.phone}
-              onChangeText={(text) => setNewAddress(prev => ({ ...prev, phone: text }))}
+              onChangeText={(text) => {
+                const digits = text.replace(/\D/g, '').slice(0, 10);
+                setNewAddress(prev => ({ ...prev, phone: digits }));
+                if (addressErrors.phone) setAddressErrors(prev => ({ ...prev, phone: undefined }));
+              }}
               keyboardType="phone-pad"
             />
+            {addressErrors.phone ? <Text style={styles.errorText}>{addressErrors.phone}</Text> : null
           </View>
 
           <TextInput
@@ -577,12 +626,16 @@ const CheckoutScreenContent = () => {
           />
 
           <TextInput
-            style={styles.input}
+            style={[styles.input, addressErrors.addressLine1 ? styles.inputError : null]}
             placeholder="Address Line 1 *"
             value={newAddress.addressLine1}
-            onChangeText={(text) => setNewAddress(prev => ({ ...prev, addressLine1: text }))}
+            onChangeText={(text) => {
+              setNewAddress(prev => ({ ...prev, addressLine1: text }));
+              if (addressErrors.addressLine1) setAddressErrors(prev => ({ ...prev, addressLine1: undefined }));
+            }}
             multiline
           />
+          {addressErrors.addressLine1 ? <Text style={styles.errorText}>{addressErrors.addressLine1}</Text> : null
 
           <TextInput
             style={styles.input}
@@ -593,27 +646,40 @@ const CheckoutScreenContent = () => {
 
           <View style={styles.formRow}>
             <TextInput
-              style={[styles.input, styles.halfInput]}
+              style={[styles.input, styles.halfInput, addressErrors.city ? styles.inputError : null]}
               placeholder="City *"
               value={newAddress.city}
-              onChangeText={(text) => setNewAddress(prev => ({ ...prev, city: text }))}
+              onChangeText={(text) => {
+                setNewAddress(prev => ({ ...prev, city: text }));
+                if (addressErrors.city) setAddressErrors(prev => ({ ...prev, city: undefined }));
+              }}
             />
+            {addressErrors.city ? <Text style={styles.errorText}>{addressErrors.city}</Text> : null
             <TextInput
-              style={[styles.input, styles.halfInput]}
+              style={[styles.input, styles.halfInput, addressErrors.pincode ? styles.inputError : null]}
               placeholder="Pincode *"
               value={newAddress.pincode}
-              onChangeText={(text) => setNewAddress(prev => ({ ...prev, pincode: text }))}
+              onChangeText={(text) => {
+                const digits = text.replace(/\D/g, '').slice(0, 6);
+                setNewAddress(prev => ({ ...prev, pincode: digits }));
+                if (addressErrors.pincode) setAddressErrors(prev => ({ ...prev, pincode: undefined }));
+              }}
               keyboardType="numeric"
             />
+            {addressErrors.pincode ? <Text style={styles.errorText}>{addressErrors.pincode}</Text> : null
           </View>
 
           <View style={styles.formRow}>
             <TextInput
-              style={[styles.input, styles.halfInput]}
+              style={[styles.input, styles.halfInput, addressErrors.state ? styles.inputError : null]}
               placeholder="State *"
               value={newAddress.state}
-              onChangeText={(text) => setNewAddress(prev => ({ ...prev, state: text }))}
+              onChangeText={(text) => {
+                setNewAddress(prev => ({ ...prev, state: text }));
+                if (addressErrors.state) setAddressErrors(prev => ({ ...prev, state: undefined }));
+              }}
             />
+            {addressErrors.state ? <Text style={styles.errorText}>{addressErrors.state}</Text> : null
             <TextInput
               style={[styles.input, styles.halfInput]}
               placeholder="Landmark"
@@ -1089,6 +1155,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: theme.colors.primary[600],
+  },
+  inputError: {
+    borderColor: theme.colors.error[500],
+  },
+  errorText: {
+    color: theme.colors.error[600],
+    fontSize: 12,
+    marginTop: -8,
+    marginBottom: 8,
   },
   notesInput: {
     borderWidth: 1,
