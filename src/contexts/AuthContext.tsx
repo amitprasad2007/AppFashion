@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useCallback, useContext, useReducer, useEffect, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Linking } from 'react-native';
 import { apiService, AuthUser, LoginCredentials, RegisterCredentials, AuthResponse } from '../services/api';
@@ -54,7 +54,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
     case 'LOADING':
       return { ...state, isLoading: action.payload };
-    
+
     case 'LOGIN_SUCCESS':
       return {
         ...state,
@@ -65,7 +65,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         isLoading: false,
         error: null,
       };
-    
+
     case 'LOGIN_FAILURE':
       return {
         ...state,
@@ -76,31 +76,31 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         isLoading: false,
         error: action.payload,
       };
-    
+
     case 'LOGOUT':
       return {
         ...initialState,
         isLoading: false,
       };
-    
+
     case 'UPDATE_USER':
       return {
         ...state,
         user: action.payload,
       };
-    
+
     case 'CLEAR_ERROR':
       return {
         ...state,
         error: null,
       };
-    
+
     case 'SET_TOKEN':
       return {
         ...state,
         token: action.payload,
       };
-    
+
     default:
       return state;
   }
@@ -150,7 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const restoreSession = useCallback(async () => {
     try {
       dispatch({ type: 'LOADING', payload: true });
-      
+
       const [token, userData, refreshToken] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.TOKEN),
         AsyncStorage.getItem(STORAGE_KEYS.USER),
@@ -160,7 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (token && userData) {
         // Set token in API service
         apiService.setAuthToken(token);
-        
+
         // Verify token is still valid by fetching current user
         try {
           const currentUser = await apiService.getCurrentUser();
@@ -208,13 +208,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [clearAuthData, saveAuthData]);
 
   // Login function
-  const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
+  const login = useCallback(async (credentials: LoginCredentials): Promise<AuthResponse> => {
     try {
       dispatch({ type: 'LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
 
       const response = await apiService.login(credentials);
-      
+
       if (response.success && response.user && response.token) {
         await saveAuthData(response.token, response.user, response.refreshToken);
         dispatch({
@@ -238,16 +238,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       dispatch({ type: 'LOGIN_FAILURE', payload: errorMessage });
       throw error;
     }
-  };
+  }, [saveAuthData]);
 
   // Register function
-  const register = async (credentials: RegisterCredentials): Promise<AuthResponse> => {
+  const register = useCallback(async (credentials: RegisterCredentials): Promise<AuthResponse> => {
     try {
       dispatch({ type: 'LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
 
       const response = await apiService.register(credentials);
-      
+
       if (response.success && response.user && response.token) {
         await saveAuthData(response.token, response.user, response.refreshToken);
         dispatch({
@@ -271,10 +271,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       dispatch({ type: 'LOGIN_FAILURE', payload: errorMessage });
       throw error;
     }
-  };
+  }, [saveAuthData]);
 
   // Logout function
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       // Call API logout
       await apiService.logout();
@@ -285,10 +285,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await clearAuthData();
       dispatch({ type: 'LOGOUT' });
     }
-  };
+  }, [clearAuthData]);
 
   // Forgot password function
-  const forgotPassword = async (email: string): Promise<AuthResponse> => {
+  const forgotPassword = useCallback(async (email: string): Promise<AuthResponse> => {
     try {
       dispatch({ type: 'CLEAR_ERROR' });
       return await apiService.forgotPassword({ email });
@@ -297,13 +297,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       dispatch({ type: 'LOGIN_FAILURE', payload: errorMessage });
       throw error;
     }
-  };
+  }, []);
 
   // Update profile function
-  const updateProfile = async (userData: Partial<AuthUser>): Promise<AuthResponse> => {
+  const updateProfile = useCallback(async (userData: Partial<AuthUser>): Promise<AuthResponse> => {
     try {
       const response = await apiService.updateProfile(userData);
-      
+
       if (response.success && response.user) {
         dispatch({ type: 'UPDATE_USER', payload: response.user });
         // Update stored user data
@@ -311,17 +311,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await saveAuthData(state.token, response.user, state.refreshToken || undefined);
         }
       }
-      
+
       return response;
     } catch (error: any) {
       throw error;
     }
-  };
+  }, [state.token, state.refreshToken, saveAuthData]);
 
   // Clear error function
-  const clearError = () => {
+  const clearError = useCallback(() => {
     dispatch({ type: 'CLEAR_ERROR' });
-  };
+  }, []);
 
   // OAuth Login function
   const oauthLogin = useCallback(async (provider: 'google' | 'facebook' | 'apple'): Promise<AuthResponse> => {
@@ -333,13 +333,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Try native OAuth first (if SDKs are installed)
       let userInfo: OAuthUserInfo | null = null;
-      
+
       try {
         userInfo = await oauthService.nativeOAuthLogin(provider);
         console.log(`✅ Native ${provider} OAuth successful:`, userInfo);
       } catch (nativeError: any) {
         console.warn(`⚠️ Native ${provider} OAuth failed:`, nativeError.message);
-        
+
         // Special handling for Apple Sign-In when not available
         if (provider === 'apple' && nativeError.message?.includes('not available')) {
           dispatch({
@@ -351,7 +351,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             message: 'Apple Sign-In is only available on iOS devices with iOS 13+ or when properly configured.',
           };
         }
-        
+
         // For other providers, try web-based OAuth
         console.log(`🌐 Falling back to web-based ${provider} OAuth...`);
         try {
@@ -385,7 +385,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         lastName: userInfo.lastName,
         photo: userInfo.photo,
       });
-      
+
       console.log(`📥 Backend ${provider} OAuth response:`, response);
 
       if (response.success && response.user && response.token) {
@@ -424,7 +424,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (result.success && result.token) {
         // Token received, verify and get user info
         apiService.setAuthToken(result.token);
-        
+
         try {
           const currentUser = await apiService.getCurrentUser();
           await saveAuthData(result.token, currentUser);
@@ -488,7 +488,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     restoreSession();
   }, [restoreSession]);
 
-  const contextValue: AuthContextType = {
+  const contextValue: AuthContextType = useMemo(() => ({
     state,
     login,
     register,
@@ -499,7 +499,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     restoreSession,
     oauthLogin,
     handleOAuthCallback,
-  };
+  }), [
+    state,
+    login,
+    register,
+    logout,
+    forgotPassword,
+    updateProfile,
+    clearError,
+    restoreSession,
+    oauthLogin,
+    handleOAuthCallback,
+  ]);
 
   return (
     <AuthContext.Provider value={contextValue}>
