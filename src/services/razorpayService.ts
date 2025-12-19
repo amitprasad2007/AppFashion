@@ -1,6 +1,5 @@
 import RazorpayCheckout from 'react-native-razorpay';
-import { Alert } from 'react-native';
-import { PaymentMethod, ShippingAddress, apiService } from './api';
+import { PaymentMethod, apiService } from './api';
 
 export interface RazorpayConfig {
   key_id: string;
@@ -67,13 +66,9 @@ class RazorpayService {
       [key: string]: any;
     };
   }> {
-    if (!this.isConfigured()) {
-      throw new Error('Razorpay not configured');
-    }
-
     try {
       const response = await apiService.createRazorpayOrder(orderData);
-      // Mapped from web app backend response structure
+      // Expect backend to return the Razorpay order id and the publishable key
       if (!response.razorpayOrderId) {
         throw new Error('Failed to create Razorpay order: Missing Order ID');
       }
@@ -92,16 +87,12 @@ class RazorpayService {
 
   // Open Razorpay payment gateway
   async openPaymentGateway(paymentData: RazorpayPaymentData): Promise<RazorpayResponse> {
-    if (!this.isConfigured()) {
-      throw new Error('Razorpay not configured');
-    }
-
     const options = {
       description: paymentData.description,
-      image: 'https://samarsilkpalace.com/favicon.PNG?text=SP', // Your app logo URL
+      image: 'https://samarsilkpalace.com/favicon.PNG?text=SP',
       currency: paymentData.currency,
-      key: paymentData.key || this.config!.key_id,
-      amount: paymentData.amount, // Amount in paise
+      key: paymentData.key || this.config?.key_id,
+      amount: paymentData.amount,
       order_id: paymentData.orderId,
       name: 'Samar Silk Palace',
       prefill: paymentData.prefill || {
@@ -111,16 +102,16 @@ class RazorpayService {
       },
       theme: paymentData.theme || { color: '#f43f5e' },
       notes: paymentData.notes || {},
-    };
+    } as any;
+
+    if (!options.key) {
+      throw new Error('Missing Razorpay key for payment initialization');
+    }
 
     return new Promise((resolve, reject) => {
       RazorpayCheckout.open(options)
-        .then((data: RazorpayResponse) => {
-          resolve(data);
-        })
-        .catch((error: RazorpayError) => {
-          reject(error);
-        });
+        .then((data: RazorpayResponse) => resolve(data))
+        .catch((error: RazorpayError) => reject(error));
     });
   }
 
@@ -154,12 +145,10 @@ class RazorpayService {
   }
 
   // Verify payment signature (should ideally be done on server)
-  private async verifyPaymentSignature(paymentResponse: RazorpayResponse): Promise<boolean> {
-    try {
-      return true;
-    } catch (error) {
-      return false;
-    }
+  private async verifyPaymentSignature(_paymentResponse: RazorpayResponse): Promise<boolean> {
+    // Signature verification should be done on the server.
+    // Keeping this as a stub for now so client-side flow isn't blocked.
+    return true;
   }
 
   // Handle payment failure

@@ -6,8 +6,8 @@
  */
 
 import React, { useEffect } from 'react';
-import {StatusBar, LogBox} from 'react-native';
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import { StatusBar, LogBox } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AppNavigator from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { UserProfileProvider } from './src/contexts/UserProfileContext';
@@ -31,15 +31,15 @@ function App(): React.JSX.Element {
       accountName: '', // [Android] specifies an account name on the device
       iosClientId: '', // [iOS] optional, if you want to specify the client ID of type iOS
       googleServicePlistPath: '', // [iOS] optional, if you renamed your GoogleService-Info.plist
-      openIdSupport: false, // [iOS] Add Open ID Connect ID Token support
+
       profileImageSize: 120, // [iOS] The desired height (and width) of the profile image
     });
-    
+
     console.log('🔧 Google Sign-In configured successfully');
   }, []);
 
   return (
-    <GestureHandlerRootView style={{flex: 1}}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
         <UserProfileProvider>
           <StatusBar
