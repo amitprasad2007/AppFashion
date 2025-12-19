@@ -1932,7 +1932,7 @@ class ApiService {
           created_at: string;
           updated_at: string;
         };
-      }>(`/ orderdetails / ${orderId} `);
+      }>(`/orderdetails/${orderId}`);
       return response;
     } catch (error) {
       console.error('Error fetching order details:', error);

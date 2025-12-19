@@ -121,13 +121,17 @@ class RazorpayService {
     orderData: any
   ): Promise<{ success: boolean; message: string; order?: any }> {
     try {
+      console.log('🔄 Saving payment to backend...', { paymentId: paymentResponse.razorpay_payment_id });
       // Save payment to backend (matching web app flow)
       const saveResponse = await apiService.saveRazorpayPayment({
         response: paymentResponse,
         orderData: orderData
       });
 
+      console.log('✅ Backend save response:', saveResponse);
+
       if (saveResponse.success === false) {
+        throw new Error(saveResponse.message || 'Failed to save payment details');
       }
 
       return {
@@ -180,9 +184,8 @@ class RazorpayService {
 
   // Check if payment method requires Razorpay
   isRazorpayMethod(paymentMethod: PaymentMethod): boolean {
-    // `type` is the backend-facing discriminator ('ONLINE' | 'COD')
-    // `id` is the UI identifier we use in some screens ('online' | 'cod')
-    return paymentMethod.type === 'ONLINE' || paymentMethod.id === 'online';
+    const type = (paymentMethod.type || '').toLowerCase();
+    return ['online'].includes(type);
   }
 
   // Process payment based on method
@@ -192,7 +195,8 @@ class RazorpayService {
     userInfo: { name: string; email: string; phone: string }
   ): Promise<{ success: boolean; message: string; paymentData?: any }> {
     try {
-      if (paymentMethod.type === 'COD') {
+      const type = (paymentMethod.type || '').toLowerCase();
+      if (type === 'cod') {
         // Handle Cash on Delivery directly
         return {
           success: true,
@@ -232,7 +236,7 @@ class RazorpayService {
 
         const razorpayResponse = await this.openPaymentGateway(paymentData);
         // Pass original orderData to handleSuccessfulPayment for saving
-        await this.handleSuccessfulPayment(razorpayResponse, orderData);
+        const successResult = await this.handleSuccessfulPayment(razorpayResponse, orderData);
 
         return {
           success: true,
@@ -242,7 +246,8 @@ class RazorpayService {
             payment_id: razorpayResponse.razorpay_payment_id,
             razorpay_order_id: razorpayResponse.razorpay_order_id,
             payment_status: 'paid',
-            razorpay_signature: razorpayResponse.razorpay_signature
+            razorpay_signature: razorpayResponse.razorpay_signature,
+            order: successResult.order // Include the order details returned from the server
           }
         };
       }
