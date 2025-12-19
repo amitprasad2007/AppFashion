@@ -12,6 +12,8 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { UserProfileProvider } from './src/contexts/UserProfileContext';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import razorpayService from './src/services/razorpayService';
+import { PAYMENT_CONFIG } from './src/config/payment';
 
 // Ignore specific warnings for development
 LogBox.ignoreLogs([
@@ -36,6 +38,18 @@ function App(): React.JSX.Element {
     });
 
     console.log('🔧 Google Sign-In configured successfully');
+
+    // Configure Razorpay (publishable key only). Backend may still return key per order.
+    if (PAYMENT_CONFIG.RAZORPAY_KEY_ID) {
+      razorpayService.initialize({
+        key_id: PAYMENT_CONFIG.RAZORPAY_KEY_ID,
+      });
+      console.log('🔧 Razorpay configured successfully');
+    } else {
+      console.warn(
+        '⚠️ Razorpay key is not set in PAYMENT_CONFIG. Online payments will rely on backend-provided key.'
+      );
+    }
   }, []);
 
   return (

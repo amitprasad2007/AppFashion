@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useCallback, useContext, useReducer, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Linking, Alert } from 'react-native';
+import { Linking } from 'react-native';
 import { apiService, AuthUser, LoginCredentials, RegisterCredentials, AuthResponse } from '../services/api';
 import { oauthService, OAuthUserInfo } from '../services/oauthService';
 
@@ -121,7 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   // Save auth data to storage
-  const saveAuthData = async (token: string, user: AuthUser, refreshToken?: string) => {
+  const saveAuthData = useCallback(async (token: string, user: AuthUser, refreshToken?: string) => {
     try {
       await Promise.all([
         AsyncStorage.setItem(STORAGE_KEYS.TOKEN, token),
@@ -131,10 +131,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Error saving auth data:', error);
     }
-  };
+  }, []);
 
   // Clear auth data from storage
-  const clearAuthData = async () => {
+  const clearAuthData = useCallback(async () => {
     try {
       await Promise.all([
         AsyncStorage.removeItem(STORAGE_KEYS.TOKEN),
@@ -144,10 +144,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Error clearing auth data:', error);
     }
-  };
+  }, []);
 
   // Restore session from storage
-  const restoreSession = async () => {
+  const restoreSession = useCallback(async () => {
     try {
       dispatch({ type: 'LOADING', payload: true });
       
@@ -158,8 +158,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ]);
 
       if (token && userData) {
-        const user = JSON.parse(userData);
-        
         // Set token in API service
         apiService.setAuthToken(token);
         
@@ -207,7 +205,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await clearAuthData();
       dispatch({ type: 'LOGOUT' });
     }
-  };
+  }, [clearAuthData, saveAuthData]);
 
   // Login function
   const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
@@ -326,7 +324,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // OAuth Login function
-  const oauthLogin = async (provider: 'google' | 'facebook' | 'apple'): Promise<AuthResponse> => {
+  const oauthLogin = useCallback(async (provider: 'google' | 'facebook' | 'apple'): Promise<AuthResponse> => {
     try {
       dispatch({ type: 'LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
@@ -413,10 +411,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       dispatch({ type: 'LOGIN_FAILURE', payload: errorMessage });
       throw error;
     }
-  };
+  }, [saveAuthData]);
 
   // Handle OAuth callback from deep link
-  const handleOAuthCallback = async (url: string): Promise<{ success: boolean; error?: string }> => {
+  const handleOAuthCallback = useCallback(async (url: string): Promise<{ success: boolean; error?: string }> => {
     try {
       dispatch({ type: 'LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
@@ -460,7 +458,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       dispatch({ type: 'LOADING', payload: false });
     }
-  };
+  }, [saveAuthData]);
 
   // Set up deep linking listener for OAuth callbacks
   useEffect(() => {
@@ -483,12 +481,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       subscription.remove();
     };
-  }, []);
+  }, [handleOAuthCallback]);
 
   // Restore session on app start
   useEffect(() => {
     restoreSession();
-  }, []);
+  }, [restoreSession]);
 
   const contextValue: AuthContextType = {
     state,

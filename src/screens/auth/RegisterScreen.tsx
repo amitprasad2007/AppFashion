@@ -21,7 +21,7 @@ import EnhancedHeader from '../../components/EnhancedHeader';
 
 const RegisterScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { state, register, oauthLogin, clearError } = useAuth();
+  const { state, register, clearError } = useAuth();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -38,14 +38,14 @@ const RegisterScreen = () => {
   // Clear error when component mounts
   useEffect(() => {
     clearError();
-  }, []);
+  }, [clearError]);
 
   // Navigate to main app when successfully authenticated
   useEffect(() => {
     if (state.isAuthenticated && !state.isLoading) {
       navigation.navigate('MainTabs');
     }
-  }, [state.isAuthenticated, state.isLoading]);
+  }, [navigation, state.isAuthenticated, state.isLoading]);
 
   const validateForm = () => {
     const errors: { [key: string]: string } = {};
@@ -125,29 +125,6 @@ const RegisterScreen = () => {
       );
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleSocialLogin = async (provider: 'google' | 'facebook' | 'apple') => {
-    try {
-      clearError();
-      const response = await oauthLogin(provider);
-
-      if (response.success) {
-        // Success is handled by the useEffect above
-        console.log(`${provider} registration/login successful`);
-      } else {
-        Alert.alert(
-          `${provider.charAt(0).toUpperCase() + provider.slice(1)} Login Failed`,
-          response.message || `Unable to login with ${provider}. Please try again.`
-        );
-      }
-    } catch (error: any) {
-      console.error(`${provider} login error:`, error);
-      Alert.alert(
-        'Login Error',
-        error.message || `Unable to connect to ${provider}. Please check your internet connection and try again.`
-      );
     }
   };
 

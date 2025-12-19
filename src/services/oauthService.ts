@@ -160,7 +160,6 @@ class OAuthService {
       // Dynamic import to avoid errors if package is not installed
       const GoogleSigninModule = require('@react-native-google-signin/google-signin');
       const GoogleSignin = GoogleSigninModule.GoogleSignin || GoogleSigninModule.default;
-      const statusCodes = GoogleSigninModule.statusCodes;
       
       console.log('🔐 Starting Google Sign-In process...');
       console.log('📦 GoogleSignin object:', GoogleSignin);
@@ -260,15 +259,15 @@ class OAuthService {
       // Dynamic import to avoid errors if package is not installed
       const { LoginManager, GraphRequest, GraphRequestManager } = require('react-native-fbsdk-next');
       
-      const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
+      const loginResult = await LoginManager.logInWithPermissions(['public_profile', 'email']);
       
-      if (result.isCancelled) {
+      if (loginResult.isCancelled) {
         console.log('User cancelled Facebook login');
         return null;
       }
       
-      if (result.error) {
-        throw new Error(result.error);
+      if (loginResult.error) {
+        throw new Error(loginResult.error);
       }
       
       // Get user info
@@ -282,17 +281,17 @@ class OAuthService {
               },
             },
           },
-          (error: any, result: any) => {
+          (error: any, graphResult: any) => {
             if (error) {
               reject(error);
             } else {
               resolve({
-                id: result?.id || '',
-                email: result?.email || '',
-                name: result?.name || '',
-                firstName: result?.first_name || '',
-                lastName: result?.last_name || '',
-                photo: result?.picture?.data?.url || undefined,
+                id: graphResult?.id || '',
+                email: graphResult?.email || '',
+                name: graphResult?.name || '',
+                firstName: graphResult?.first_name || '',
+                lastName: graphResult?.last_name || '',
+                photo: graphResult?.picture?.data?.url || undefined,
                 provider: 'facebook',
               });
             }

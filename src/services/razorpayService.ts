@@ -2,8 +2,10 @@ import RazorpayCheckout from 'react-native-razorpay';
 import { PaymentMethod, apiService } from './api';
 
 export interface RazorpayConfig {
+  // Publishable key id (safe to embed in client)
   key_id: string;
-  key_secret: string;
+  // Never required on the client; keep optional to prevent accidental use.
+  key_secret?: string;
   webhook_secret?: string;
 }
 
@@ -66,23 +68,39 @@ class RazorpayService {
       [key: string]: any;
     };
   }> {
-    try {
-      const response = await apiService.createRazorpayOrder(orderData);
-      // Expect backend to return the Razorpay order id and the publishable key
-      if (!response.razorpayOrderId) {
-        throw new Error('Failed to create Razorpay order: Missing Order ID');
-      }
+    const response = await apiService.createRazorpayOrder(orderData);
 
-      return {
-        order_id: response.razorpayOrderId,
-        amount: response.amount,
-        currency: 'INR',
-        key: response.key || this.config?.key_id,
-        rzdetails: response.rzdetails || { receipt: `order_${Date.now()}` }
-      };
-    } catch (error) {
-      throw error;
+    // Backend response formats vary. Normalize here.
+    const orderId =
+      response?.razorpayOrderId ||
+      response?.razorpay_order_id ||
+      response?.order_id ||
+      response?.id;
+
+    const amount = response?.amount ?? orderData?.total ?? orderData?.total_amount;
+
+    // Some backends return `key`, some `key_id`, some `razorpay_key`
+    const keyFromBackend = response?.key || response?.key_id || response?.razorpay_key;
+
+    const resolvedKey = keyFromBackend || this.config?.key_id;
+
+    if (!orderId) {
+      throw new Error('Failed to create Razorpay order: Missing Order ID');
     }
+
+    if (!resolvedKey) {
+      throw new Error(
+        'Missing Razorpay key. Backend did not provide a key and RazorpayService is not initialized.'
+      );
+    }
+
+    return {
+      order_id: String(orderId),
+      amount: Number(amount),
+      currency: response?.currency || 'INR',
+      key: resolvedKey,
+      rzdetails: response?.rzdetails || response?.notes || { receipt: `order_${Date.now()}` },
+    };
   }
 
   // Open Razorpay payment gateway
@@ -184,8 +202,9 @@ class RazorpayService {
 
   // Check if payment method requires Razorpay
   isRazorpayMethod(paymentMethod: PaymentMethod): boolean {
-    const type = (paymentMethod.type || '').toLowerCase();
-    return ['online'].includes(type);
+    // PaymentMethod.type is 'COD' | 'ONLINE'
+    // Some parts of the UI may use id = 'online'
+    return paymentMethod.type === 'ONLINE' || paymentMethod.id === 'online';
   }
 
   // Process payment based on method

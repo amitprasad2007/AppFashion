@@ -7,9 +7,9 @@ import ReactTestRenderer from 'react-test-renderer';
 
 // Unit test should not mount full navigation tree (it triggers network calls, timers, etc.)
 jest.mock('../src/navigation/AppNavigator', () => {
-  const React = require('react');
+  const ReactMock = require('react');
   return function MockAppNavigator() {
-    return React.createElement(React.Fragment, null);
+    return ReactMock.createElement(ReactMock.Fragment, null);
   };
 });
 

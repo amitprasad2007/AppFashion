@@ -22,7 +22,7 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const LoginScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { state, login, forgotPassword, clearError, oauthLogin } = useAuth();
+  const { state, login, forgotPassword, clearError } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,14 +33,14 @@ const LoginScreen = () => {
   // Clear error when component mounts
   useEffect(() => {
     clearError();
-  }, []);
+  }, [clearError]);
 
   // Navigate to main app when successfully authenticated
   useEffect(() => {
     if (state.isAuthenticated && !state.isLoading) {
       navigation.navigate('MainTabs');
     }
-  }, [state.isAuthenticated, state.isLoading]);
+  }, [navigation, state.isAuthenticated, state.isLoading]);
 
   // Validation function
   const validateForm = () => {
@@ -120,29 +120,6 @@ const LoginScreen = () => {
       }
     } catch (error: any) {
       Alert.alert('Network Error', 'Unable to send reset email. Please check your connection.');
-    }
-  };
-
-  const handleSocialLogin = async (provider: 'google' | 'facebook' | 'apple') => {
-    try {
-      clearError();
-      const response = await oauthLogin(provider);
-
-      if (response.success) {
-        // Success is handled by the useEffect above
-        console.log(`${provider} login successful`);
-      } else {
-        Alert.alert(
-          `${provider.charAt(0).toUpperCase() + provider.slice(1)} Login Failed`,
-          response.message || `Unable to login with ${provider}. Please try again.`
-        );
-      }
-    } catch (error: any) {
-      console.error(`${provider} login error:`, error);
-      Alert.alert(
-        'Login Error',
-        error.message || `Unable to connect to ${provider}. Please check your internet connection and try again.`
-      );
     }
   };
 

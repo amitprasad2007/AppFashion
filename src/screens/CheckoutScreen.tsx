@@ -257,7 +257,7 @@ const CheckoutScreenContent = () => {
             slug: slug,
           };
         }),
-        address_id: parseInt(address.id || '1'),
+        address_id: parseInt(address.id || '1', 10),
         shipping: Number(shippingAmount) || 0,
         payment_method: 'cod',
         subtotal: Number(itemsTotal) || 0,
@@ -349,10 +349,13 @@ const CheckoutScreenContent = () => {
       const orderData = {
         items: items.map((item: any) => {
           const itemData = item.product || item;
-          const itemImage = Array.isArray(itemData.images) ? itemData.images[0] :
-            Array.isArray(itemData.image) ? itemData.image[0] :
-              typeof itemData.image === 'string' ? itemData.image :
-                itemData.images?.[0] || '';
+          const itemImage = Array.isArray(itemData.images)
+            ? itemData.images[0]
+            : Array.isArray(itemData.image)
+              ? itemData.image[0]
+              : typeof itemData.image === 'string'
+                ? itemData.image
+                : itemData.images?.[0] || '';
 
           return {
             cart_id: item.cart_id,
@@ -366,7 +369,7 @@ const CheckoutScreenContent = () => {
             slug: itemData.slug || item.slug || `product-${itemData.id}`,
           };
         }),
-        address_id: parseInt(address.id || '1'),
+        address_id: parseInt(address.id || '1', 10),
         shipping: Number(shippingAmount) || 0,
         payment_method: 'online',
         subtotal: Number(itemsTotal) || 0,
@@ -715,7 +718,7 @@ const CheckoutScreenContent = () => {
         </View>
       )}
 
-      {addresses.map((address, index) => (
+      {addresses.map((address) => (
         <TouchableOpacity
           key={address.id}
           style={[
@@ -762,7 +765,7 @@ const CheckoutScreenContent = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>💳 Payment Method</Text>
 
-        {(paymentMethods || []).map((method, index) => (
+        {(paymentMethods || []).map((method) => (
           <TouchableOpacity
             key={method.id}
             style={[
