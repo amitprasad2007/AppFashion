@@ -602,7 +602,7 @@ const CheckoutScreenContent = () => {
                 if (addressErrors.name) setAddressErrors(prev => ({ ...prev, name: undefined }));
               }}
             />
-            {addressErrors.name ? <Text style={styles.errorText}>{addressErrors.name}</Text> : null
+            {addressErrors.name ? <Text style={styles.errorText}>{addressErrors.name}</Text> : null}
             <TextInput
               style={[styles.input, styles.halfInput, addressErrors.phone ? styles.inputError : null]}
               placeholder="Phone Number *"
@@ -614,7 +614,7 @@ const CheckoutScreenContent = () => {
               }}
               keyboardType="phone-pad"
             />
-            {addressErrors.phone ? <Text style={styles.errorText}>{addressErrors.phone}</Text> : null
+            {addressErrors.phone ? <Text style={styles.errorText}>{addressErrors.phone}</Text> : null}
           </View>
 
           <TextInput
@@ -635,7 +635,7 @@ const CheckoutScreenContent = () => {
             }}
             multiline
           />
-          {addressErrors.addressLine1 ? <Text style={styles.errorText}>{addressErrors.addressLine1}</Text> : null
+          {addressErrors.addressLine1 ? <Text style={styles.errorText}>{addressErrors.addressLine1}</Text> : null}
 
           <TextInput
             style={styles.input}
@@ -654,7 +654,7 @@ const CheckoutScreenContent = () => {
                 if (addressErrors.city) setAddressErrors(prev => ({ ...prev, city: undefined }));
               }}
             />
-            {addressErrors.city ? <Text style={styles.errorText}>{addressErrors.city}</Text> : null
+            {addressErrors.city ? <Text style={styles.errorText}>{addressErrors.city}</Text> : null}
             <TextInput
               style={[styles.input, styles.halfInput, addressErrors.pincode ? styles.inputError : null]}
               placeholder="Pincode *"
@@ -666,7 +666,7 @@ const CheckoutScreenContent = () => {
               }}
               keyboardType="numeric"
             />
-            {addressErrors.pincode ? <Text style={styles.errorText}>{addressErrors.pincode}</Text> : null
+            {addressErrors.pincode ? <Text style={styles.errorText}>{addressErrors.pincode}</Text> : null}
           </View>
 
           <View style={styles.formRow}>
@@ -679,7 +679,7 @@ const CheckoutScreenContent = () => {
                 if (addressErrors.state) setAddressErrors(prev => ({ ...prev, state: undefined }));
               }}
             />
-            {addressErrors.state ? <Text style={styles.errorText}>{addressErrors.state}</Text> : null
+            {addressErrors.state ? <Text style={styles.errorText}>{addressErrors.state}</Text> : null}
             <TextInput
               style={[styles.input, styles.halfInput]}
               placeholder="Landmark"

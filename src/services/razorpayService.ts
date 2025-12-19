@@ -1,6 +1,5 @@
 import RazorpayCheckout from 'react-native-razorpay';
-import { Alert } from 'react-native';
-import { PaymentMethod, ShippingAddress, apiService } from './api';
+import { PaymentMethod, apiService } from './api';
 
 export interface RazorpayConfig {
   key_id: string;
@@ -142,12 +141,10 @@ class RazorpayService {
   }
 
   // Verify payment signature (should ideally be done on server)
-  private async verifyPaymentSignature(paymentResponse: RazorpayResponse): Promise<boolean> {
-    try {
-      return true;
-    } catch (error) {
-      return false;
-    }
+  private async verifyPaymentSignature(_paymentResponse: RazorpayResponse): Promise<boolean> {
+    // Signature verification should be done on the server.
+    // Keeping this as a stub for now so client-side flow isn't blocked.
+    return true;
   }
 
   // Handle payment failure
@@ -183,7 +180,9 @@ class RazorpayService {
 
   // Check if payment method requires Razorpay
   isRazorpayMethod(paymentMethod: PaymentMethod): boolean {
-    return ['online'].includes(paymentMethod.type);
+    // `type` is the backend-facing discriminator ('ONLINE' | 'COD')
+    // `id` is the UI identifier we use in some screens ('online' | 'cod')
+    return paymentMethod.type === 'ONLINE' || paymentMethod.id === 'online';
   }
 
   // Process payment based on method
