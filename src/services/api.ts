@@ -149,6 +149,17 @@ export interface AuthResponse {
   expiresIn?: number;
 }
 
+export interface ApiProductReview {
+  id: string;
+  product_slug: string;
+  user_id: string;
+  user_name?: string;
+  rating: number;
+  review_text: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Updated interfaces to match your API response
 export interface ApiCartItem {
   id: number;
@@ -206,6 +217,27 @@ export interface ApiAddress {
   postal: string;
   phone: string;
   isDefault: boolean;
+  // Raw fields for editing
+  full_name?: string;
+  address_line1?: string;
+  address_line2?: string;
+  country?: string;
+  postal_code?: string;
+  address_type?: string;
+  is_default?: boolean;
+}
+
+export interface AddressInput {
+  full_name: string;
+  phone: string;
+  address_line1: string;
+  address_line2?: string;
+  city: string;
+  state: string;
+  country: string;
+  postal_code: string;
+  address_type: 'home' | 'work' | 'other';
+  is_default: boolean;
 }
 
 export interface UserData {
@@ -776,19 +808,50 @@ class ApiService {
       // since /products endpoint doesn't exist in your backend
 
       const featuredProducts = await this.getFeaturedProducts();
-
-      // If categoryId is specified, try to filter (this may not work without proper endpoint)
-      if (params.categoryId) {
-        console.warn('Category filtering may not work without dedicated category products endpoint');
-        // Return all featured products for now
-      }
-
       return featuredProducts;
     } catch (error) {
       console.error('Error fetching products:', error);
       return [];
     }
   }
+
+  // Product Reviews
+  async getProductReviews(productSlug: string): Promise<ApiProductReview[]> {
+    try {
+      const queryString = `?productSlug=${encodeURIComponent(productSlug)}`;
+      const data = await this.fetchApi<{ data: ApiProductReview[] }>(`/product-reviews${queryString}`);
+
+      if (data && Array.isArray(data.data)) {
+        return data.data;
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching product reviews:', error);
+      return [];
+    }
+  }
+
+  async addProductReview(data: { productSlug: string; rating: number; reviewText: string; userId: string }): Promise<any> {
+    try {
+      return await this.fetchApi('/product-reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productSlug: data.productSlug,
+          rating: data.rating,
+          reviewText: data.reviewText,
+          userId: parseInt(data.userId),
+        }),
+      });
+    } catch (error) {
+      console.error('Error adding product review:', error);
+      throw error;
+    }
+  }
+
+
 
   // Get related products by product slug (matching your API structure)
   async getRelatedProducts(productSlug: string): Promise<ApiProduct[]> {
@@ -1198,15 +1261,7 @@ class ApiService {
   // ==================== ADDRESS MANAGEMENT ====================
 
   // Get user addresses
-  async getAddresses(): Promise<ApiAddress[]> {
-    try {
-      const userData = await this.getUserData();
-      return userData.addresses;
-    } catch (error) {
-      console.error('Error fetching addresses:', error);
-      return [];
-    }
-  }
+
 
   // Place new order
   async placeOrder(orderData: {
@@ -1724,70 +1779,7 @@ class ApiService {
 
   // ==================== ADDRESS OPERATIONS ====================
 
-  // Get addresses (independent endpoint)
-  async getAddressesIndependent(): Promise<ApiAddress[]> {
-    try {
-      const response = await this.fetchApi<ApiAddress[]>('/addresses');
-      return response;
-    } catch (error) {
-      console.error('Error fetching addresses:', error);
-      return [];
-    }
-  }
 
-  // Get addresses index
-  async getAddressesIndex(): Promise<{ addresses: ApiAddress[] }> {
-    try {
-      const response = await this.fetchApi<{ addresses: ApiAddress[] }>('/addressesind');
-      return response;
-    } catch (error) {
-      console.error('Error fetching addresses index:', error);
-      return { addresses: [] };
-    }
-  }
-
-  // Update address
-  async updateAddress(
-    addressId: number,
-    address: Partial<{
-      name: string;
-      type: string;
-      address: string;
-      city: string;
-      state: string;
-      postal: string;
-      phone: string;
-      isDefault: boolean;
-    }>
-  ): Promise<{ success: boolean; message: string; address?: ApiAddress }> {
-    try {
-      const response = await this.fetchApi<{
-        success: boolean;
-        message: string;
-        address?: ApiAddress
-      }>(`/ addresses / ${addressId} `, {
-        method: 'PUT',
-        body: JSON.stringify(address),
-      });
-      return response;
-    } catch (error) {
-      console.error('Error updating address:', error);
-      throw error;
-    }
-  }
-
-  // Delete address
-  async deleteAddress(addressId: number): Promise<{ success: boolean; message: string }> {
-    try {
-      const response = await this.fetchApi<{ success: boolean; message: string }>(`/ addresses / ${addressId} `, {
-        method: 'DELETE',
-      });
-      return response;
-    } catch (error) {
-      console.error('Error deleting address:', error);
-      throw error;
-    }
-  }
 
   // Get addresses in legacy format for backward compatibility
   async getLegacyAddresses(): Promise<ShippingAddress[]> {
@@ -2557,6 +2549,37 @@ class ApiService {
       console.error('Error checking guest wishlist:', error);
       throw error;
     }
+  }
+
+  // Address Management
+  async getAddresses(): Promise<ApiAddress[]> {
+    try {
+      const response = await this.fetchApi<any>('/addresses');
+      return response.addresses || response;
+    } catch (error) {
+      console.error('Error fetching addresses:', error);
+      return [];
+    }
+  }
+
+  async addAddress(data: AddressInput): Promise<ApiResponse<ApiAddress>> {
+    return this.fetchApi<ApiResponse<ApiAddress>>('/addresses', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateAddress(id: number, data: AddressInput): Promise<ApiResponse<ApiAddress>> {
+    return this.fetchApi<ApiResponse<ApiAddress>>(`/addresses/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteAddress(id: number): Promise<ApiResponse<void>> {
+    return this.fetchApi<ApiResponse<void>>(`/addresses/${id}`, {
+      method: 'DELETE',
+    });
   }
 }
 

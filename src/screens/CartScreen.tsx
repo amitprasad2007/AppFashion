@@ -255,6 +255,7 @@ const CartScreenContent = () => {
 
   // Render cart item
   const renderCartItem = ({ item, index }: { item: ApiCartItem; index: number }) => {
+   // console.log('item', item);
 
     const isUpdating = updatingItems.has(item.id);
     const itemPrice = parseFloat(item.price);

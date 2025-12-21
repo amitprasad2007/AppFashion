@@ -18,12 +18,14 @@ import EnhancedHeader from '../components/EnhancedHeader';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import { apiService, ShippingAddress, PaymentMethod } from '../services/api';
+import { useUserProfile } from '../contexts/UserProfileContext';
 import ProtectedScreen from '../components/ProtectedScreen';
 import razorpayService from '../services/razorpayService';
 
 const CheckoutScreenContent = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute();
+  const { refreshUserData } = useUserProfile();
 
   const params = route.params as any;
   const cart = params?.cart;
@@ -75,7 +77,7 @@ const CheckoutScreenContent = () => {
   useEffect(() => {
     loadCheckoutData();
   }, []);
-  
+
   // Razorpay is initialized per-payment using server-provided key in razorpayService.createOrder()
   // No secrets are stored on the client.
 
@@ -297,7 +299,7 @@ const CheckoutScreenContent = () => {
         const orderId = response.order_id || orderDetails?.order_id;
         const orderNumber = response.order_number || orderDetails?.order_id;
         try {
-          await apiService.clearCart();
+          await refreshUserData();
         } catch (clearError) {
           console.warn('Could not clear cart after order:', clearError);
         }
@@ -397,7 +399,7 @@ const CheckoutScreenContent = () => {
         const orderNumber = orderDetails?.order_number || orderDetails?.order_id || paymentResult.paymentData?.razorpay_order_id || '';
 
         try {
-          await apiService.clearCart();
+          await refreshUserData();
         } catch (clearError) {
           console.warn('Could not clear cart after order:', clearError);
         }
@@ -434,7 +436,7 @@ const CheckoutScreenContent = () => {
             text: 'Retry',
             onPress: () => {
               handleRazorpayPayment(items, address, finalTotal, itemsCount, itemsTotal, discountAmount, shippingAmount, taxAmount)
-                .catch(() => {});
+                .catch(() => { });
             }
           },
           {
@@ -442,7 +444,7 @@ const CheckoutScreenContent = () => {
             onPress: () => {
               setSelectedPayment({ id: 'cod', type: 'COD', name: 'Cash on Delivery' });
               handleCODPayment(items, address, finalTotal, itemsCount, itemsTotal, discountAmount, shippingAmount, taxAmount)
-                .catch(() => {});
+                .catch(() => { });
             }
           },
           { text: 'Cancel', style: 'cancel' }
@@ -840,7 +842,6 @@ const CheckoutScreenContent = () => {
         {renderAddressSelection()}
         {renderPaymentMethods()}
         {renderCartSummary()}
-        {renderOrderNotes()}
 
         <GradientButton
           title={loading ? 'Processing...' : `Place Order - ₹${params?.total.toFixed(2) || params?.cart?.total.toFixed(2) || 0}`}

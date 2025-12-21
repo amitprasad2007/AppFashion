@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { apiService, UserData, ApiOrder, ApiWishlistItem, ApiAddress, ApiCart, ApiProduct } from '../services/api';
+import { apiService, UserData, ApiOrder, ApiWishlistItem, ApiAddress, ApiCart, ApiProduct, AddressInput } from '../services/api';
 import { useAuth } from './AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -33,8 +33,8 @@ interface UserProfileContextType {
   checkWishlist: (productId: number, variantId?: number) => Promise<{ in_wishlist: boolean; wishlist_id?: number }>;
 
   // Address operations
-  createAddress: (address: { name: string; type: string; address: string; city: string; state: string; postal: string; phone: string; isDefault?: boolean; }) => Promise<void>;
-  updateAddress: (addressId: number, address: Partial<{ name: string; type: string; address: string; city: string; state: string; postal: string; phone: string; isDefault: boolean; }>) => Promise<void>;
+  createAddress: (address: AddressInput) => Promise<void>;
+  updateAddress: (addressId: number, address: AddressInput) => Promise<void>;
   deleteAddress: (addressId: number) => Promise<void>;
 
   // Order operations
@@ -357,21 +357,9 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   // Address operations
-  const createAddress = async (address: {
-    name: string;
-    type: string;
-    address: string;
-    city: string;
-    state: string;
-    postal: string;
-    phone: string;
-    isDefault?: boolean;
-  }): Promise<void> => {
+  const createAddress = async (address: AddressInput): Promise<void> => {
     try {
-      await apiService.createAddress({
-        ...address,
-        isDefault: address.isDefault ?? false
-      });
+      await apiService.addAddress(address);
       // Refresh user data to update addresses
       await refreshUserData();
     } catch (error) {
@@ -382,16 +370,7 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const updateAddress = async (
     addressId: number,
-    address: Partial<{
-      name: string;
-      type: string;
-      address: string;
-      city: string;
-      state: string;
-      postal: string;
-      phone: string;
-      isDefault: boolean;
-    }>
+    address: AddressInput
   ): Promise<void> => {
     try {
       await apiService.updateAddress(addressId, address);

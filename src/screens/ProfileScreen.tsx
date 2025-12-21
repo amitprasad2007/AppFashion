@@ -162,7 +162,8 @@ const ProfileScreenContent = () => {
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.neutral[50]} />
       <EnhancedHeader
         title="👤 Profile"
-        showBackButton={false}
+        showBackButton={true}
+        onBackPress={() => navigation.goBack()}
         rightComponent={
           <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton}>
             <Text style={styles.refreshText}>🔄</Text>
@@ -203,11 +204,11 @@ const ProfileScreenContent = () => {
               <Text style={styles.memberSince}>Member since {memberSince}</Text>
             </View>
           </View>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.editButton}
             onPress={() => navigation.navigate('EditProfile')}>
             <Text style={styles.editButtonText}>✏️ Edit Profile</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {/* Stats */}

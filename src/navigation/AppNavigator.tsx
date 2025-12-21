@@ -1,8 +1,8 @@
 import React from 'react';
-import {Text, View, TouchableOpacity, StyleSheet} from 'react-native';
-import {NavigationContainer, useNavigation} from '@react-navigation/native';
-import {createStackNavigator} from '@react-navigation/stack';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 // Import Screens
 import HomeScreen from '../screens/HomeScreen';
@@ -18,6 +18,7 @@ import WishlistScreen from '../screens/WishlistScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import OrderConfirmationScreen from '../screens/OrderConfirmationScreen';
+import AddressesScreen from '../screens/AddressesScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -47,35 +48,35 @@ const TabNavigator = () => {
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarIcon: ({color}) => <TabIcon icon="🏠" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon icon="🏠" color={color} />,
         }}
       />
       <Tab.Screen
         name="Categories"
         component={CategoriesScreen}
         options={{
-          tabBarIcon: ({color}) => <TabIcon icon="📂" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon icon="📂" color={color} />,
         }}
       />
       <Tab.Screen
         name="Search"
         component={SearchScreen}
         options={{
-          tabBarIcon: ({color}) => <TabIcon icon="🔍" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon icon="🔍" color={color} />,
         }}
       />
       <Tab.Screen
         name="Wishlist"
         component={WishlistScreen}
         options={{
-          tabBarIcon: ({color}) => <TabIcon icon="❤️" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon icon="❤️" color={color} />,
         }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
         options={{
-          tabBarIcon: ({color}) => <TabIcon icon="👤" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon icon="👤" color={color} />,
         }}
       />
     </Tab.Navigator>
@@ -83,8 +84,8 @@ const TabNavigator = () => {
 };
 
 // Tab Icon Component
-const TabIcon = ({icon, color}: {icon: string; color: string}) => (
-  <Text style={{fontSize: 20, color}}>{icon}</Text>
+const TabIcon = ({ icon, color }: { icon: string; color: string }) => (
+  <Text style={{ fontSize: 20, color }}>{icon}</Text>
 );
 
 // Main Stack Navigator
@@ -94,7 +95,7 @@ const AppNavigator = () => {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
-          cardStyleInterpolator: ({current, next, layouts}) => {
+          cardStyleInterpolator: ({ current, next, layouts }) => {
             return {
               cardStyle: {
                 transform: [
@@ -109,34 +110,34 @@ const AppNavigator = () => {
             };
           },
         }}>
-        
+
         {/* Main Tab Navigator */}
         <Stack.Screen name="MainTabs" component={TabNavigator} />
         <Stack.Screen name="Home" component={HomeScreen} />
-        
+
         {/* Product Screens */}
         <Stack.Screen name="ProductList" component={ProductListScreen} />
         <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
-        
+
         {/* Shopping Flow */}
         <Stack.Screen name="Cart" component={CartScreen} />
         <Stack.Screen name="Checkout" component={CheckoutScreen} />
         <Stack.Screen name="OrderConfirmation" component={OrderConfirmationScreen} />
-      
+
         {/* User Account */}
         <Stack.Screen name="Orders" component={OrdersScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
-        
+
         {/* Additional Screens - Commented out until implemented */}
         {/* <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} />
-        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+        {/* <Stack.Screen name="EditProfile" component={EditProfileScreen} /> */}
         <Stack.Screen name="Addresses" component={AddressesScreen} />
-        <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
+        {/* <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="Support" component={SupportScreen} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} /> */}
-        
+
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -145,9 +146,9 @@ const AppNavigator = () => {
 // Placeholder screens can be added here when needed
 
 // Placeholder Screen Component
-const PlaceholderScreen = ({title, subtitle}: {title: string; subtitle: string}) => {
+const PlaceholderScreen = ({ title, subtitle }: { title: string; subtitle: string }) => {
   const navigation = useNavigation();
-  
+
   return (
     <View style={placeholderStyles.container}>
       <View style={placeholderStyles.header}>

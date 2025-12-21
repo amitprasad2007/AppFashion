@@ -20,6 +20,7 @@ import EnhancedHeader from '../components/EnhancedHeader';
 import GlassCard from '../components/GlassCard';
 import FloatingElements from '../components/FloatingElements';
 import CartIcon from '../components/CartIcon';
+import ProductReviews from '../components/ProductReviews';
 import SafeAlert from '../utils/safeAlert';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
@@ -578,6 +579,9 @@ const ProductDetailsScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Product Reviews */}
+        <ProductReviews productSlug={product.slug} />
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
