@@ -385,8 +385,8 @@ class ApiService {
         ...optionsHeaders,
       };
 
-      // Add auth token if available
-      if (this.authToken) {
+      // Add auth token if available and not already set
+      if (this.authToken && !headers['Authorization']) {
         headers['Authorization'] = `Bearer ${this.authToken}`;
       }
 
@@ -831,13 +831,19 @@ class ApiService {
     }
   }
 
-  async addProductReview(data: { productSlug: string; rating: number; reviewText: string; userId: string }): Promise<any> {
+  async addProductReview(data: { productSlug: string; rating: number; reviewText: string; userId: string; token?: string }): Promise<any> {
     try {
+      const headers: any = {
+        'Content-Type': 'application/json',
+      };
+
+      if (data.token) {
+        headers['Authorization'] = `Bearer ${data.token}`;
+      }
+
       return await this.fetchApi('/product-reviews', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           productSlug: data.productSlug,
           rating: data.rating,

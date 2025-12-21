@@ -21,7 +21,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productSlug }) => {
     const [submitting, setSubmitting] = useState(false);
 
     const { state } = useAuth();
-    const { user, isAuthenticated } = state;
+    const { user, isAuthenticated, token } = state;
     const navigation = useNavigation<any>();
 
     const fetchReviews = useCallback(async () => {
@@ -51,6 +51,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productSlug }) => {
     }, [fetchReviews]);
 
     const handleSubmitReview = async () => {
+
         if (!isAuthenticated || !user) {
             Alert.alert(
                 'Login Required',
@@ -70,13 +71,18 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productSlug }) => {
 
         setSubmitting(true);
         try {
-            await apiService.addProductReview({
+            const response = await apiService.addProductReview({
                 productSlug,
                 rating,
                 reviewText,
                 userId: String(user.id),
+                token: token || undefined,
             });
 
+            if (response && response.success === false) {
+                Alert.alert('Notice', response.message || 'You have already reviewed this product.');
+                return;
+            }
             Alert.alert('Success', 'Your review has been submitted!');
             setReviewText('');
             setRating(5);
