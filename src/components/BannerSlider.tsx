@@ -12,7 +12,6 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import { theme } from '../theme';
 import AnimatedCard from './AnimatedCard';
-import GradientButton from './GradientButton';
 import { apiService, ApiBannerData } from '../services/api';
 import { testApiConnection, getDeviceNetworkInfo } from '../utils/debugNetwork';
 
@@ -220,67 +219,72 @@ const BannerSlider: React.FC<BannerSliderProps> = ({
           {/* Luxury Overlay Pattern */}
           <View style={styles.luxuryOverlay} />
 
-          {/* Main Content */}
-          <View style={styles.bannerContent}>
+          {/* Top Header Section - Title utilizes full width */}
+          <View style={styles.bannerHeader}>
             {/* Premium Badge */}
             <View style={styles.premiumBadge}>
               <Text style={styles.premiumBadgeText}>✨ PREMIUM</Text>
             </View>
 
             {/* Title with Elegant Typography */}
-            <Text style={styles.bannerTitle}>{item.title}</Text>
-
-            {/* Subtitle with Gold Accent */}
-            {item.subtitle && (
-              <View style={styles.subtitleContainer}>
-                <View style={styles.goldAccent} />
-                <Text style={styles.bannerSubtitle}>{item.subtitle}</Text>
-                <View style={styles.goldAccent} />
-              </View>
-            )}
-
-            {/* Description */}
-            <Text style={styles.bannerDescription} numberOfLines={2}>
-              {item.description}
-            </Text>
-
-            {/* Luxury CTA Button */}
-            <TouchableOpacity style={styles.luxuryButton} onPress={item.onPress}>
-              <LinearGradient
-                colors={['#DAA520', '#FFD700', '#FFF8DC']}
-                style={styles.luxuryButtonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}>
-                <Text style={styles.luxuryButtonText}>{item.buttonText}</Text>
-                <Text style={styles.luxuryButtonIcon}>→</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+            <Text style={styles.bannerTitle} numberOfLines={1} adjustsFontSizeToFit>{item.title}</Text>
           </View>
 
-          {/* Enhanced Image/Visual Section */}
-          <View style={styles.bannerImageContainer}>
-            {item.image ? (
-              <View style={styles.imageWrapper}>
-                <View style={styles.imageFrame}>
-                  <Image
-                    source={{ uri: item.image }}
-                    style={styles.bannerImage}
-                    resizeMode="cover"
-                  />
+          {/* Main Content & Image Row */}
+          <View style={styles.bannerRow}>
+            {/* Main Content */}
+            <View style={styles.bannerContent}>
+
+              {/* Subtitle with Gold Accent */}
+              {item.subtitle && (
+                <View style={styles.subtitleContainer}>
+                  <Text style={styles.bannerSubtitle}>{item.subtitle}</Text>
                 </View>
-                {/* Decorative Elements */}
-                <View style={styles.decorativeElement1} />
-                <View style={styles.decorativeElement2} />
-              </View>
-            ) : (
-              <View style={styles.emojiWrapper}>
-                <View style={styles.emojiBackground}>
-                  <Text style={styles.bannerEmoji}>{item.emoji}</Text>
+              )}
+
+              {/* Description */}
+              <Text style={styles.bannerDescription} numberOfLines={2}>
+                {item.description}
+              </Text>
+
+              {/* Luxury CTA Button */}
+              <TouchableOpacity style={styles.luxuryButton} onPress={item.onPress}>
+                <LinearGradient
+                  colors={['#DAA520', '#FFD700', '#FFF8DC']}
+                  style={styles.luxuryButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}>
+                  <Text style={styles.luxuryButtonText}>{item.buttonText}</Text>
+                  <Text style={styles.luxuryButtonIcon}>→</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+
+            {/* Enhanced Image/Visual Section */}
+            <View style={styles.bannerImageContainer}>
+              {item.image ? (
+                <View style={styles.imageWrapper}>
+                  <View style={styles.imageFrame}>
+                    <Image
+                      source={{ uri: item.image }}
+                      style={styles.bannerImage}
+                      resizeMode="cover"
+                    />
+                  </View>
+                  {/* Decorative Elements */}
+                  <View style={styles.decorativeElement1} />
+                  <View style={styles.decorativeElement2} />
                 </View>
-                {/* Decorative Ring */}
-                <View style={styles.decorativeRing} />
-              </View>
-            )}
+              ) : (
+                <View style={styles.emojiWrapper}>
+                  <View style={styles.emojiBackground}>
+                    <Text style={styles.bannerEmoji}>{item.emoji}</Text>
+                  </View>
+                  {/* Decorative Ring */}
+                  <View style={styles.decorativeRing} />
+                </View>
+              )}
+            </View>
           </View>
         </LinearGradient>
       </AnimatedCard>
@@ -380,11 +384,21 @@ const styles = StyleSheet.create({
   banner: {
     padding: theme.spacing[6],
     borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column', // Changed from row to column
     minHeight: 280,
     position: 'relative',
     overflow: 'hidden',
+  },
+  // New Header Style
+  bannerHeader: {
+    width: '100%',
+    marginBottom: theme.spacing[2],
+  },
+  // New Row container for Content + Image
+  bannerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   // Luxury Overlay for Pattern/Texture
   luxuryOverlay: {
@@ -423,7 +437,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: theme.colors.white,
     textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 3 },
+    textShadowOffset: { width: 2, height: 5 },
     textShadowRadius: 6,
     lineHeight: 36,
     marginBottom: theme.spacing[2],
@@ -501,8 +515,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   imageFrame: {
-    width: 200,
-    height: 200,
+    width: 240,
+    height: 240,
     borderRadius: 100,
     overflow: 'hidden',
     borderWidth: 3,

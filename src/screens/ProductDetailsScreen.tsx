@@ -80,17 +80,10 @@ const ProductDetailsScreen = () => {
       setError(null);
 
       if (!slugToUse) {
-        console.error('❌ Product slug is missing. Route params:', { productId, productSlug, product: productParam });
-        console.error('Available route params:', route.params);
         throw new Error('Product slug is required');
       }
-
-      console.log('🔍 Loading product with slug:', slugToUse);
-
       // Load product details using slug-based API (matching your frontend)
       const productData = await apiService.getProductBySlug(slugToUse);
-      console.log('Product data:', productData);
-
       if (productData) {
         setProduct(productData);
 
@@ -99,7 +92,6 @@ const ProductDetailsScreen = () => {
           // Find default variant or first one
           const defaultVar = productData.variants.find(v => v.id === productData.defaultVariantId) || productData.variants[0];
           setSelectedVariant(defaultVar);
-          console.log('Initialized variant:', defaultVar.color?.name);
         }
 
         // Check if product is in wishlist
@@ -112,14 +104,14 @@ const ProductDetailsScreen = () => {
           const wishlistStatus = await checkWishlist(productData.id, variantToCheck?.id);
           setIsFavorite(wishlistStatus.in_wishlist);
         } catch (error) {
-          console.log('Error checking wishlist status:', error);
+          console.log('Error checking wishlist status:', error);  
         }
 
         // Add to recently viewed
         try {
           await addToRecentlyViewed(productData.id);
-        } catch (error) {
-          console.log('Error adding to recently viewed:', error);
+        } catch (error) { 
+          console.log('Error adding to recently viewed:', error);  
         }
 
         // Load related products using the correct API with product slug
@@ -127,7 +119,6 @@ const ProductDetailsScreen = () => {
         try {
           // Use getRelatedProducts endpoint with product slug
           related = await apiService.getRelatedProducts(productData.slug);
-          console.log('Related products loaded:', related.length);
         } catch (error) {
           console.log('getRelatedProducts endpoint failed, using featured products as fallback');
           // Fallback to featured products
@@ -139,7 +130,6 @@ const ProductDetailsScreen = () => {
         const filteredRelated = related.filter(p => p.id !== productData.id);
         setRelatedProducts(filteredRelated);
 
-        console.log('Product loaded:', productData.name);
       } else {
         throw new Error('Product not found');
       }
