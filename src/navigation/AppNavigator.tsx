@@ -15,6 +15,7 @@ import SearchScreen from '../screens/SearchScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import WishlistScreen from '../screens/WishlistScreen';
+import RecentlyViewedScreen from '../screens/RecentlyViewedScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import OrderConfirmationScreen from '../screens/OrderConfirmationScreen';
@@ -126,6 +127,7 @@ const AppNavigator = () => {
 
         {/* User Account */}
         <Stack.Screen name="Orders" component={OrdersScreen} />
+        <Stack.Screen name="RecentlyViewed" component={RecentlyViewedScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
 

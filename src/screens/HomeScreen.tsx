@@ -17,7 +17,8 @@ import ProductCard from '../components/ProductCard';
 import CategoryCard from '../components/CategoryCard';
 import EnhancedHeader from '../components/EnhancedHeader';
 import CartIcon from '../components/CartIcon';
-import FloatingActionButton from '../components/FloatingActionButton'; // If exists, or remove
+import CollectionCard from '../components/CollectionCard';
+import UserActivitySection from '../components/UserActivitySection';
 import { apiService, ApiCategory, ApiProduct, ApiCollection } from '../services/api';
 import type { RootStackParamList } from '../types/navigation';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -32,6 +33,8 @@ const HomeScreen = () => {
   const [featuredProducts, setFeaturedProducts] = useState<ApiProduct[]>([]);
   const [bestsellerProducts, setBestsellerProducts] = useState<ApiProduct[]>([]);
   const [collections, setCollections] = useState<ApiCollection[]>([]);
+  const [recentlyViewed, setRecentlyViewed] = useState<ApiProduct[]>([]);
+  const [wishlistItems, setWishlistItems] = useState<ApiProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,17 +46,21 @@ const HomeScreen = () => {
       setError(null);
       console.log('🔄 Loading home screen data...');
 
-      const [categoriesData, featuredData, bestsellerData, collectionsData] = await Promise.allSettled([
+      const results = await Promise.allSettled([
         apiService.getCategories(),
         apiService.getFeaturedProducts(),
         apiService.getBestsellerProducts(),
         apiService.getFeaturedCollections(),
+        apiService.getRecentlyViewedItems(),
+        apiService.getWishlistItems(),
       ]);
 
-      if (categoriesData.status === 'fulfilled') setCategories(categoriesData.value);
-      if (featuredData.status === 'fulfilled') setFeaturedProducts(featuredData.value);
-      if (bestsellerData.status === 'fulfilled') setBestsellerProducts(bestsellerData.value);
-      if (collectionsData.status === 'fulfilled') setCollections(collectionsData.value);
+      if (results[0].status === 'fulfilled') setCategories(results[0].value);
+      if (results[1].status === 'fulfilled') setFeaturedProducts(results[1].value);
+      if (results[2].status === 'fulfilled') setBestsellerProducts(results[2].value);
+      if (results[3].status === 'fulfilled') setCollections(results[3].value);
+      if (results[4].status === 'fulfilled') setRecentlyViewed(results[4].value);
+      if (results[5].status === 'fulfilled') setWishlistItems(results[5].value);
 
     } catch (error) {
       console.error('❌ Error loading home data:', error);
@@ -71,6 +78,11 @@ const HomeScreen = () => {
     setRefreshing(true);
     await loadData();
     setRefreshing(false);
+  };
+
+  const handleCollectionPress = (collection: ApiCollection) => {
+    // For now navigate to ProductList, can be enhanced to support collection filtering
+    navigation.navigate('ProductList', { categoryName: collection.name });
   };
 
   const handleProductPress = (product: ApiProduct) => {
@@ -140,10 +152,45 @@ const HomeScreen = () => {
           />
         </View>
 
+
+
+        {/* User Activity Section (Recently Viewed / Wishlist) */}
+        <UserActivitySection
+          recentlyViewed={recentlyViewed}
+          wishlistItems={wishlistItems}
+        />
+
+        {/* Collections Section */}
+        {
+          collections.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Our Collections</Text>
+              </View>
+
+              <FlatList
+                data={collections}
+                renderItem={({ item }) => (
+                  <CollectionCard
+                    collection={item}
+                    onPress={handleCollectionPress}
+                  />
+                )}
+                keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalList}
+                snapToInterval={width * 0.8 + 16} // Card width + margin
+                decelerationRate="fast"
+              />
+            </View>
+          )
+        }
+
         {/* Featured Products */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Featured Collections</Text>
+            <Text style={styles.sectionTitle}>Featured Products</Text>
           </View>
 
           <FlatList
@@ -185,8 +232,8 @@ const HomeScreen = () => {
 
         {/* Bottom Spacing */}
         <View style={{ height: 40 }} />
-      </ScrollView>
-    </View>
+      </ScrollView >
+    </View >
   );
 };
 

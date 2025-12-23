@@ -71,7 +71,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, style }) =>
 
                 {/* Price Section */}
                 <View style={styles.priceContainer}>
-                    <Text style={styles.price}>₹{product.price.toLocaleString()}</Text>
+                    <Text style={styles.price}>₹{(product.price || 0).toLocaleString()}</Text>
                     {product.originalPrice && product.originalPrice > product.price && (
                         <Text style={styles.originalPrice}>
                             ₹{product.originalPrice.toLocaleString()}

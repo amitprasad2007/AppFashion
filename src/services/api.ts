@@ -372,6 +372,10 @@ class ApiService {
 
   private async fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     try {
+      if (__DEV__) {
+        console.log(`📡 [API] ${options.method || 'GET'} ${BASE_URL}${endpoint}`);
+        if (options.body) console.log(`📦 [Body]`, options.body);
+      }
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
 
@@ -798,22 +802,85 @@ class ApiService {
         return await this.getBestsellerProducts();
       }
       if (params.type === 'category') {
-        return await this.getCategoryProducts(params.categoryId as number);
+        if (!params.categoryId) return [];
+        return await this.getCategoryProducts(Number(params.categoryId));
       }
       if (params.type === 'recommended') {
         return await this.getRecommendedProducts();
       }
 
-      // For category-based or general product requests, use featured as fallback
-      // since /products endpoint doesn't exist in your backend
-
-      const featuredProducts = await this.getFeaturedProducts();
-      return featuredProducts;
+      // Default fallback
+      return await this.getFeaturedProducts();
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error('Error in getProducts:', error);
       return [];
     }
   }
+
+  // User Activity Methods
+  async getWishlistItems(): Promise<ApiProduct[]> {
+    try {
+      let endpoint = this.authToken ? '/wishlist' : '/guest/wishlist';
+
+      // Add session token for guest users
+      if (!this.authToken) {
+        const sessionToken = this.getSessionToken();
+        if (sessionToken) {
+          endpoint += `?session_token=${encodeURIComponent(sessionToken)}`;
+        }
+      }
+
+      const response = await this.fetchApi<any>(endpoint);
+
+      // Standardize response to ApiProduct[]
+      // Note: Wishlist API might return items wrapped differently
+      let products: ApiProduct[] = [];
+
+      if (Array.isArray(response)) {
+        products = response;
+      } else if (response && response.data) {
+        products = response.data;
+      } else if (response && response.wishlist_items) {
+        // Handle nested structure if any
+        products = response.wishlist_items;
+      }
+
+      return products;
+    } catch (error) {
+      console.error('Error fetching wishlist:', error);
+      return [];
+    }
+  }
+
+  async getRecentlyViewedItems(): Promise<ApiProduct[]> {
+    try {
+      let endpoint = this.authToken ? '/recently-viewed' : '/guest/recently-viewed';
+
+      // Add session token for guest users
+      if (!this.authToken) {
+        const sessionToken = this.getSessionToken();
+        if (sessionToken) {
+          endpoint += `?session_token=${encodeURIComponent(sessionToken)}`;
+        }
+      }
+
+      const response = await this.fetchApi<any>(endpoint);
+
+      let products: ApiProduct[] = [];
+
+      if (Array.isArray(response)) {
+        products = response;
+      } else if (response && response.data) {
+        products = response.data;
+      }
+
+      return products;
+    } catch (error) {
+      console.error('Error fetching recently viewed:', error);
+      return [];
+    }
+  }
+
 
   // Product Reviews
   async getProductReviews(productSlug: string): Promise<ApiProductReview[]> {
@@ -1460,16 +1527,6 @@ class ApiService {
 
   // ==================== WISHLIST OPERATIONS ====================
 
-  // Get wishlist items (independent endpoint)
-  async getWishlistItems(): Promise<ApiWishlistItem[]> {
-    try {
-      const response = await this.fetchApi<ApiWishlistItem[]>('/wishlist');
-      return response;
-    } catch (error) {
-      console.error('Error fetching wishlist items:', error);
-      return [];
-    }
-  }
 
   // Add item to wishlist
   async addToWishlist(productId: number, variantId?: number): Promise<{ success: boolean; message: string }> {
