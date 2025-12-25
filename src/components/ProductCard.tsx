@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -7,10 +7,17 @@ import {
     TouchableOpacity,
     Dimensions,
     ViewStyle,
+    ActivityIndicator,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import LinearGradient from 'react-native-linear-gradient';
 import { theme } from '../theme';
 import { ApiProduct } from '../services/api';
+import { RootStackParamList } from '../types/navigation';
+import { useUserProfile } from '../contexts/UserProfileContext';
+import { useAuth } from '../contexts/AuthContext';
+import SafeAlert from '../utils/safeAlert';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.44; // Approx 44% of screen width
@@ -22,6 +29,118 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, style }) => {
+    const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+    const { state: authState } = useAuth();
+    const { addToCart, addToWishlist, removeFromWishlist, checkWishlist } = useUserProfile();
+    const [addingToCart, setAddingToCart] = useState(false);
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [togglingWishlist, setTogglingWishlist] = useState(false);
+
+    // Initial check for wishlist status
+    useEffect(() => {
+        const checkStatus = async () => {
+            if (product && !togglingWishlist) {
+                try {
+                    // Determine default variant for checking
+                    let variantId = undefined;
+                    if (product.variants && product.variants.length > 0) {
+                        const defaultVar = product.variants.find(v => v.id === product.defaultVariantId) || product.variants[0];
+                        variantId = defaultVar.id;
+                    }
+
+                    const status = await checkWishlist(product.id, variantId);
+                    setIsFavorite(status.in_wishlist);
+                } catch (error) {
+                    // Fail silently for wishlist check
+                    console.log('Error checking wishlist status:', error);
+                }
+            }
+        };
+
+        checkStatus();
+    }, [product.id, product.variants]); // Re-check if product changes
+    console.log(isFavorite);
+
+    const handleWishlistToggle = async () => {
+        if (togglingWishlist) return;
+
+        try {
+            setTogglingWishlist(true);
+
+            // Determine variant
+            let variantId = undefined;
+            if (product.variants && product.variants.length > 0) {
+                const defaultVar = product.variants.find(v => v.id === product.defaultVariantId) || product.variants[0];
+                variantId = defaultVar.id;
+            }
+
+            if (isFavorite) {
+                await removeFromWishlist(product.id, variantId);
+                setIsFavorite(false);
+                SafeAlert.success('Removed', 'Item removed from wishlist');
+            } else {
+                await addToWishlist(product.id, variantId);
+                setIsFavorite(true);
+                SafeAlert.success('Added', 'Item added to wishlist');
+            }
+        } catch (error) {
+            console.error('Error toggling wishlist:', error);
+            // Revert state on error if needed, or just show error
+            SafeAlert.error('Error', 'Failed to update wishlist. Please try again.');
+        } finally {
+            setTogglingWishlist(false);
+        }
+    };
+
+    const handleAddToCart = async () => {
+        if (!product) return;
+
+        // Check if user is authenticated
+        if (!authState.isAuthenticated) {
+            SafeAlert.show(
+                'Login Required',
+                'Please login to add items to your cart',
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                        text: 'Login',
+                        onPress: () => navigation.navigate('Login')
+                    }
+                ]
+            );
+            return;
+        }
+
+        try {
+            setAddingToCart(true);
+
+            // Determine default variant
+            let variantId = undefined;
+            if (product.variants && product.variants.length > 0) {
+                // Try to find default variant or use first one
+                const defaultVar = product.variants.find(v => v.id === product.defaultVariantId) || product.variants[0];
+                variantId = defaultVar.id;
+            }
+
+            await addToCart(product.id, 1, {
+                variant_id: variantId,
+            });
+
+            SafeAlert.show(
+                'Added to Cart',
+                `${product.name} has been added to your cart.`,
+                [
+                    { text: 'Continue Shopping', style: 'cancel' },
+                    { text: 'View Cart', onPress: () => navigation.navigate('Cart') }
+                ]
+            );
+        } catch (error) {
+            console.error('Error adding to cart:', error);
+            SafeAlert.error('Error', 'Failed to add item to cart. Please try again.');
+        } finally {
+            setAddingToCart(false);
+        }
+    };
     const imageUrl = product.images && product.images.length > 0
         ? product.images[0]
         : `https://picsum.photos/300/400?random=${product.id}`;
@@ -52,9 +171,20 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, style }) =>
                 )}
 
                 {/* Wishlist / Action Placeholder */}
-                <View style={styles.actionButton}>
-                    <Text style={styles.heartIcon}>🤍</Text>
-                </View>
+                <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={handleWishlistToggle}
+                    disabled={togglingWishlist}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                    {togglingWishlist ? (
+                        <ActivityIndicator size="small" color={theme.colors.primary[500]} />
+                    ) : (
+                        <Text style={[styles.heartIcon, isFavorite && { color: 'red' }]}>
+                            {isFavorite ? '❤️' : '🤍'}
+                        </Text>
+                    )}
+                </TouchableOpacity>
             </View>
 
             {/* Content Container */}
@@ -89,8 +219,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, style }) =>
                 )}
 
                 {/* Add to Cart Button (Small) */}
-                <TouchableOpacity style={styles.addButton}>
-                    <Text style={styles.addButtonText}>ADD TO CART</Text>
+                <TouchableOpacity
+                    style={[styles.addButton, addingToCart && { opacity: 0.8 }]}
+                    onPress={handleAddToCart}
+                    disabled={addingToCart}
+                >
+                    {addingToCart ? (
+                        <ActivityIndicator size="small" color={theme.colors.gold} />
+                    ) : (
+                        <Text style={styles.addButtonText}>ADD TO CART</Text>
+                    )}
                 </TouchableOpacity>
             </View>
         </TouchableOpacity>

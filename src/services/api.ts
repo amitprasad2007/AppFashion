@@ -1556,6 +1556,8 @@ class ApiService {
       const payload: any = { product_id: productId };
       if (variantId) {
         payload.product_variant_id = variantId;
+      }else{
+        payload.product_variant_id = null;
       }
       const response = await this.fetchApi<any>('/wishlist', {
         method: 'POST',

@@ -16,8 +16,27 @@ interface UserActivityProps {
 const UserActivitySection = ({ recentlyViewed, wishlistItems }: UserActivityProps) => {
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
+    // Deduplicate items to prevent "duplicate key" errors
+    const uniqueRecentlyViewed = React.useMemo(() => {
+        const seen = new Set();
+        return recentlyViewed.filter(item => {
+            const duplicate = seen.has(item.id);
+            seen.add(item.id);
+            return !duplicate;
+        });
+    }, [recentlyViewed]);
+
+    const uniqueWishlistItems = React.useMemo(() => {
+        const seen = new Set();
+        return wishlistItems.filter(item => {
+            const duplicate = seen.has(item.id);
+            seen.add(item.id);
+            return !duplicate;
+        });
+    }, [wishlistItems]);
+
     // Internal loading state is no longer needed as parent handles fetching
-    const isEmpty = !recentlyViewed.length && !wishlistItems.length;
+    const isEmpty = !uniqueRecentlyViewed.length && !uniqueWishlistItems.length;
 
     const handleProductPress = (product: ApiProduct) => {
         navigation.navigate('ProductDetails', { product });
@@ -59,13 +78,13 @@ const UserActivitySection = ({ recentlyViewed, wishlistItems }: UserActivityProp
         <View>
             {renderSection(
                 'Recently Viewed',
-                recentlyViewed,
+                uniqueRecentlyViewed,
                 () => navigation.navigate('RecentlyViewed')
             )}
 
             {renderSection(
                 'Your Wishlist',
-                wishlistItems,
+                uniqueWishlistItems,
                 () => navigation.navigate('Wishlist')
             )}
         </View>

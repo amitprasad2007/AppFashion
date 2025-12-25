@@ -254,7 +254,7 @@ const WishlistScreenContent = () => {
           <FlatList
             data={wishlistItems}
             renderItem={renderWishlistItem}
-            keyExtractor={item => `wishlist_${item.wish_id}`}
+            keyExtractor={(item, index) => `wishlist_${item.wish_id || item.id || index}`}
             contentContainerStyle={styles.itemsList}
             showsVerticalScrollIndicator={false}
             refreshControl={
