@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { theme } from '../theme';
 import { apiService, AddressInput, ApiAddress } from '../services/api';
+import { locationService } from '../services/LocationService';
 
 interface AddAddressModalProps {
     visible: boolean;
@@ -30,6 +31,7 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
     editAddress,
 }) => {
     const [loading, setLoading] = useState(false);
+    const [fetchingLocation, setFetchingLocation] = useState(false);
     const [formData, setFormData] = useState<AddressInput>({
         full_name: '',
         phone: '',
@@ -100,6 +102,34 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
         }
     };
 
+    const handleUseCurrentLocation = async () => {
+        setFetchingLocation(true);
+        try {
+            const position = await locationService.getCurrentLocation();
+            const { latitude, longitude } = position.coords;
+
+            // Get address details
+            const addressData = await locationService.getAddressFromCoordinates(latitude, longitude);
+
+            setFormData(prev => ({
+                ...prev,
+                address_line1: addressData.address || prev.address_line1,
+                city: addressData.city || prev.city,
+                state: addressData.state || prev.state,
+                postal_code: addressData.pincode || prev.postal_code,
+            }));
+
+            if (addressData.address === 'API Key Missing') {
+                Alert.alert('Note', 'Location coordinates fetched, but address lookup requires configuration.');
+            }
+        } catch (error: any) {
+            console.error('Location error:', error);
+            Alert.alert('Error', 'Failed to get current location. Please ensure location services are enabled.');
+        } finally {
+            setFetchingLocation(false);
+        }
+    };
+
     const renderInput = (
         label: string,
         field: keyof AddressInput,
@@ -144,6 +174,23 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
                     <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false}>
                         {renderInput('Full Name', 'full_name', 'Enter full name')}
                         {renderInput('Phone Number', 'phone', 'Enter phone number', 'phone-pad')}
+
+                        {/* Use Current Location Button */}
+                        <TouchableOpacity
+                            style={styles.locationButton}
+                            onPress={handleUseCurrentLocation}
+                            disabled={fetchingLocation}
+                        >
+                            {fetchingLocation ? (
+                                <ActivityIndicator size="small" color={theme.colors.primary[600]} style={{ marginRight: 8 }} />
+                            ) : (
+                                <Text style={styles.locationIcon}>📍</Text>
+                            )}
+                            <Text style={styles.locationButtonText}>
+                                {fetchingLocation ? 'Fetching Location...' : 'Use Current Location'}
+                            </Text>
+                        </TouchableOpacity>
+
                         {renderInput('Address Line 1', 'address_line1', 'House no., Building, Street')}
                         {renderInput('Address Line 2', 'address_line2', 'Area, Landmark', 'default', false)}
 
@@ -364,6 +411,21 @@ const styles = StyleSheet.create({
     },
     spacer: {
         height: 30,
+    },
+    locationButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 10,
+        marginBottom: 16,
+    },
+    locationIcon: {
+        fontSize: 16,
+        marginRight: 8,
+    },
+    locationButtonText: {
+        color: theme.colors.primary[600],
+        fontWeight: '600',
+        fontSize: 14,
     },
 });
 
