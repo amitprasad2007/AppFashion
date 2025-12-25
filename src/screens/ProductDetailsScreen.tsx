@@ -94,24 +94,24 @@ const ProductDetailsScreen = () => {
           setSelectedVariant(defaultVar);
         }
 
+        // Determine variant to check
+        const variantToCheck = (productData.variants && productData.variants.length > 0)
+          ? (productData.variants.find((v: any) => v.id === productData.defaultVariantId) || productData.variants[0])
+          : null;
+
         // Check if product is in wishlist
         try {
-          // Determine variant to check
-          const variantToCheck = (productData.variants && productData.variants.length > 0)
-            ? (productData.variants.find((v: any) => v.id === productData.defaultVariantId) || productData.variants[0])
-            : null;
-
           const wishlistStatus = await checkWishlist(productData.id, variantToCheck?.id);
           setIsFavorite(wishlistStatus.in_wishlist);
         } catch (error) {
-          console.log('Error checking wishlist status:', error);  
+          console.log('Error checking wishlist status:', error);
         }
 
         // Add to recently viewed
         try {
-          await addToRecentlyViewed(productData.id);
-        } catch (error) { 
-          console.log('Error adding to recently viewed:', error);  
+          await addToRecentlyViewed(productData.id, variantToCheck?.id);
+        } catch (error) {
+          console.log('Error adding to recently viewed:', error);
         }
 
         // Load related products using the correct API with product slug

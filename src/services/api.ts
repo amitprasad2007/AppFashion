@@ -168,6 +168,8 @@ export interface ApiCartItem {
   price: string;
   quantity: number;
   image: string[];
+  variant_id?: number;
+  product_variant_id?: number;
 }
 
 export interface ApiCart {
@@ -360,11 +362,30 @@ class ApiService {
   }
 
   // Get or generate session token for guest API calls
-  public getSessionToken(): string {
-    // Check if we already have a guest session token stored
-    if (!this.guestSessionToken) {
-      // Generate a new one and store it (matching website localStorage logic)
-      this.guestSessionToken = this.generateGuestSessionToken();
+  // Get or generate session token for guest API calls
+  public async getSessionToken(): Promise<string> {
+    // Check if we already have a guest session token in memory
+    if (this.guestSessionToken) {
+      return this.guestSessionToken;
+    }
+
+    // Try to get from storage
+    try {
+      const storedToken = await AsyncStorage.getItem('guest_session_token');
+      if (storedToken) {
+        this.guestSessionToken = storedToken;
+        return storedToken;
+      }
+    } catch (error) {
+      console.warn('Error reading guest token from storage:', error);
+    }
+
+    // Generate a new one and store it
+    this.guestSessionToken = this.generateGuestSessionToken();
+    try {
+      await AsyncStorage.setItem('guest_session_token', this.guestSessionToken);
+    } catch (error) {
+      console.warn('Error saving guest token to storage:', error);
     }
 
     return this.guestSessionToken;
@@ -824,7 +845,7 @@ class ApiService {
 
       // Add session token for guest users
       if (!this.authToken) {
-        const sessionToken = this.getSessionToken();
+        const sessionToken = await this.getSessionToken();
         if (sessionToken) {
           endpoint += `?session_token=${encodeURIComponent(sessionToken)}`;
         }
@@ -858,7 +879,7 @@ class ApiService {
 
       // Add session token for guest users
       if (!this.authToken) {
-        const sessionToken = this.getSessionToken();
+        const sessionToken = await this.getSessionToken();
         if (sessionToken) {
           endpoint += `?session_token=${encodeURIComponent(sessionToken)}`;
         }
@@ -1452,13 +1473,14 @@ class ApiService {
   }
 
   // Remove item from cart
-  async removeFromCart(cartId: number, productId: number): Promise<{ success: boolean; message: string }> {
+  async removeFromCart(cartId: number, productId: number, variantId?: number): Promise<{ success: boolean; message: string }> {
     try {
       const response = await this.fetchApi<{ success: boolean; message: string }>('/cart/remove', {
         method: 'DELETE',
         body: JSON.stringify({
           cart_id: cartId,
-          product_id: productId
+          product_id: productId,
+          product_variant_id: variantId || null
         }),
       });
       return response;
@@ -1535,11 +1557,16 @@ class ApiService {
       if (variantId) {
         payload.product_variant_id = variantId;
       }
-      const response = await this.fetchApi<{ success: boolean; message: string }>('/wishlist', {
+      const response = await this.fetchApi<any>('/wishlist', {
         method: 'POST',
         body: JSON.stringify(payload),
       });
-      return response;
+
+      // Backend returns { status: 'ok' } so we normalize it
+      if (response && response.status === 'ok') {
+        return { success: true, message: 'Added to wishlist' };
+      }
+      return response as { success: boolean; message: string };
     } catch (error) {
       console.error('Error adding to wishlist:', error);
       throw error;
@@ -1553,10 +1580,15 @@ class ApiService {
       if (variantId) {
         endpoint += `?product_variant_id=${variantId}`;
       }
-      const response = await this.fetchApi<{ success: boolean; message: string }>(endpoint, {
+      const response = await this.fetchApi<any>(endpoint, {
         method: 'DELETE',
       });
-      return response;
+
+      // Backend returns { status: 'ok' } so we normalize it
+      if (response && response.status === 'ok') {
+        return { success: true, message: 'Removed from wishlist' };
+      }
+      return response as { success: boolean; message: string };
     } catch (error) {
       console.error('Error removing from wishlist:', error);
       throw error;
@@ -1593,20 +1625,33 @@ class ApiService {
 
       // For guest users, add session token
       if (!this.authToken) {
-        const sessionToken = this.getSessionToken();
+        const sessionToken = await this.getSessionToken();
         requestBody.session_token = sessionToken;
-
       }
 
-      const response = await this.fetchApi<{ in_wishlist: boolean; wish_id?: number }>(endpoint, {
+      const response = await this.fetchApi<any>(endpoint, {
         method: 'POST',
         body: JSON.stringify(requestBody),
       });
 
+      // Handle numeric response (count) from backend
+      if (typeof response === 'number') {
+        return {
+          in_wishlist: response > 0,
+          wishlist_id: undefined
+        };
+      } else if (typeof response === 'string' && !isNaN(Number(response))) {
+        // In case it comes as string "1"
+        return {
+          in_wishlist: Number(response) > 0,
+          wishlist_id: undefined
+        };
+      }
+
       // Normalize the response to match our interface
       return {
-        in_wishlist: response.in_wishlist,
-        wishlist_id: response.wish_id
+        in_wishlist: !!response?.in_wishlist || !!response?.success,
+        wishlist_id: response?.wish_id
       };
     } catch (error) {
       console.error('Error checking wishlist:', error);
@@ -1884,25 +1929,31 @@ class ApiService {
   }
 
   // Add product to recently viewed (with session token support)
-  async addToRecentlyViewed(productId: number): Promise<{ success: boolean; message: string }> {
+  async addToRecentlyViewed(productId: number, productVariantId?: number): Promise<{ success: boolean; message: string }> {
     try {
       // Use different endpoints based on authentication status
       const endpoint = this.authToken ? '/recently-viewed' : '/guest/recently-viewed';
 
-      const requestBody: any = { product_id: productId };
+      const requestBody: any = {
+        product_id: productId,
+        product_variant_id: productVariantId || null
+      };
 
       // For guest users, add session token
       if (!this.authToken) {
-        const sessionToken = this.getSessionToken();
+        const sessionToken = await this.getSessionToken();
         requestBody.session_token = sessionToken;
-
       }
 
-      const response = await this.fetchApi<{ success: boolean; message: string }>(endpoint, {
+      const response = await this.fetchApi<any>(endpoint, {
         method: 'POST',
         body: JSON.stringify(requestBody),
       });
-      return response;
+      // Backend returns { status: 'ok' }
+      if (response && response.status === 'ok') {
+        return { success: true, message: 'Added to recently viewed' };
+      }
+      return response as { success: boolean; message: string };
     } catch (error) {
       console.error('Error adding to recently viewed:', error);
       // Return success for fallback to prevent blocking the user flow
@@ -1911,11 +1962,11 @@ class ApiService {
   }
 
   // Sync recently viewed products (for offline/online sync)
-  async syncRecentlyViewed(productIds: number[]): Promise<{ success: boolean; message: string }> {
+  async syncRecentlyViewed(items: { product_id: number; product_variant_id?: number }[]): Promise<{ success: boolean; message: string }> {
     try {
       const response = await this.fetchApi<{ success: boolean; message: string }>('/sync-recently-viewed', {
         method: 'POST',
-        body: JSON.stringify({ product_ids: productIds }),
+        body: JSON.stringify({ recently_viewed: items }),
       });
       return response;
     } catch (error) {

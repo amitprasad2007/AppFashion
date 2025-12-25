@@ -22,7 +22,7 @@ interface UserProfileContextType {
   // Cart operations
   addToCart: (productId: number, quantity?: number, options?: { size?: string; color?: string; variant_id?: number }) => Promise<void>;
   updateCartItem: (cartItemId: number, quantity: number) => Promise<void>;
-  removeFromCart: (cartItemId: number, productId: number) => Promise<void>;
+  removeFromCart: (cartItemId: number, productId: number, variantId?: number) => Promise<void>;
   getCartSummary: () => Promise<{ total_items: number; subtotal: number; total: number; discount: number; shipping: number; tax: number; }>;
 
   // Wishlist operations
@@ -43,7 +43,7 @@ interface UserProfileContextType {
 
   // Recently viewed
   getRecentlyViewed: () => Promise<ApiProduct[]>;
-  addToRecentlyViewed: (productId: number) => Promise<void>;
+  addToRecentlyViewed: (productId: number, variantId?: number) => Promise<void>;
 }
 
 interface UserStatistics {
@@ -125,7 +125,7 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const getWishlist = async (): Promise<ApiWishlistItem[]> => {
     try {
       if (!authState.isAuthenticated) {
-        const sessionToken = apiService.getSessionToken();
+        const sessionToken = await apiService.getSessionToken();
         const response = await apiService.guestGetWishlist(sessionToken);
         // Map guest response to ApiWishlistItem if needed, or assume backend returns compatible format
         // The backend returns a list of items directly or wrapped?
@@ -200,7 +200,7 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const addToWishlist = async (productId: number, variantId?: number): Promise<void> => {
     try {
       if (!authState.isAuthenticated) {
-        const sessionToken = apiService.getSessionToken();
+        const sessionToken = await apiService.getSessionToken();
         await apiService.guestAddToWishlist(sessionToken, productId, variantId);
         // For guest, we don't have userData to refresh, but the UI might re-fetch
         return;
@@ -218,7 +218,7 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const removeFromWishlist = async (productId: number, variantId?: number): Promise<void> => {
     try {
       if (!authState.isAuthenticated) {
-        const sessionToken = apiService.getSessionToken();
+        const sessionToken = await apiService.getSessionToken();
         await apiService.guestRemoveFromWishlist(sessionToken, productId, variantId);
         return;
       }
@@ -246,19 +246,7 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Check if product is in wishlist
   const checkWishlist = async (productId: number, variantId?: number): Promise<{ in_wishlist: boolean; wishlist_id?: number }> => {
     try {
-      if (!authState.isAuthenticated) {
-        const sessionToken = apiService.getSessionToken();
-        const response = await apiService.guestCheckWishlist(sessionToken, productId, variantId);
-        // The API returns true/false or an object?
-        // User provided: api.post(...) -> res.data
-        // Typically check APIs return { success: true, in_wishlist: true/false } or simply boolean
-        // We'll assume consistency with auth checkWishlist which returns { in_wishlist: boolean, ... }
-        // If response is just true/false (boolean), wrap it
-        if (typeof response === 'boolean') {
-          return { in_wishlist: response };
-        }
-        return response;
-      }
+      // apiService.checkWishlist now handles both auth and guest logic gracefully with persistent session tokens
       return await apiService.checkWishlist(productId, variantId);
     } catch (error) {
       console.error('Error checking wishlist:', error);
@@ -313,9 +301,9 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   };
 
-  const removeFromCart = async (cartItemId: number, productId: number): Promise<void> => {
+  const removeFromCart = async (cartItemId: number, productId: number, variantId?: number): Promise<void> => {
     try {
-      const response: any = await apiService.removeFromCart(cartItemId, productId);
+      const response: any = await apiService.removeFromCart(cartItemId, productId, variantId);
 
       // If API returns cart, sync it. If not, we rely on refresh.
       // Assuming we updated api.ts to return cart or we handle it.
@@ -446,9 +434,9 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   };
 
-  const addToRecentlyViewed = async (productId: number): Promise<void> => {
+  const addToRecentlyViewed = async (productId: number, variantId?: number): Promise<void> => {
     try {
-      await apiService.addToRecentlyViewed(productId);
+      await apiService.addToRecentlyViewed(productId, variantId);
     } catch (error) {
       console.error('Error adding to recently viewed:', error);
       // Don't throw error for recently viewed as it's not critical

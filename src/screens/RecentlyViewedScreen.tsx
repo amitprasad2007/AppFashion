@@ -75,9 +75,8 @@ const RecentlyViewedScreen = () => {
         const imageUrl = item.images && item.images.length > 0
             ? item.images[0]
             : 'https://via.placeholder.com/150';
-
         const isAdding = addLoading === item.id;
-
+        console.log(item.images[0]);
         return (
             <View style={styles.itemCard}>
                 <TouchableOpacity

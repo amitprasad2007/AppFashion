@@ -88,7 +88,7 @@ const CartScreenContent = () => {
       setRefreshing(false);
     }
   };
-  
+
   // Load cart when user data changes
   useEffect(() => {
     if (userData?.cart_items) {
@@ -143,7 +143,7 @@ const CartScreenContent = () => {
   };
 
   // Remove item
-  const removeItem = (cartItemId: number, productId: number) => {
+  const removeItem = (cartItemId: number, productId: number, variantId?: number) => {
     Alert.alert(
       'Remove Item',
       'Are you sure you want to remove this item from your cart?',
@@ -155,7 +155,7 @@ const CartScreenContent = () => {
           onPress: async () => {
             try {
               setUpdatingItems(prev => new Set(prev).add(cartItemId));
-              await removeFromCart(cartItemId, productId);
+              await removeFromCart(cartItemId, productId, variantId);
               // Cart will be updated via refreshUserData in the context
             } catch (error) {
               console.error('Error removing item:', error);
@@ -189,7 +189,9 @@ const CartScreenContent = () => {
             try {
               // Remove each item individually since we don't have a clear cart endpoint
               for (const item of cart.items) {
-                await removeFromCart(item.cart_id, item.id);
+                for (const item of cart.items) {
+                  await removeFromCart(item.cart_id, item.id, item.variant_id);
+                }
               }
             } catch (error) {
               console.error('Error clearing cart:', error);
@@ -255,7 +257,7 @@ const CartScreenContent = () => {
 
   // Render cart item
   const renderCartItem = ({ item, index }: { item: ApiCartItem; index: number }) => {
-   // console.log('item', item);
+    // console.log('item', item);
 
     const isUpdating = updatingItems.has(item.id);
     const itemPrice = parseFloat(item.price);
@@ -284,7 +286,7 @@ const CartScreenContent = () => {
           <View style={styles.itemActions}>
             <TouchableOpacity
               style={styles.removeButton}
-              onPress={() => removeItem(item.cart_id, item.id)}
+              onPress={() => removeItem(item.cart_id, item.id, item.variant_id)}
               disabled={isUpdating}>
               <Text style={styles.removeIcon}>🗑️</Text>
             </TouchableOpacity>
