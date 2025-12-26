@@ -1188,6 +1188,7 @@ const styles = StyleSheet.create({
   },
   placeOrderButton: {
     marginTop: 16,
+    marginBottom: 16,
   },
 });
 

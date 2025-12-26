@@ -712,7 +712,8 @@ const styles = StyleSheet.create({
     color: theme.colors.primary[600],
   },
   checkoutButton: {
-    marginBottom: 2,
+    marginTop: 16,
+    marginBottom: 16,
   },
 });
 
