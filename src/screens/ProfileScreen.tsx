@@ -67,14 +67,14 @@ const ProfileScreenContent = () => {
       title: 'Payment Methods',
       subtitle: 'Cards & payment options',
       icon: '💳',
-      onPress: () => navigation.navigate('PaymentMethods'),
+      onPress: () => Alert.alert('Payment Methods', 'Payment methods management coming soon!'),
     },
     {
       id: '5',
       title: 'Notifications',
       subtitle: 'Manage your preferences',
       icon: '🔔',
-      onPress: () => navigation.navigate('Notifications'),
+      onPress: () => Alert.alert('Notifications', 'Notification preferences coming soon!'),
     },
     {
       id: '6',
@@ -204,11 +204,11 @@ const ProfileScreenContent = () => {
               <Text style={styles.memberSince}>Member since {memberSince}</Text>
             </View>
           </View>
-          {/* <TouchableOpacity
+          <TouchableOpacity
             style={styles.editButton}
             onPress={() => navigation.navigate('EditProfile')}>
             <Text style={styles.editButtonText}>✏️ Edit Profile</Text>
-          </TouchableOpacity> */}
+          </TouchableOpacity>
         </View>
 
         {/* Stats */}

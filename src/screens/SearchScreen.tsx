@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ScrollView,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -15,15 +16,7 @@ import { RootStackParamList } from '../types/navigation';
 import EnhancedImage from '../components/EnhancedImage';
 import EnhancedHeader from '../components/EnhancedHeader';
 import { theme } from '../theme';
-
-type SearchResult = {
-  id: string;
-  name: string;
-  slug?: string;
-  type: 'category' | 'product';
-  image: string;
-  price?: string;
-};
+import api, { ApiSearchSuggestion } from '../services/api';
 
 const SearchScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -31,52 +24,64 @@ const SearchScreen = () => {
   const [recentSearches] = useState(['Banarasi Saree', 'Silk', 'Wedding Collection', 'Gold Jewelry']);
   const [popularSearches] = useState(['Bridal', 'Katan Silk', 'Georgette', 'Offer']);
 
-  const searchResults: SearchResult[] = [
-    { id: '1', name: 'Summer Wedding Collection', type: 'category' as const, image: 'https://via.placeholder.com/60' },
-    { id: '2', name: 'Premium Silk Saree', type: 'product' as const, price: '₹8999', image: 'https://via.placeholder.com/60' },
-    { id: '3', name: 'Banarasi Dupatta', type: 'product' as const, price: '₹2499', image: 'https://via.placeholder.com/60' },
-    { id: '4', name: 'Gold Plated Necklace', type: 'product' as const, price: '₹4999', image: 'https://via.placeholder.com/60' },
-    { id: '5', name: 'Accessories', type: 'category' as const, image: 'https://via.placeholder.com/60' },
-  ];
+  const [results, setResults] = useState<ApiSearchSuggestion[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const filteredResults = searchResults.filter(item =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Debounce search
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.length >= 2) {
+        setIsLoading(true);
+        try {
+          const suggestions = await api.getSearchSuggestions(searchQuery);
+          setResults(suggestions);
+        } catch (error) {
+          console.error('Search error:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    // In a real app, you would make an API call here
   };
 
-  const renderSearchResult = ({ item, index }: { item: SearchResult; index: number }) => (
+  const navigateToItem = (item: ApiSearchSuggestion) => {
+    if (item.type === 'product') {
+      navigation.navigate('ProductDetails', { productSlug: item.slug });
+    } else if (item.type === 'category' || item.type === 'collection') {
+      navigation.navigate('ProductList', {
+        categoryName: item.label,
+        categoryId: item.id.toString(), // Convert number to string for navigation
+      });
+    }
+  };
+
+  const renderSearchResult = ({ item }: { item: ApiSearchSuggestion }) => (
     <TouchableOpacity
-      key={index}
       style={styles.resultItem}
-      onPress={() => {
-        if (item.type === 'product') {
-          navigation.navigate('ProductDetails', { productSlug: item.slug || item.id.toString() });
-        } else {
-          navigation.navigate('ProductList', { categoryName: item.name });
-        }
-      }}
+      onPress={() => navigateToItem(item)}
       activeOpacity={0.7}>
-      <EnhancedImage
-        source={{ uri: item.image }}
-        style={styles.resultImage}
-        borderRadius={8}
-        placeholder={item.name}
-        fallbackIcon={item.type === 'product' ? '👗' : '📂'}
-      />
+      <View style={styles.iconContainer}>
+        <Text style={styles.resultIcon}>
+          {item.type === 'product' ? '👗' : item.type === 'category' ? '📂' : '✨'}
+        </Text>
+      </View>
       <View style={styles.resultInfo}>
-        <Text style={styles.resultName}>{item.name}</Text>
+        <Text style={styles.resultName}>{item.label}</Text>
         <Text style={[
           styles.resultType,
           {
             backgroundColor: item.type === 'product' ? theme.colors.primary[50] : theme.colors.secondary[50],
             color: item.type === 'product' ? theme.colors.primary[700] : theme.colors.secondary[700]
           }
-        ]}>{item.type === 'product' ? 'Product' : 'Category'}</Text>
-        {item.price && <Text style={styles.resultPrice}>{item.price}</Text>}
+        ]}>{item.type.charAt(0).toUpperCase() + item.type.slice(1)}</Text>
       </View>
       <Text style={styles.arrow}>→</Text>
     </TouchableOpacity>
@@ -112,11 +117,13 @@ const SearchScreen = () => {
             onChangeText={handleSearch}
             autoFocus
           />
-          {searchQuery.length > 0 && (
+          {isLoading ? (
+            <ActivityIndicator size="small" color={theme.colors.primary[600]} style={{ marginRight: 8 }} />
+          ) : searchQuery.length > 0 ? (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
               <Text style={styles.clearButton}>✕</Text>
             </TouchableOpacity>
-          )}
+          ) : null}
         </View>
       </View>
 
@@ -173,13 +180,13 @@ const SearchScreen = () => {
         <View style={styles.searchResults}>
           <View style={styles.resultsHeader}>
             <Text style={styles.resultsHeaderText}>
-              Found {filteredResults.length} result{filteredResults.length !== 1 ? 's' : ''} for "{searchQuery}"
+              Found {results.length} result{results.length !== 1 ? 's' : ''} for "{searchQuery}"
             </Text>
           </View>
           <FlatList
-            data={filteredResults}
+            data={results}
             renderItem={renderSearchResult}
-            keyExtractor={item => item.id}
+            keyExtractor={(item, index) => `${item.type}-${item.id}-${index}`}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 20 }}
           />
@@ -334,6 +341,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: theme.colors.primary[600],
+  },
+  iconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 8,
+    backgroundColor: theme.colors.neutral[100],
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  resultIcon: {
+    fontSize: 24,
   },
   arrow: {
     fontSize: 18,

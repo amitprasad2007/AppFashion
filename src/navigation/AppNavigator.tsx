@@ -20,6 +20,10 @@ import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import OrderConfirmationScreen from '../screens/OrderConfirmationScreen';
 import AddressesScreen from '../screens/AddressesScreen';
+import OrderDetailsScreen from '../screens/OrderDetailsScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
+import SupportScreen from '../screens/SupportScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -132,13 +136,13 @@ const AppNavigator = () => {
         <Stack.Screen name="Register" component={RegisterScreen} />
 
         {/* Additional Screens - Commented out until implemented */}
-        {/* <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} />
-        {/* <Stack.Screen name="EditProfile" component={EditProfileScreen} /> */}
+        <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} />
+        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
         <Stack.Screen name="Addresses" component={AddressesScreen} />
-        {/* <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
+        {/* <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} /> */}
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="Support" component={SupportScreen} />
-        <Stack.Screen name="Notifications" component={NotificationsScreen} /> */}
+        {/* <Stack.Screen name="Notifications" component={NotificationsScreen} /> */}
 
       </Stack.Navigator>
     </NavigationContainer>

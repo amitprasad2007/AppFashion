@@ -24,6 +24,13 @@ export interface ApiCategory {
 }
 
 // Updated to match your actual API response from getProductDetails
+export interface ApiSearchSuggestion {
+  id: number;
+  type: 'product' | 'category' | 'collection' | 'page';
+  label: string;
+  slug: string;
+}
+
 export interface ApiProduct {
   id: number;
   name: string;
@@ -797,14 +804,37 @@ class ApiService {
       } else if (response && (response as any).data) {
         return (response as any).data;
       } else {
-        console.warn('Unexpected featured products API response structure:', response);
         return [];
       }
     } catch (error) {
       console.error('Error fetching featured products:', error);
+      console.log('🔄 Using mock data for featured products');
+
+      // Return mock data as fallback
       return [];
     }
   }
+
+  async getSearchSuggestions(query: string): Promise<ApiSearchSuggestion[]> {
+    try {
+      if (!query || query.trim().length < 2) {
+        return [];
+      }
+
+      const response = await this.fetchApi<ApiSearchSuggestion[]>(`/search/suggestions?q=${encodeURIComponent(query)}`);
+
+      if (Array.isArray(response)) {
+        return response;
+      } else {
+        console.warn('Unexpected search suggestions format:', response);
+        return [];
+      }
+    } catch (error) {
+      console.error('Error fetching search suggestions:', error);
+      return [];
+    }
+  }
+
 
   // Enhanced product methods using your actual endpoints
   async getProducts(params: {
@@ -1556,7 +1586,7 @@ class ApiService {
       const payload: any = { product_id: productId };
       if (variantId) {
         payload.product_variant_id = variantId;
-      }else{
+      } else {
         payload.product_variant_id = null;
       }
       const response = await this.fetchApi<any>('/wishlist', {
