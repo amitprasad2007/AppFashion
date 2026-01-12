@@ -2,7 +2,7 @@
 export const API_CONFIG = {
   // Development/Local API - Use IP address for emulator connectivity
   //BASE_URL: 'https://superadmin.samarsilkpalace.com/api', // Live production API
-  BASE_URL: 'http://10.0.2.2:8000/api', // Android emulator access to host machine
+  BASE_URL: 'http://shiwasha.test/api', // Android emulator access to host machine
   // BASE_URL: 'http://192.168.1.100/varanasisaree.test/api', // Your actual local IP
 
   // Alternative configurations for different environments
