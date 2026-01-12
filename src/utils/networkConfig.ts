@@ -1,10 +1,6 @@
 // Network configuration for different environments
 export const API_CONFIG = {
-  // Development/Local API - Use IP address for emulator connectivity
-  //BASE_URL: 'https://superadmin.samarsilkpalace.com/api', // Live production API
-  // Bridge Configuration for Android Emulator
-  // User confirmed 127.0.0.1:8000 works on host.
-  // In emulator, this is accessed via 10.0.2.2:8000
+ 
   BASE_URL: 'http://10.0.2.2:8000/api',
 
   // Alternative configurations for different environments
