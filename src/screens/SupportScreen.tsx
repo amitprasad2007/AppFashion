@@ -16,15 +16,15 @@ const SupportScreen = () => {
     const navigation = useNavigation();
 
     const handleEmail = () => {
-        Linking.openURL('mailto:support@samarsilkpalace.com');
+        Linking.openURL('mailto:samar@samarsilkpalace.com');
     };
 
     const handlePhone = () => {
-        Linking.openURL('tel:+919876543210');
+        Linking.openURL('tel:+919305626874');
     };
 
     const handleWhatsApp = () => {
-        Linking.openURL('whatsapp://send?text=Hello&phone=+919876543210');
+        Linking.openURL('whatsapp://send?text=Hello&phone=+919305626874');
     };
 
     const FAQs = [
