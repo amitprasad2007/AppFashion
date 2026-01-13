@@ -27,6 +27,7 @@ export type RootStackParamList = {
   Addresses: undefined;
   PaymentMethods: undefined;
   Settings: undefined;
+  Policy: { type: string; title: string };
   Support: undefined;
   Notifications: undefined;
   RecentlyViewed: undefined;

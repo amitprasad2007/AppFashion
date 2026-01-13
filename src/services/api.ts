@@ -236,6 +236,44 @@ export interface ApiAddress {
   is_default?: boolean;
 }
 
+export interface PolicySection {
+  title: string;
+  items: string[];
+}
+
+export interface DeliveryArea {
+  area: string;
+  time: string;
+}
+
+export interface ShippingMethod {
+  name: string;
+  time: string;
+  price: string;
+  details: string;
+}
+
+export interface TrackingInfo {
+  title: string;
+  content: string;
+}
+
+export interface PolicyMetadata {
+  introduction: string;
+  sections?: PolicySection[];
+  // Shipping specific
+  note?: string;
+  tracking?: TrackingInfo;
+  delivery_areas?: DeliveryArea[];
+  shipping_methods?: ShippingMethod[];
+}
+
+export interface ApiPolicy {
+  title: string;
+  content: string | null;
+  metadata?: PolicyMetadata;
+}
+
 export interface AddressInput {
   full_name: string;
   phone: string;
@@ -812,6 +850,112 @@ class ApiService {
 
       // Return mock data as fallback
       return [];
+    }
+  }
+
+  async getPolicy(type: string): Promise<ApiPolicy> {
+    try {
+      const response = await this.fetchApi<ApiPolicy>(`/policies/${type}`);
+
+      // Handle wrapped response
+      let policyData = response;
+      if (response && (response as any).data) {
+        policyData = (response as any).data;
+      }
+
+      // Check if we have valid metadata
+      // The metadata can have EITHER 'sections' OR shipping-specific fields like 'shipping_methods'
+      const hasSections = policyData?.metadata?.sections && policyData.metadata.sections.length > 0;
+      const hasShippingData = policyData?.metadata?.shipping_methods && policyData.metadata.shipping_methods.length > 0;
+
+      if (!policyData || !policyData.metadata || (!hasSections && !hasShippingData)) {
+        throw new Error('API returned policy without structured metadata');
+      }
+
+      return policyData;
+    } catch (error) {
+      console.error(`Error fetching policy ${type}:`, error);
+      // Mock data generator for different policy types
+      let mockMetadata: PolicyMetadata;
+
+      switch (type) {
+        case 'privacy':
+          mockMetadata = {
+            introduction: "At Samar Silk Palace, we are committed to protecting your privacy and ensuring the security of your personal information.",
+            sections: [
+              {
+                title: "Information We Collect",
+                items: ["Personal identification information", "Shipping and billing addresses", "Payment information", "Browsing behavior"]
+              },
+              {
+                title: "How We Use Your Information",
+                items: ["Process and fulfill your orders", "Communicate with you about your purchases", "Send promotional emails", "Improve our services"]
+              }
+            ]
+          };
+          break;
+        case 'terms':
+          mockMetadata = {
+            introduction: "Welcome to Samar Silk Palace. By accessing our website and mobile app, you agree to be bound by these Terms of Service.",
+            sections: [
+              {
+                title: "Use of Service",
+                items: ["You must be at least 18 years old", "Account confidentiality is your responsibility", "Product prices are subject to change"]
+              },
+              {
+                title: "Intellectual Property",
+                items: ["All content is property of Samar Silk Palace", "No reproduction without permission", "Trademarks are protected by law"]
+              }
+            ]
+          };
+          break;
+        case 'refund':
+          mockMetadata = {
+            introduction: "We want you to be completely satisfied with your purchase. If you're not, we offer a hassle-free refund policy.",
+            sections: [
+              {
+                title: "Return Eligibility",
+                items: ["Items must be unused and in original packaging", "Return request within 7 days of delivery", "Tags must be intact"]
+              },
+              {
+                title: "Refund Process",
+                items: ["Initiate return from 'My Orders'", "Pickup will be scheduled", "Refund processed within 5-7 days after inspection"]
+              }
+            ]
+          };
+          break;
+        case 'shipping':
+          mockMetadata = {
+            introduction: "We strive to deliver your products as quickly and safely as possible across India.",
+            sections: [
+              {
+                title: "Delivery Timelines",
+                items: ["Metro cities: 3-5 business days", "Rest of India: 5-7 business days", "Remote areas: 7-10 business days"]
+              },
+              {
+                title: "Shipping Charges",
+                items: ["Free shipping on orders above ₹999", "Standard charge of ₹99 for orders below ₹999", "Express shipping options available"]
+              }
+            ]
+          };
+          break;
+        default:
+          mockMetadata = {
+            introduction: "Policy details.",
+            sections: [
+              {
+                title: "General",
+                items: ["Details regarding this policy will be updated soon."]
+              }
+            ]
+          };
+      }
+
+      return {
+        title: type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) + (type.includes('policy') ? '' : ' Policy'),
+        content: null,
+        metadata: mockMetadata
+      };
     }
   }
 

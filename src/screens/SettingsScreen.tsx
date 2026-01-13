@@ -10,12 +10,16 @@ import {
     StatusBar,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../types/navigation';
 import EnhancedHeader from '../components/EnhancedHeader';
 import { theme } from '../theme';
 import { useAuth } from '../contexts/AuthContext';
 
+type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
+
 const SettingsScreen = () => {
-    const navigation = useNavigation();
+    const navigation = useNavigation<SettingsScreenNavigationProp>();
     const { logout } = useAuth();
 
     const [pushEnabled, setPushEnabled] = useState(true);
@@ -81,18 +85,35 @@ const SettingsScreen = () => {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Legal & Privacy</Text>
 
-                    <TouchableOpacity style={styles.linkRow}>
+                    <TouchableOpacity
+                        style={styles.linkRow}
+                        onPress={() => navigation.navigate('Policy', { type: 'privacy', title: 'Privacy Policy' })}
+                    >
                         <Text style={styles.linkText}>Privacy Policy</Text>
                         <Text style={styles.arrow}>→</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.linkRow}>
+                    <TouchableOpacity
+                        style={styles.linkRow}
+                        onPress={() => navigation.navigate('Policy', { type: 'terms', title: 'Terms of Service' })}
+                    >
                         <Text style={styles.linkText}>Terms of Service</Text>
                         <Text style={styles.arrow}>→</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.linkRow}>
+                    <TouchableOpacity
+                        style={styles.linkRow}
+                        onPress={() => navigation.navigate('Policy', { type: 'refund', title: 'Refund Policy' })}
+                    >
                         <Text style={styles.linkText}>Refund Policy</Text>
+                        <Text style={styles.arrow}>→</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.linkRow}
+                        onPress={() => navigation.navigate('Policy', { type: 'shipping', title: 'Shipping Policy' })}
+                    >
+                        <Text style={styles.linkText}>Shipping Policy</Text>
                         <Text style={styles.arrow}>→</Text>
                     </TouchableOpacity>
                 </View>

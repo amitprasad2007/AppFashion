@@ -24,6 +24,7 @@ import OrderDetailsScreen from '../screens/OrderDetailsScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import SupportScreen from '../screens/SupportScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import PolicyScreen from '../screens/PolicyScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -141,6 +142,7 @@ const AppNavigator = () => {
         <Stack.Screen name="Addresses" component={AddressesScreen} />
         {/* <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} /> */}
         <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen name="Policy" component={PolicyScreen} />
         <Stack.Screen name="Support" component={SupportScreen} />
         {/* <Stack.Screen name="Notifications" component={NotificationsScreen} /> */}
 
