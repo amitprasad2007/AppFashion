@@ -1,11 +1,11 @@
 // Network configuration for different environments
 export const API_CONFIG = {
- 
-  BASE_URL: 'http://10.0.2.2:8000/api',
+
+  BASE_URL: 'https://superadmin.samarsilkpalace.com/api',
 
   // Alternative configurations for different environments
-  STAGING_URL: 'https://staging-api.varanasisaree.com/api',
-  PRODUCTION_URL: 'https://api.varanasisaree.com/api',
+  STAGING_URL: 'https://superadmin.samarsilkpalace.com/api',
+  PRODUCTION_URL: 'https://superadmin.samarsilkpalace.com/api',
 
   // Timeout settings
   TIMEOUT: 10000, // 10 seconds

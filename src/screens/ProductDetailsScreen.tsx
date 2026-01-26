@@ -30,6 +30,11 @@ import { useAuth } from '../contexts/AuthContext';
 
 const { width } = Dimensions.get('window');
 
+const removeHtmlTags = (str: string | null | undefined) => {
+  if (!str) return '';
+  return str.replace(/<[^>]*>?/gm, '');
+};
+
 const ProductDetailsScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute();
@@ -486,7 +491,7 @@ const ProductDetailsScreen = () => {
           <View style={styles.descriptionSection}>
             <Text style={styles.sectionTitle}>Product Details</Text>
             <Text style={styles.description}>
-              {product.description || 'Experience the elegance of this premium saree, crafted with the finest materials. Perfect for weddings, festivals, and special occasions. The intricate design and superior quality fabric make it a must-have in your ethnic collection.'}
+              {removeHtmlTags(product.description) || 'Experience the elegance of this premium saree, crafted with the finest materials. Perfect for weddings, festivals, and special occasions. The intricate design and superior quality fabric make it a must-have in your ethnic collection.'}
             </Text>
           </View>
 
