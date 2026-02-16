@@ -18,7 +18,7 @@ import EnhancedHeader from '../components/EnhancedHeader';
 import { theme } from '../theme';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import { useAuth } from '../contexts/AuthContext';
-import api from '../services/api';
+import api from '../services/api_service';
 
 const EditProfileScreen = () => {
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();

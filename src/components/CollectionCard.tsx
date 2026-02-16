@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { theme } from '../theme';
-import { ApiCollection } from '../services/api';
+import { ApiCollection } from '../services/api_service';
 import { getApiBaseUrl } from '../utils/networkConfig';
 
 const { width } = Dimensions.get('window');

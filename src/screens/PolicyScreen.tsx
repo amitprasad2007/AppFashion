@@ -10,7 +10,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import EnhancedHeader from '../components/EnhancedHeader';
 import { theme } from '../theme';
-import { apiService, ApiPolicy } from '../services/api';
+import { apiService, ApiPolicy } from '../services/api_service';
 import FloatingElements from '../components/FloatingElements';
 import LinearGradient from 'react-native-linear-gradient';
 

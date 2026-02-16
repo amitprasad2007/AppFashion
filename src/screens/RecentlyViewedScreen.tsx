@@ -13,7 +13,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
-import { ApiProduct, apiService } from '../services/api';
+import apiService, { ApiProduct } from '../services/api_service';
 import EnhancedHeader from '../components/EnhancedHeader';
 import CartIcon from '../components/CartIcon';
 import SafeAlert from '../utils/safeAlert';

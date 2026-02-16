@@ -15,7 +15,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import EnhancedHeader from '../components/EnhancedHeader';
 import { theme } from '../theme';
-import api, { ApiOrderItem, ApiAddress } from '../services/api';
+import api, { ApiOrderItem, ApiAddress } from '../services/api_service';
 
 type OrderDetailsRouteProp = RouteProp<RootStackParamList, 'OrderDetails'>;
 

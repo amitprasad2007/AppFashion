@@ -17,7 +17,7 @@ import GradientButton from '../components/GradientButton';
 import EnhancedHeader from '../components/EnhancedHeader';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
-import { apiService, ShippingAddress, PaymentMethod } from '../services/api';
+import { apiService, ShippingAddress, PaymentMethod } from '../services/api_service';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import ProtectedScreen from '../components/ProtectedScreen';
 import razorpayService from '../services/razorpayService';

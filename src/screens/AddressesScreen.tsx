@@ -15,7 +15,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import { theme } from '../theme';
 import EnhancedHeader from '../components/EnhancedHeader';
-import { apiService, ApiAddress } from '../services/api';
+import { apiService, ApiAddress } from '../services/api_service';
 import AddAddressModal from '../components/AddAddressModal';
 import { useUserProfile } from '../contexts/UserProfileContext';
 
@@ -134,7 +134,7 @@ const AddressesScreen = () => {
     return (
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor={theme.colors.neutral[50]} />
-            <EnhancedHeader title="My Addresses" showBackButton={true} onBackPress={() => navigation.goBack()}/>
+            <EnhancedHeader title="My Addresses" showBackButton={true} onBackPress={() => navigation.goBack()} />
 
             {loading && !refreshing ? (
                 <View style={styles.loadingContainer}>

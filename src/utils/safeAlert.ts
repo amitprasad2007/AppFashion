@@ -5,7 +5,7 @@ import { Alert, Platform } from 'react-native';
  */
 export class SafeAlert {
   private static isShowing = false;
-  
+
   /**
    * Show an alert safely with delay to ensure Activity is available
    */
@@ -25,29 +25,29 @@ export class SafeAlert {
     setTimeout(() => {
       try {
         SafeAlert.isShowing = true;
-        
+
         Alert.alert(
           title,
           message,
           buttons,
           {
-            ...options,
+            ...(options || {}),
             onDismiss: () => {
               SafeAlert.isShowing = false;
               options?.onDismiss?.();
             }
           }
         );
-        
+
         // Fallback to reset flag after 5 seconds
         setTimeout(() => {
           SafeAlert.isShowing = false;
         }, 5000);
-        
+
       } catch (error) {
         console.error('SafeAlert Error:', error);
         SafeAlert.isShowing = false;
-        
+
         // Fallback to console log if Alert fails
         console.log(`Alert: ${title} - ${message}`);
       }

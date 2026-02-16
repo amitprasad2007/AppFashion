@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Alert, FlatList } from 'react-native';
-import { apiService, ApiProductReview } from '../services/api';
+import { apiService, ApiProductReview } from '../services/api_service';
 import ReviewItem from './ReviewItem';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useAuth } from '../contexts/AuthContext';

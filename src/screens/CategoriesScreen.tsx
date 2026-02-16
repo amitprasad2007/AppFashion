@@ -15,7 +15,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import EnhancedHeader from '../components/EnhancedHeader';
 import CartIcon from '../components/CartIcon';
-import { apiService, ApiCategory } from '../services/api';
+import apiService, { ApiCategory } from '../services/api_service';
 import { theme } from '../theme';
 
 type Category = {

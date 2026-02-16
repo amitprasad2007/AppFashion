@@ -14,7 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import { useUserProfile } from '../contexts/UserProfileContext';
-import { ApiWishlistItem } from '../services/api';
+import apiService, { ApiWishlistItem } from '../services/api_service';
 import ProtectedScreen from '../components/ProtectedScreen';
 import EnhancedHeader from '../components/EnhancedHeader';
 import CartIcon from '../components/CartIcon';

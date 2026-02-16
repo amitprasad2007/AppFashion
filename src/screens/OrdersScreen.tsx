@@ -16,7 +16,7 @@ import { theme } from '../theme';
 import EnhancedHeader from '../components/EnhancedHeader';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
-import { ApiOrder } from '../services/api';
+import { ApiOrder } from '../services/api_service';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import ProtectedScreen from '../components/ProtectedScreen';
 

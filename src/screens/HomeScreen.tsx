@@ -19,7 +19,7 @@ import EnhancedHeader from '../components/EnhancedHeader';
 import CartIcon from '../components/CartIcon';
 import CollectionCard from '../components/CollectionCard';
 import UserActivitySection from '../components/UserActivitySection';
-import { apiService, ApiCategory, ApiProduct, ApiCollection } from '../services/api';
+import apiService, { ApiCategory, ApiProduct, ApiCollection } from '../services/api_service';
 import type { RootStackParamList } from '../types/navigation';
 import { StackNavigationProp } from '@react-navigation/stack';
 

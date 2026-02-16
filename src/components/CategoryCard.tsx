@@ -8,7 +8,7 @@ import {
     ViewStyle,
 } from 'react-native';
 import { theme } from '../theme';
-import { ApiCategory } from '../services/api';
+import { ApiCategory } from '../services/api_service';
 
 interface CategoryCardProps {
     category: ApiCategory;

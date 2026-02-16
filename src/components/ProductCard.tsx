@@ -11,9 +11,8 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import LinearGradient from 'react-native-linear-gradient';
 import { theme } from '../theme';
-import { ApiProduct } from '../services/api';
+import { ApiProduct } from '../services/api_service';
 import { RootStackParamList } from '../types/navigation';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -28,64 +27,104 @@ interface ProductCardProps {
     style?: ViewStyle;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, style }) => {
+const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, onPress, style }) => {
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+
+    // Safety check - if product is missing, render a fallback or null
+    if (!product) {
+        return (
+            <View style={[styles.container, styles.errorContainer, { width: CARD_WIDTH }, style]}>
+                <Text style={styles.errorText}>Product unavailable</Text>
+            </View>
+        );
+    }
+
     const { state: authState } = useAuth();
     const { addToCart, addToWishlist, removeFromWishlist, checkWishlist } = useUserProfile();
+
+    const {
+        id = 0,
+        name = 'Unknown Product',
+        price = 0,
+        originalPrice = 0,
+        rating = 0,
+        reviewCount = 0,
+        images = [],
+        category,
+        variants = [],
+        defaultVariantId,
+    } = product;
+
     const [addingToCart, setAddingToCart] = useState(false);
-    const [isFavorite, setIsFavorite] = useState(false);
+    const [isWishlisted, setIsWishlisted] = useState(false);
     const [togglingWishlist, setTogglingWishlist] = useState(false);
 
     // Initial check for wishlist status
     useEffect(() => {
-        const checkStatus = async () => {
-            if (product && !togglingWishlist) {
-                try {
-                    // Determine default variant for checking
-                    let variantId = undefined;
-                    if (product.variants && product.variants.length > 0) {
-                        const defaultVar = product.variants.find(v => v.id === product.defaultVariantId) || product.variants[0];
-                        variantId = defaultVar.id;
-                    }
+        let isMounted = true;
 
-                    const status = await checkWishlist(product.id, variantId);
-                    setIsFavorite(status.in_wishlist);
-                } catch (error) {
-                    // Fail silently for wishlist check
-                    console.log('Error checking wishlist status:', error);
+        const checkStatus = async () => {
+            if (!id || !authState.isAuthenticated) return;
+
+            try {
+                // Determine default variant for checking
+                let variantId = undefined;
+                if (variants && variants.length > 0) {
+                    const defaultVar = variants.find(v => v.id === defaultVariantId) || variants[0];
+                    variantId = defaultVar?.id;
                 }
+
+                const status = await checkWishlist(id, variantId);
+                if (isMounted) {
+                    setIsWishlisted(!!status?.in_wishlist);
+                }
+            } catch (error) {
+                // Fail silently for wishlist check
+                console.log('Error checking wishlist status:', error);
             }
         };
 
         checkStatus();
-    }, [product.id, product.variants]); // Re-check if product changes
-    console.log(isFavorite);
+        return () => { isMounted = false; };
+    }, [id, authState.isAuthenticated]);
 
     const handleWishlistToggle = async () => {
         if (togglingWishlist) return;
+
+        // Check if user is authenticated
+        if (!authState.isAuthenticated) {
+            SafeAlert.show(
+                'Login Required',
+                'Please login to manage your wishlist',
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Login', onPress: () => navigation.navigate('Login') }
+                ]
+            );
+            return;
+        }
 
         try {
             setTogglingWishlist(true);
 
             // Determine variant
             let variantId = undefined;
-            if (product.variants && product.variants.length > 0) {
-                const defaultVar = product.variants.find(v => v.id === product.defaultVariantId) || product.variants[0];
-                variantId = defaultVar.id;
+            if (variants && variants.length > 0) {
+                const defaultVar = variants.find(v => v.id === defaultVariantId) || variants[0];
+                variantId = defaultVar?.id;
             }
 
-            if (isFavorite) {
-                await removeFromWishlist(product.id, variantId);
-                setIsFavorite(false);
+            if (isWishlisted) {
+                await removeFromWishlist(id, variantId);
+                setIsWishlisted(false);
                 SafeAlert.success('Removed', 'Item removed from wishlist');
             } else {
-                await addToWishlist(product.id, variantId);
-                setIsFavorite(true);
+                await addToWishlist(id, variantId);
+                setIsWishlisted(true);
                 SafeAlert.success('Added', 'Item added to wishlist');
             }
         } catch (error) {
             console.error('Error toggling wishlist:', error);
-            // Revert state on error if needed, or just show error
             SafeAlert.error('Error', 'Failed to update wishlist. Please try again.');
         } finally {
             setTogglingWishlist(false);
@@ -93,8 +132,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, style }) =>
     };
 
     const handleAddToCart = async () => {
-        if (!product) return;
-
         // Check if user is authenticated
         if (!authState.isAuthenticated) {
             SafeAlert.show(
@@ -102,10 +139,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, style }) =>
                 'Please login to add items to your cart',
                 [
                     { text: 'Cancel', style: 'cancel' },
-                    {
-                        text: 'Login',
-                        onPress: () => navigation.navigate('Login')
-                    }
+                    { text: 'Login', onPress: () => navigation.navigate('Login') }
                 ]
             );
             return;
@@ -116,19 +150,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, style }) =>
 
             // Determine default variant
             let variantId = undefined;
-            if (product.variants && product.variants.length > 0) {
-                // Try to find default variant or use first one
-                const defaultVar = product.variants.find(v => v.id === product.defaultVariantId) || product.variants[0];
-                variantId = defaultVar.id;
+            if (variants && variants.length > 0) {
+                const defaultVar = variants.find(v => v.id === defaultVariantId) || variants[0];
+                variantId = defaultVar?.id;
             }
 
-            await addToCart(product.id, 1, {
+            await addToCart(id, 1, {
                 variant_id: variantId,
             });
 
             SafeAlert.show(
                 'Added to Cart',
-                `${product.name} has been added to your cart.`,
+                `${name} has been added to your cart.`,
                 [
                     { text: 'Continue Shopping', style: 'cancel' },
                     { text: 'View Cart', onPress: () => navigation.navigate('Cart') }
@@ -141,12 +174,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, style }) =>
             setAddingToCart(false);
         }
     };
-    const imageUrl = product.images && product.images.length > 0
-        ? product.images[0]
-        : `https://picsum.photos/300/400?random=${product.id}`;
 
-    const discount = product.originalPrice && product.originalPrice > product.price
-        ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+    const imageUrl = images && images.length > 0
+        ? images[0]
+        : `https://picsum.photos/300/400?random=${id}`;
+
+    const discount = (originalPrice && originalPrice > price)
+        ? Math.round(((originalPrice - price) / originalPrice) * 100)
         : 0;
 
     return (
@@ -170,7 +204,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, style }) =>
                     </View>
                 )}
 
-                {/* Wishlist / Action Placeholder */}
+                {/* Wishlist Button */}
                 <TouchableOpacity
                     style={styles.actionButton}
                     onPress={handleWishlistToggle}
@@ -180,8 +214,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, style }) =>
                     {togglingWishlist ? (
                         <ActivityIndicator size="small" color={theme.colors.primary[500]} />
                     ) : (
-                        <Text style={[styles.heartIcon, isFavorite && { color: 'red' }]}>
-                            {isFavorite ? '❤️' : '🤍'}
+                        <Text style={[styles.heartIcon, isWishlisted && { color: 'red' }]}>
+                            {isWishlisted ? '❤️' : '🤍'}
                         </Text>
                     )}
                 </TouchableOpacity>
@@ -191,34 +225,34 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, style }) =>
             <View style={styles.content}>
                 {/* Category */}
                 <Text style={styles.category} numberOfLines={1}>
-                    {product.category?.title || 'Silk Saree'}
+                    {category?.title || 'Silk Saree'}
                 </Text>
 
                 {/* Title */}
                 <Text style={styles.title} numberOfLines={2}>
-                    {product.name}
+                    {name}
                 </Text>
 
                 {/* Price Section */}
                 <View style={styles.priceContainer}>
-                    <Text style={styles.price}>₹{(product.price || 0).toLocaleString()}</Text>
-                    {product.originalPrice && product.originalPrice > product.price && (
+                    <Text style={styles.price}>₹{(price || 0).toLocaleString()}</Text>
+                    {originalPrice && originalPrice > price && (
                         <Text style={styles.originalPrice}>
-                            ₹{product.originalPrice.toLocaleString()}
+                            ₹{originalPrice.toLocaleString()}
                         </Text>
                     )}
                 </View>
 
                 {/* Rating */}
-                {product.rating && (
+                {rating > 0 && (
                     <View style={styles.ratingContainer}>
                         <Text style={styles.star}>⭐</Text>
-                        <Text style={styles.rating}>{product.rating}</Text>
-                        <Text style={styles.reviews}>({product.reviewCount || 0})</Text>
+                        <Text style={styles.rating}>{rating}</Text>
+                        <Text style={styles.reviews}>({reviewCount || 0})</Text>
                     </View>
                 )}
 
-                {/* Add to Cart Button (Small) */}
+                {/* Add to Cart Button */}
                 <TouchableOpacity
                     style={[styles.addButton, addingToCart && { opacity: 0.8 }]}
                     onPress={handleAddToCart}
@@ -233,7 +267,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, style }) =>
             </View>
         </TouchableOpacity>
     );
-};
+});
 
 const styles = StyleSheet.create({
     container: {
@@ -242,12 +276,8 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         marginBottom: 16,
         marginRight: 12,
-        // Soft Shadow
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
         shadowRadius: 8,
         elevation: 4,
@@ -256,7 +286,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     imageContainer: {
-        height: CARD_WIDTH * 1.3, // 3:4 Aspect Ratio roughly
+        height: CARD_WIDTH * 1.3,
         width: '100%',
         backgroundColor: theme.colors.neutral[100],
         position: 'relative',
@@ -313,7 +343,7 @@ const styles = StyleSheet.create({
         color: theme.colors.neutral[900],
         marginBottom: 8,
         lineHeight: 20,
-        height: 40, // Fixed height for 2 lines
+        height: 40,
     },
     priceContainer: {
         flexDirection: 'row',
@@ -361,6 +391,18 @@ const styles = StyleSheet.create({
         fontSize: 10,
         fontWeight: 'bold',
         letterSpacing: 1,
+    },
+    errorContainer: {
+        height: CARD_WIDTH * 1.5,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: theme.colors.neutral[50],
+        borderStyle: 'dashed',
+    },
+    errorText: {
+        color: theme.colors.neutral[400],
+        fontSize: 12,
+        fontWeight: '500',
     }
 });
 

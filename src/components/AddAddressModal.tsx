@@ -14,7 +14,7 @@ import {
     Platform,
 } from 'react-native';
 import { theme } from '../theme';
-import { apiService, AddressInput, ApiAddress } from '../services/api';
+import { apiService, AddressInput, ApiAddress } from '../services/api_service';
 import { locationService } from '../services/LocationService';
 
 interface AddAddressModalProps {

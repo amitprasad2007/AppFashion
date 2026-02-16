@@ -12,7 +12,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import { theme } from '../theme';
 import AnimatedCard from './AnimatedCard';
-import { apiService, ApiBannerData } from '../services/api';
+import { apiService, ApiBannerData } from '../services/api_service';
 import { testApiConnection, getDeviceNetworkInfo } from '../utils/debugNetwork';
 
 const { width } = Dimensions.get('window');
@@ -203,93 +203,98 @@ const BannerSlider: React.FC<BannerSliderProps> = ({
     }
   }).current;
 
-  const renderBanner = ({ item, index }: { item: BannerData; index: number }) => (
-    <View style={styles.bannerContainer}>
-      <AnimatedCard
-        style={styles.bannerCard}
-        elevation="xl"
-        animationType="fade"
-        delay={index * 200}>
-        <LinearGradient
-          colors={item.gradient}
-          style={styles.banner}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}>
+  const renderBanner = ({ item, index }: { item: BannerData; index: number }) => {
+    if (!item) return null;
 
-          {/* Luxury Overlay Pattern */}
-          <View style={styles.luxuryOverlay} />
+    const isEmoji = !item.image || item.image.length < 5;
+    return (
+      <View style={styles.bannerContainer}>
+        <AnimatedCard
+          style={styles.bannerCard}
+          elevation="xl"
+          animationType="fade"
+          delay={index * 200}>
+          <LinearGradient
+            colors={item.gradient}
+            style={styles.banner}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}>
 
-          {/* Top Header Section - Title utilizes full width */}
-          <View style={styles.bannerHeader}>
-            {/* Premium Badge */}
-            <View style={styles.premiumBadge}>
-              <Text style={styles.premiumBadgeText}>✨ PREMIUM</Text>
+            {/* Luxury Overlay Pattern */}
+            <View style={styles.luxuryOverlay} />
+
+            {/* Top Header Section - Title utilizes full width */}
+            <View style={styles.bannerHeader}>
+              {/* Premium Badge */}
+              <View style={styles.premiumBadge}>
+                <Text style={styles.premiumBadgeText}>✨ PREMIUM</Text>
+              </View>
+
+              {/* Title with Elegant Typography */}
+              <Text style={styles.bannerTitle} numberOfLines={1} adjustsFontSizeToFit>{item.title}</Text>
             </View>
 
-            {/* Title with Elegant Typography */}
-            <Text style={styles.bannerTitle} numberOfLines={1} adjustsFontSizeToFit>{item.title}</Text>
-          </View>
+            {/* Main Content & Image Row */}
+            <View style={styles.bannerRow}>
+              {/* Main Content */}
+              <View style={styles.bannerContent}>
 
-          {/* Main Content & Image Row */}
-          <View style={styles.bannerRow}>
-            {/* Main Content */}
-            <View style={styles.bannerContent}>
-
-              {/* Subtitle with Gold Accent */}
-              {item.subtitle && (
-                <View style={styles.subtitleContainer}>
-                  <Text style={styles.bannerSubtitle}>{item.subtitle}</Text>
-                </View>
-              )}
-
-              {/* Description */}
-              <Text style={styles.bannerDescription} numberOfLines={2}>
-                {item.description}
-              </Text>
-
-              {/* Luxury CTA Button */}
-              <TouchableOpacity style={styles.luxuryButton} onPress={item.onPress}>
-                <LinearGradient
-                  colors={['#DAA520', '#FFD700', '#FFF8DC']}
-                  style={styles.luxuryButtonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}>
-                  <Text style={styles.luxuryButtonText}>{item.buttonText}</Text>
-                  <Text style={styles.luxuryButtonIcon}>→</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-
-            {/* Enhanced Image/Visual Section */}
-            <View style={styles.bannerImageContainer}>
-              {item.image ? (
-                <View style={styles.imageWrapper}>
-                  <View style={styles.imageFrame}>
-                    <Image
-                      source={{ uri: item.image }}
-                      style={styles.bannerImage}
-                      resizeMode="cover"
-                    />
+                {/* Subtitle with Gold Accent */}
+                {item.subtitle && (
+                  <View style={styles.subtitleContainer}>
+                    <Text style={styles.bannerSubtitle}>{item.subtitle}</Text>
                   </View>
-                  {/* Decorative Elements */}
-                  <View style={styles.decorativeElement1} />
-                  <View style={styles.decorativeElement2} />
-                </View>
-              ) : (
-                <View style={styles.emojiWrapper}>
-                  <View style={styles.emojiBackground}>
-                    <Text style={styles.bannerEmoji}>{item.emoji}</Text>
+                )}
+
+                {/* Description */}
+                <Text style={styles.bannerDescription} numberOfLines={2}>
+                  {item.description}
+                </Text>
+
+                {/* Luxury CTA Button */}
+                <TouchableOpacity style={styles.luxuryButton} onPress={item.onPress}>
+                  <LinearGradient
+                    colors={['#DAA520', '#FFD700', '#FFF8DC']}
+                    style={styles.luxuryButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}>
+                    <Text style={styles.luxuryButtonText}>{item.buttonText}</Text>
+                    <Text style={styles.luxuryButtonIcon}>→</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+
+              {/* Enhanced Image/Visual Section */}
+              <View style={styles.bannerImageContainer}>
+                {item.image ? (
+                  <View style={styles.imageWrapper}>
+                    <View style={styles.imageFrame}>
+                      <Image
+                        source={{ uri: item.image }}
+                        style={styles.bannerImage}
+                        resizeMode="cover"
+                      />
+                    </View>
+                    {/* Decorative Elements */}
+                    <View style={styles.decorativeElement1} />
+                    <View style={styles.decorativeElement2} />
                   </View>
-                  {/* Decorative Ring */}
-                  <View style={styles.decorativeRing} />
-                </View>
-              )}
+                ) : (
+                  <View style={styles.emojiWrapper}>
+                    <View style={styles.emojiBackground}>
+                      <Text style={styles.bannerEmoji}>{item.emoji}</Text>
+                    </View>
+                    {/* Decorative Ring */}
+                    <View style={styles.decorativeRing} />
+                  </View>
+                )}
+              </View>
             </View>
-          </View>
-        </LinearGradient>
-      </AnimatedCard>
-    </View>
-  );
+          </LinearGradient>
+        </AnimatedCard>
+      </View>
+    );
+  };
 
   if (loading) {
     return (

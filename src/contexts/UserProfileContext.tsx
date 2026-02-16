@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { apiService, UserData, ApiOrder, ApiWishlistItem, ApiAddress, ApiCart, ApiProduct, AddressInput } from '../services/api';
+import { apiService, UserData, ApiOrder, ApiWishlistItem, ApiAddress, ApiCart, ApiProduct, AddressInput } from '../services/api_service';
 import { useAuth } from './AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

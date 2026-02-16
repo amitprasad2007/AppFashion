@@ -3,12 +3,17 @@ export const API_CONFIG = {
 
   BASE_URL: 'https://superadmin.samarsilkpalace.com/api',
 
+  // Local development URL (Android Emulator bridge to Laravel)
+  // Use http://10.0.2.2:8000/api if running 'php artisan serve'
+  // Use http://10.0.2.2/api if running via Laragon/Apache
+  LOCAL_DEV_URL: 'https://superadmin.samarsilkpalace.com/api', // Default to production but easily toggleable
+
   // Alternative configurations for different environments
   STAGING_URL: 'https://superadmin.samarsilkpalace.com/api',
   PRODUCTION_URL: 'https://superadmin.samarsilkpalace.com/api',
 
   // Timeout settings
-  TIMEOUT: 10000, // 10 seconds
+  TIMEOUT: 60000, // Increased to 60 seconds
 
   // Default headers
   HEADERS: {
@@ -30,7 +35,8 @@ export const API_CONFIG = {
 // Helper function to get current API base URL
 export const getApiBaseUrl = () => {
   if (__DEV__) {
-    // Return the bridged URL for development
+    // You can toggle between API_CONFIG.BASE_URL and API_CONFIG.LOCAL_DEV_URL here
+    // return API_CONFIG.LOCAL_DEV_URL; 
     return API_CONFIG.BASE_URL;
   }
   return API_CONFIG.PRODUCTION_URL;

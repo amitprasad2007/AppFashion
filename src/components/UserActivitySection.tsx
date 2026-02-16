@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
-import { ApiProduct, apiService, ApiWishlistItem } from '../services/api';
+import { ApiProduct, apiService, ApiWishlistItem } from '../services/api_service';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import ProductCard from './ProductCard';
 import { theme } from '../theme';
@@ -17,22 +17,18 @@ const UserActivitySection = ({ recentlyViewed, wishlistItems }: UserActivityProp
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
     // Deduplicate items to prevent "duplicate key" errors
-    const uniqueRecentlyViewed = React.useMemo(() => {
-        const seen = new Set();
-        return recentlyViewed.filter(item => {
-            const duplicate = seen.has(item.id);
-            seen.add(item.id);
-            return !duplicate;
-        });
+    const uniqueRecentlyViewed = useMemo(() => {
+        const items = recentlyViewed || [];
+        return items.filter((item, index, self) =>
+            index === self.findIndex((t) => t.id === item.id)
+        );
     }, [recentlyViewed]);
 
-    const uniqueWishlistItems = React.useMemo(() => {
-        const seen = new Set();
-        return wishlistItems.filter(item => {
-            const duplicate = seen.has(item.id);
-            seen.add(item.id);
-            return !duplicate;
-        });
+    const uniqueWishlistItems = useMemo(() => {
+        const items = wishlistItems || [];
+        return items.filter((item, index, self) =>
+            index === self.findIndex((t) => t.id === item.id)
+        );
     }, [wishlistItems]);
 
     // Internal loading state is no longer needed as parent handles fetching

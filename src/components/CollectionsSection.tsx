@@ -12,7 +12,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import { theme } from '../theme';
 import GlassCard from './GlassCard';
-import { apiService, ApiCollection } from '../services/api';
+import { apiService, ApiCollection } from '../services/api_service';
 import AnimatedCard from './AnimatedCard';
 
 const { width } = Dimensions.get('window');

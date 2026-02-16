@@ -13,7 +13,7 @@ import {
   Dimensions,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { theme } from '../theme';
 import AnimatedCard from '../components/AnimatedCard';
 import GradientButton from '../components/GradientButton';
@@ -21,7 +21,7 @@ import BannerSlider from '../components/BannerSlider';
 import EnhancedHeader from '../components/EnhancedHeader';
 import GlassCard from '../components/GlassCard';
 import CollectionsSection from '../components/CollectionsSection';
-import { apiService, ApiCategory, ApiProduct, ApiCollection } from '../services/api';
+import { apiService, ApiCategory, ApiProduct, ApiCollection } from '../services/api_service';
 import type { Product, Category, RootStackParamList } from '../types/navigation';
 import { StackNavigationProp } from '@react-navigation/stack';
 
@@ -41,23 +41,23 @@ const HomeScreen = () => {
 
   // Fallback data in case API fails
   const fallbackCategories: Category[] = [
-    {id: '1', name: 'Fashion', image: 'https://via.placeholder.com/100'},
-    {id: '2', name: 'Electronics', image: 'https://via.placeholder.com/100'},
-    {id: '3', name: 'Home & Garden', image: 'https://via.placeholder.com/100'},
-    {id: '4', name: 'Sports', image: 'https://via.placeholder.com/100'},
+    { id: '1', name: 'Fashion', image: 'https://via.placeholder.com/100' },
+    { id: '2', name: 'Electronics', image: 'https://via.placeholder.com/100' },
+    { id: '3', name: 'Home & Garden', image: 'https://via.placeholder.com/100' },
+    { id: '4', name: 'Sports', image: 'https://via.placeholder.com/100' },
   ];
 
   const fallbackFeaturedProducts: Product[] = [
-    {id: '1', name: 'Summer Dress', price: '₹49.99', image: 'https://via.placeholder.com/150', rating: 4.8},
-    {id: '2', name: 'Wireless Headphones', price: '₹89.99', image: 'https://via.placeholder.com/150', rating: 4.7},
-    {id: '3', name: 'Running Shoes', price: '₹129.99', image: 'https://via.placeholder.com/150', rating: 4.9},
+    { id: '1', name: 'Summer Dress', price: '₹49.99', image: 'https://via.placeholder.com/150', rating: 4.8 },
+    { id: '2', name: 'Wireless Headphones', price: '₹89.99', image: 'https://via.placeholder.com/150', rating: 4.7 },
+    { id: '3', name: 'Running Shoes', price: '₹129.99', image: 'https://via.placeholder.com/150', rating: 4.9 },
   ];
 
   // Load data from API
   const loadData = async () => {
     try {
       setError(null);
-      
+
       // Fetch data from all endpoints simultaneously
       const [categoriesData, featuredData, bestsellerData] = await Promise.all([
         apiService.getCategories(),
@@ -79,7 +79,7 @@ const HomeScreen = () => {
     } catch (err) {
       console.error('Error loading home screen data:', err);
       setError('Failed to load data. Using offline content.');
-      
+
       // Use fallback data on error
       setCategories(fallbackCategories as any);
       setFeaturedProducts(fallbackFeaturedProducts as any);
@@ -103,7 +103,7 @@ const HomeScreen = () => {
 
   const handleBannerPress = (banner: any) => {
     console.log('Banner pressed:', banner.title);
-    
+
     // Handle different banner types based on your API data
     if (banner.path) {
       // If banner has specific path, navigate there
@@ -111,36 +111,36 @@ const HomeScreen = () => {
       // You can add custom navigation logic here based on the path
       // Example: if (banner.path.includes('bridal')) navigation.navigate('BridalCollection')
     }
-    
+
     // For now, navigate to product list for all banners
     (navigation as any).navigate('ProductList');
   };
 
-  const renderCategory = ({item, index}: {item: ApiCategory; index: number}) => (
+  const renderCategory = ({ item, index }: { item: ApiCategory; index: number }) => (
     <AnimatedCard
       style={styles.categoryItem}
-      onPress={() => (navigation as any).navigate('Categories', {categoryId: item.id})}
+      onPress={() => (navigation as any).navigate('Categories', { categoryId: item.id })}
       elevation="md"
       animationType="scale"
       delay={index * 100}>
       <LinearGradient
         colors={theme.colors.gradients.ocean}
         style={styles.categoryGradient}>
-        <Image source={{uri: item.image}} style={styles.categoryImage as any} />
+        <Image source={{ uri: item.image }} style={styles.categoryImage as any} />
       </LinearGradient>
       <Text style={styles.categoryName}>{item.name}</Text>
       <Text style={styles.categoryCount}>{item.count} items</Text>
     </AnimatedCard>
   );
 
-  const renderProduct = ({item, index}: {item: ApiProduct; index: number}) => (
+  const renderProduct = ({ item, index }: { item: ApiProduct; index: number }) => (
     <AnimatedCard
       style={styles.productItem}
-      onPress={() => (navigation as any).navigate('ProductDetails', {productSlug: item.slug})}
+      onPress={() => (navigation as any).navigate('ProductDetails', { productSlug: item.slug })}
       elevation="lg"
       animationType="slide"
       delay={index * 150}>
-      <Image source={{uri: item.images[0]}} style={styles.productImage as any} />
+      <Image source={{ uri: item.images[0] }} style={styles.productImage as any} />
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.8)']}
         style={styles.productOverlay}>
@@ -161,17 +161,17 @@ const HomeScreen = () => {
     </AnimatedCard>
   );
 
-  const renderBestsellerProduct = ({item, index}: {item: ApiProduct; index: number}) => (
+  const renderBestsellerProduct = ({ item, index }: { item: ApiProduct; index: number }) => (
     <AnimatedCard
       style={styles.bestsellerItem}
-      onPress={() => (navigation as any).navigate('ProductDetails', {productSlug: item.slug})}
+      onPress={() => (navigation as any).navigate('ProductDetails', { productSlug: item.slug })}
       elevation="lg"
       animationType="fade"
       delay={index * 100}>
       <View style={styles.bestsellerBadge}>
         <Text style={styles.bestsellerBadgeText}>🔥 BESTSELLER</Text>
       </View>
-      <Image source={{uri: item.images[0]}} style={styles.bestsellerImage as any} />
+      <Image source={{ uri: item.images[0] }} style={styles.bestsellerImage as any} />
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.9)']}
         style={styles.bestsellerOverlay}>
@@ -198,7 +198,7 @@ const HomeScreen = () => {
   }
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -216,12 +216,12 @@ const HomeScreen = () => {
             )}
           </View>
           <View style={styles.headerRight}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.loginButton}
               onPress={() => (navigation as any).navigate('Login')}>
               <Text style={styles.loginButtonText}>Login</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.searchButton}
               onPress={() => (navigation as any).navigate('Search')}>
               <Text style={styles.searchIcon}>🔍</Text>
@@ -231,7 +231,7 @@ const HomeScreen = () => {
       </LinearGradient>
 
       {/* Dynamic Banner Slider */}
-      <BannerSlider 
+      <BannerSlider
         autoSlide={true}
         slideInterval={4000}
         onBannerPress={handleBannerPress}

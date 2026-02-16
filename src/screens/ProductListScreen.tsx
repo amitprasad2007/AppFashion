@@ -19,7 +19,7 @@ import CartIcon from '../components/CartIcon';
 import SafeAlert from '../utils/safeAlert';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
-import { apiService, ApiProduct, ApiCategory } from '../services/api';
+import apiService, { ApiProduct, ApiCategory } from '../services/api_service';
 
 const ProductListScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();

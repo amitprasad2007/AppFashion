@@ -1,5 +1,5 @@
 import RazorpayCheckout from 'react-native-razorpay';
-import { PaymentMethod, apiService } from './api';
+import { PaymentMethod, apiService } from './api_service';
 
 export interface RazorpayConfig {
   // Publishable key id (safe to embed in client)

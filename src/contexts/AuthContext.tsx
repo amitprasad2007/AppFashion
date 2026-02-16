@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useReducer, useEffect, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Linking } from 'react-native';
-import { apiService, AuthUser, LoginCredentials, RegisterCredentials, AuthResponse } from '../services/api';
+import { apiService, AuthUser, LoginCredentials, RegisterCredentials, AuthResponse } from '../services/api_service';
 import { oauthService, OAuthUserInfo } from '../services/oauthService';
 
 // Auth State Types

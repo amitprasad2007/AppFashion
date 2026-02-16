@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { ApiProductReview } from '../services/api';
+import { ApiProductReview } from '../services/api_service';
 import { useAuth } from '../contexts/AuthContext';
 
 interface ReviewItemProps {
@@ -44,7 +44,7 @@ const ReviewItem: React.FC<ReviewItemProps> = ({ review }) => {
                 <View style={styles.stars}>{renderStars(review.rating)}</View>
                 <Text style={styles.date}>{formatDate(review.created_at)}</Text>
             </View>
-            <Text style={styles.userName}>{(user?.name==review.user_name)?"Given by You":review.user_name || `User ${review.user_id}`}</Text>
+            <Text style={styles.userName}>{(user?.name == review.user_name) ? "Given by You" : review.user_name || `User ${review.user_id}`}</Text>
             <Text style={styles.reviewText}>{review.review_text}</Text>
         </View>
     );

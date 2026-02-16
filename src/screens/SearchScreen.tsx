@@ -16,7 +16,7 @@ import { RootStackParamList } from '../types/navigation';
 import EnhancedImage from '../components/EnhancedImage';
 import EnhancedHeader from '../components/EnhancedHeader';
 import { theme } from '../theme';
-import api, { ApiSearchSuggestion } from '../services/api';
+import apiService, { ApiSearchSuggestion } from '../services/api_service';
 
 const SearchScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -33,7 +33,7 @@ const SearchScreen = () => {
       if (searchQuery.length >= 2) {
         setIsLoading(true);
         try {
-          const suggestions = await api.getSearchSuggestions(searchQuery);
+          const suggestions = await apiService.getSearchSuggestions(searchQuery);
           setResults(suggestions);
         } catch (error) {
           console.error('Search error:', error);
