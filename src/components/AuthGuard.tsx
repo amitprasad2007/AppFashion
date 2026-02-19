@@ -7,13 +7,13 @@ import {
   Alert,
   Dimensions,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
-import {useAuth} from '../contexts/AuthContext';
+import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '../contexts/AuthContext';
 import ScreenWrapper from './ScreenWrapper';
 import GlassCard from './GlassCard';
 import GradientButton from './GradientButton';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -28,7 +28,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   redirectTo = 'Login',
   showLoginPrompt = true,
 }) => {
-  const {state} = useAuth();
+  const { state } = useAuth();
   const navigation = useNavigation<any>();
 
   // Show loading state while checking authentication
@@ -50,16 +50,16 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
 
   // If user is not authenticated, show login prompt
   return (
-    <ScreenWrapper>
+    <ScreenWrapper scrollable={true}>
       <View style={styles.container}>
         <GlassCard style={styles.promptCard}>
           <View style={styles.iconContainer}>
             <Text style={styles.lockIcon}>🔐</Text>
           </View>
-          
+
           <Text style={styles.title}>Authentication Required</Text>
           <Text style={styles.message}>{fallbackMessage}</Text>
-          
+
           {showLoginPrompt && (
             <View style={styles.buttonContainer}>
               <GradientButton
@@ -67,7 +67,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
                 onPress={() => navigation.navigate(redirectTo)}
                 style={styles.loginButton}
               />
-              
+
               <TouchableOpacity
                 style={styles.registerLink}
                 onPress={() => navigation.navigate('Register')}
@@ -76,7 +76,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
                   Don't have an account? <Text style={styles.registerHighlight}>Sign Up</Text>
                 </Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={styles.backButton}
                 onPress={() => navigation.goBack()}
@@ -86,7 +86,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
             </View>
           )}
         </GlassCard>
-        
+
         {/* Features Preview */}
         <View style={styles.featuresContainer}>
           <Text style={styles.featuresTitle}>What you'll get with an account:</Text>
@@ -103,7 +103,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   );
 };
 
-const FeatureItem: React.FC<{icon: string; text: string}> = ({icon, text}) => (
+const FeatureItem: React.FC<{ icon: string; text: string }> = ({ icon, text }) => (
   <View style={styles.featureItem}>
     <Text style={styles.featureIcon}>{icon}</Text>
     <Text style={styles.featureText}>{text}</Text>
@@ -112,10 +112,9 @@ const FeatureItem: React.FC<{icon: string; text: string}> = ({icon, text}) => (
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 20,
-    justifyContent: 'center',
     alignItems: 'center',
+    paddingBottom: 40,
   },
   loadingContainer: {
     flex: 1,

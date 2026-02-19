@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Image, TouchableOpacity, StyleSheet, Text, ActivityIndicator, ScrollView, Dimensions } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, Image, TouchableOpacity, StyleSheet, Text, ActivityIndicator, ScrollView, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { theme } from '../../theme';
 
 const { width } = Dimensions.get('window');
@@ -25,14 +25,44 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
     onToggleWishlist,
     togglingWishlist,
 }) => {
+    const scrollRef = useRef<ScrollView>(null);
+
+    // Sync scroll position with selectedImageIndex from parent
+    useEffect(() => {
+        if (images.length > 0) {
+            scrollRef.current?.scrollTo({ x: selectedImageIndex * width, animated: true });
+        }
+    }, [selectedImageIndex, images.length]);
+
+    const handleMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const contentOffsetX = event.nativeEvent.contentOffset.x;
+        const index = Math.round(contentOffsetX / width);
+        if (index !== selectedImageIndex && index >= 0 && index < images.length) {
+            onSelectImage(index);
+        }
+    };
+
     return (
         <View>
-            {/* Main Image */}
+            {/* Main Swipable Image Section */}
             <View style={styles.imageSection}>
-                <Image
-                    source={{ uri: images[selectedImageIndex] || images[0] }}
-                    style={styles.productImage}
-                />
+                <ScrollView
+                    ref={scrollRef}
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    onMomentumScrollEnd={handleMomentumScrollEnd}
+                    scrollEventThrottle={16}
+                >
+                    {(images.length > 0 ? images : ['']).map((image, index) => (
+                        <View key={index} style={{ width: width, height: 450 }}>
+                            <Image
+                                source={{ uri: image || 'placeholder' }}
+                                style={styles.productImage}
+                            />
+                        </View>
+                    ))}
+                </ScrollView>
 
                 {/* Badges */}
                 <View style={styles.badgeContainer}>

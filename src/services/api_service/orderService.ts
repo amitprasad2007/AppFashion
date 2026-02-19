@@ -22,6 +22,13 @@ export class OrderService extends CartService {
         }
     }
 
+    async getPaymentMethods(): Promise<PaymentMethod[]> {
+        return [
+            { id: 'cod', type: 'COD', name: 'Cash on Delivery', details: 'Pay when you receive your order' },
+            { id: 'online', type: 'ONLINE', name: 'Online Payment', details: 'Pay using PhonePe, GPay, Paytm, etc.' },
+        ];
+    }
+
     async checkout(addressId: number, paymentMethod: string, notes?: string): Promise<any> {
         try {
             const payload = { address_id: addressId, payment_method: paymentMethod, notes };
