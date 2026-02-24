@@ -26,7 +26,7 @@ function App(): React.JSX.Element {
   useEffect(() => {
     // Configure Google Sign-In
     GoogleSignin.configure({
-      webClientId: '1095073031134-jdhgh4uf3lnpgr6p3gm3u0ld9f4rnl1b.apps.googleusercontent.com', // Your Google Web Client ID
+      webClientId: '629218788603-t7n5r7g31mnq24mlrp2l92978at2jd6o.apps.googleusercontent.com', // Your Google Web Client ID
       offlineAccess: true, // If you want to access Google API on behalf of the user FROM YOUR SERVER
       hostedDomain: '', // Restrict to a particular domain
       forceCodeForRefreshToken: true, // [Android] related to `serverAuthCode`
@@ -44,7 +44,7 @@ function App(): React.JSX.Element {
       razorpayService.initialize({
         key_id: PAYMENT_CONFIG.RAZORPAY_KEY_ID,
       });
-      console.log('🔧 Razorpay configured successfully');
+
     } else {
       console.warn(
         '⚠️ Razorpay key is not set in PAYMENT_CONFIG. Online payments will rely on backend-provided key.'
