@@ -236,7 +236,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, onPress, 
                 {/* Price Section */}
                 <View style={styles.priceContainer}>
                     <Text style={styles.price}>₹{(price || 0).toLocaleString()}</Text>
-                    {originalPrice && originalPrice > price && (
+                    {(originalPrice || 0) > (price || 0) && (
                         <Text style={styles.originalPrice}>
                             ₹{originalPrice.toLocaleString()}
                         </Text>

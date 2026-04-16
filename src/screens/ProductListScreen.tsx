@@ -162,7 +162,7 @@ const ProductListScreen = () => {
 
           <View style={styles.priceRow}>
             <Text style={styles.price}>₹{item.price}</Text>
-            {item.originalPrice && item.originalPrice > item.price && (
+            {(item.originalPrice || 0) > (item.price || 0) && (
               <Text style={styles.originalPrice}>₹{item.originalPrice}</Text>
             )}
           </View>

@@ -1,0 +1,981 @@
+﻿> Task :gradle-plugin:settings-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:shared:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:shared:compileJava NO-SOURCE
+> Task :gradle-plugin:shared:processResources NO-SOURCE
+> Task :gradle-plugin:shared:classes UP-TO-DATE
+> Task :gradle-plugin:shared:jar UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:settings-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:jar UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:react-native-gradle-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:react-native-gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:jar UP-TO-DATE
+> Task :app:generateAutolinkingPackageList
+> Task :app:generateCodegenSchemaFromJavaScript SKIPPED
+> Task :app:generateCodegenArtifactsFromSchema SKIPPED
+> Task :app:generateReactNativeEntryPoint
+> Task :app:preBuild
+> Task :app:preReleaseBuild
+> Task :app:mergeReleaseJniLibFolders
+> Task :react-native-async-storage_async-storage:preBuild UP-TO-DATE
+> Task :react-native-async-storage_async-storage:preReleaseBuild UP-TO-DATE
+> Task :react-native-async-storage_async-storage:mergeReleaseJniLibFolders
+> Task :react-native-async-storage_async-storage:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-community_blur:preBuild UP-TO-DATE
+> Task :react-native-community_blur:preReleaseBuild UP-TO-DATE
+> Task :react-native-async-storage_async-storage:copyReleaseJniLibsProjectOnly
+> Task :react-native-community_blur:mergeReleaseJniLibFolders
+> Task :react-native-community_blur:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-fbsdk-next:preBuild UP-TO-DATE
+> Task :react-native-community_blur:copyReleaseJniLibsProjectOnly
+> Task :react-native-fbsdk-next:preReleaseBuild UP-TO-DATE
+> Task :react-native-fbsdk-next:mergeReleaseJniLibFolders
+> Task :react-native-fbsdk-next:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-geolocation-service:preBuild UP-TO-DATE
+> Task :react-native-fbsdk-next:copyReleaseJniLibsProjectOnly
+> Task :react-native-geolocation-service:preReleaseBuild UP-TO-DATE
+> Task :react-native-geolocation-service:mergeReleaseJniLibFolders
+> Task :react-native-geolocation-service:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-gesture-handler:preBuild UP-TO-DATE
+> Task :react-native-gesture-handler:preReleaseBuild UP-TO-DATE
+> Task :react-native-geolocation-service:copyReleaseJniLibsProjectOnly
+> Task :react-native-gesture-handler:mergeReleaseJniLibFolders
+> Task :react-native-gesture-handler:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-google-signin_google-signin:preBuild UP-TO-DATE
+> Task :react-native-gesture-handler:copyReleaseJniLibsProjectOnly
+> Task :react-native-google-signin_google-signin:preReleaseBuild UP-TO-DATE
+> Task :react-native-google-signin_google-signin:mergeReleaseJniLibFolders
+> Task :react-native-google-signin_google-signin:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-linear-gradient:preBuild UP-TO-DATE
+> Task :react-native-google-signin_google-signin:copyReleaseJniLibsProjectOnly
+> Task :react-native-linear-gradient:preReleaseBuild UP-TO-DATE
+> Task :react-native-linear-gradient:mergeReleaseJniLibFolders
+> Task :react-native-linear-gradient:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-razorpay:preBuild UP-TO-DATE
+> Task :react-native-linear-gradient:copyReleaseJniLibsProjectOnly
+> Task :react-native-razorpay:preReleaseBuild UP-TO-DATE
+> Task :react-native-razorpay:mergeReleaseJniLibFolders
+> Task :react-native-razorpay:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-safe-area-context:preBuild UP-TO-DATE
+> Task :react-native-razorpay:copyReleaseJniLibsProjectOnly
+> Task :react-native-safe-area-context:preReleaseBuild UP-TO-DATE
+> Task :react-native-safe-area-context:mergeReleaseJniLibFolders
+> Task :react-native-safe-area-context:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-screens:preBuild UP-TO-DATE
+> Task :react-native-safe-area-context:copyReleaseJniLibsProjectOnly
+> Task :react-native-screens:preReleaseBuild UP-TO-DATE
+> Task :react-native-screens:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-screens:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-screens:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-screens:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-screens:configureCMakeRelWithDebInfo[x86]
+> Task :react-native-screens:buildCMakeRelWithDebInfo[x86]
+> Task :react-native-screens:configureCMakeRelWithDebInfo[x86_64]
+> Task :react-native-screens:buildCMakeRelWithDebInfo[x86_64]
+> Task :react-native-screens:mergeReleaseJniLibFolders
+> Task :react-native-vector-icons:preBuild UP-TO-DATE
+> Task :react-native-vector-icons:preReleaseBuild UP-TO-DATE
+> Task :react-native-vector-icons:mergeReleaseJniLibFolders
+> Task :react-native-vector-icons:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-google-signin_google-signin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-vector-icons:copyReleaseJniLibsProjectOnly
+> Task :react-native-google-signin_google-signin:generateReleaseBuildConfig
+> Task :react-native-google-signin_google-signin:generateReleaseResValues
+> Task :react-native-google-signin_google-signin:generateReleaseResources
+> Task :react-native-screens:mergeReleaseNativeLibs
+> Task :react-native-google-signin_google-signin:packageReleaseResources
+> Task :react-native-gesture-handler:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-gesture-handler:generateReleaseBuildConfig
+> Task :react-native-google-signin_google-signin:javaPreCompileRelease
+> Task :react-native-gesture-handler:generateReleaseResValues
+> Task :react-native-gesture-handler:generateReleaseResources
+> Task :react-native-gesture-handler:packageReleaseResources
+> Task :react-native-screens:copyReleaseJniLibsProjectOnly
+> Task :react-native-gesture-handler:parseReleaseLocalResources
+> Task :react-native-google-signin_google-signin:parseReleaseLocalResources
+> Task :react-native-safe-area-context:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-gesture-handler:javaPreCompileRelease
+> Task :react-native-google-signin_google-signin:generateReleaseRFile
+> Task :react-native-gesture-handler:generateReleaseRFile
+> Task :react-native-safe-area-context:generateReleaseBuildConfig
+> Task :app:mergeReleaseNativeLibs
+> Task :app:stripReleaseDebugSymbols
+> Task :react-native-safe-area-context:generateReleaseResValues
+> Task :react-native-safe-area-context:generateReleaseResources
+> Task :react-native-safe-area-context:packageReleaseResources
+> Task :react-native-screens:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-safe-area-context:javaPreCompileRelease
+> Task :react-native-safe-area-context:parseReleaseLocalResources
+> Task :react-native-screens:generateReleaseBuildConfig
+> Task :react-native-screens:generateReleaseResValues
+> Task :react-native-screens:generateReleaseResources
+> Task :react-native-safe-area-context:generateReleaseRFile
+> Task :app:extractReleaseNativeSymbolTables
+> Task :react-native-screens:packageReleaseResources
+
+> Task :react-native-google-signin_google-signin:compileReleaseKotlin
+w: file:///E:/native/AppFashion/node_modules/@react-native-google-signin/google-signin/android/src/main/java/com/reactnativegooglesignin/ErrorDto.kt:3:8 'class GoogleSignInStatusCodes : CommonStatusCodes' is deprecated. Deprecated in Java.
+w: file:///E:/native/AppFashion/node_modules/@react-native-google-signin/google-signin/android/src/main/java/com/reactnativegooglesignin/ErrorDto.kt:23:31 Condition is always 'true'.
+w: file:///E:/native/AppFashion/node_modules/@react-native-google-signin/google-signin/android/src/main/java/com/reactnativegooglesignin/ErrorDto.kt:24:16 'class GoogleSignInStatusCodes : CommonStatusCodes' is deprecated. Deprecated in Java.
+w: file:///E:/native/AppFashion/node_modules/@react-native-google-signin/google-signin/android/src/main/java/com/reactnativegooglesignin/ErrorDto.kt:29:33 'class GoogleSignInStatusCodes : CommonStatusCodes' is deprecated. Deprecated in Java.
+w: file:///E:/native/AppFashion/node_modules/@react-native-google-signin/google-signin/android/src/main/java/com/reactnativegooglesignin/ErrorDto.kt:30:38 'class GoogleSignInStatusCodes : CommonStatusCodes' is deprecated. Deprecated in Java.
+
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :react-native-screens:parseReleaseLocalResources
+
+> Task :react-native-google-signin_google-signin:compileReleaseJavaWithJavac
+.\gradlew : E:\native\AppFashion\node_modules\@re
+act-native-google-signin\google-signin\android\sr
+c\main\java\com\reactnativegooglesignin\RNGoogleS
+igninModule.java:97: warning: [removal] 
+getCurrentActivity() in 
+ReactContextBaseJavaModule has been deprecated 
+and marked for removal
+At line:1 char:51
++ ... dlew clean; .\gradlew assembleRelease 
+--console=plain > build_output. ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (E:\ 
+   native\AppFa...ked for removal:String) [], R  
+  emoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+        Activity activity = getCurrentActivity();
+                            ^
+E:\native\AppFashion\node_modules\@react-native-g
+oogle-signin\google-signin\android\src\main\java\
+com\reactnativegooglesignin\RNGoogleSigninModule.
+java:183: warning: [removal] 
+getCurrentActivity() in 
+ReactContextBaseJavaModule has been deprecated 
+and marked for removal
+        final Activity activity = 
+getCurrentActivity();
+                                  ^
+E:\native\AppFashion\node_modules\@react-native-g
+oogle-signin\google-signin\android\src\main\java\
+com\reactnativegooglesignin\RNGoogleSigninModule.
+java:198: warning: [removal] 
+getCurrentActivity() in 
+ReactContextBaseJavaModule has been deprecated 
+and marked for removal
+      final Activity activity = 
+getCurrentActivity();
+                                ^
+E:\native\AppFashion\node_modules\@react-native-g
+oogle-signin\google-signin\android\src\main\java\
+com\reactnativegooglesignin\RNGoogleSigninModule.
+java:370: warning: [removal] 
+getCurrentActivity() in 
+ReactContextBaseJavaModule has been deprecated 
+and marked for removal
+            Activity activity = 
+moduleInstance.getCurrentActivity();
+                                              ^
+Note: Some input files use or override a 
+deprecated API.
+Note: Recompile with -Xlint:deprecation for 
+details.
+Note: E:\native\AppFashion\node_modules\@react-na
+tive-google-signin\google-signin\android\src\main
+\java\com\reactnativegooglesignin\RNGoogleSigninM
+odule.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for 
+details.
+4 warnings
+
+> Task :react-native-screens:javaPreCompileRelease
+> Task :react-native-async-storage_async-storage:generateReleaseBuildConfig
+> Task :react-native-async-storage_async-storage:generateReleaseResValues
+> Task :react-native-google-signin_google-signin:bundleLibRuntimeToDirRelease
+> Task :react-native-async-storage_async-storage:generateReleaseResources
+> Task :react-native-async-storage_async-storage:packageReleaseResources
+> Task :react-native-async-storage_async-storage:javaPreCompileRelease
+> Task :react-native-async-storage_async-storage:parseReleaseLocalResources
+> Task :react-native-community_blur:generateReleaseBuildConfig
+> Task :react-native-screens:generateReleaseRFile
+> Task :react-native-async-storage_async-storage:generateReleaseRFile
+
+> Task :react-native-safe-area-context:compileReleaseKotlin
+w: file:///E:/native/AppFashion/node_modules/react-native-safe-area-context/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaView.kt:59:23 'val uiImplementation: UIImplementation!' is deprecated. Deprecated in Java.
+w: file:///E:/native/AppFashion/node_modules/react-native-safe-area-context/android/src/paper/java/com/th3rdwave/safeareacontext/InsetsChangeEvent.kt:19:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+
+> Task :react-native-safe-area-context:compileReleaseJavaWithJavac
+Note: E:\native\AppFashion\node_modules\react-nat
+ive-safe-area-context\android\src\paper\java\com\
+th3rdwave\safeareacontext\NativeSafeAreaContextSp
+ec.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for 
+details.
+
+> Task :react-native-safe-area-context:bundleLibRuntimeToDirRelease
+
+> Task :react-native-async-storage_async-storage:compileReleaseJavaWithJavac
+Note: Some input files use or override a 
+deprecated API.
+Note: Recompile with -Xlint:deprecation for 
+details.
+Note: E:\native\AppFashion\node_modules\@react-na
+tive-async-storage\async-storage\android\src\java
+Package\java\com\reactnativecommunity\asyncstorag
+e\AsyncStoragePackage.java uses unchecked or 
+unsafe operations.
+Note: Recompile with -Xlint:unchecked for 
+details.
+
+> Task :react-native-community_blur:generateReleaseResValues
+> Task :react-native-async-storage_async-storage:bundleLibRuntimeToDirRelease
+> Task :react-native-community_blur:generateReleaseResources
+> Task :react-native-community_blur:packageReleaseResources
+> Task :react-native-community_blur:javaPreCompileRelease
+> Task :react-native-community_blur:parseReleaseLocalResources
+> Task :react-native-fbsdk-next:generateReleaseBuildConfig
+> Task :react-native-fbsdk-next:generateReleaseResValues
+> Task :react-native-fbsdk-next:generateReleaseResources
+> Task :react-native-fbsdk-next:packageReleaseResources
+> Task :react-native-community_blur:generateReleaseRFile
+> Task :react-native-fbsdk-next:parseReleaseLocalResources
+> Task :react-native-community_blur:compileReleaseJavaWithJavac
+> Task :react-native-fbsdk-next:javaPreCompileRelease
+> Task :react-native-community_blur:bundleLibRuntimeToDirRelease
+> Task :react-native-geolocation-service:generateReleaseBuildConfig
+> Task :react-native-geolocation-service:generateReleaseResValues
+> Task :react-native-fbsdk-next:generateReleaseRFile
+> Task :react-native-geolocation-service:generateReleaseResources
+> Task :react-native-gesture-handler:compileReleaseKotlin
+
+> Task :react-native-fbsdk-next:compileReleaseJavaWithJavac
+E:\native\AppFashion\node_modules\react-native-fb
+sdk-next\android\src\main\java\com\facebook\react
+native\androidsdk\FBGameRequestDialogModule.java:
+85: warning: [removal] getCurrentActivity() in 
+ReactContextBaseJavaModule has been deprecated 
+and marked for removal
+        if (getCurrentActivity() != null) {
+            ^
+E:\native\AppFashion\node_modules\react-native-fb
+sdk-next\android\src\main\java\com\facebook\react
+native\androidsdk\FBGameRequestDialogModule.java:
+86: warning: [removal] getCurrentActivity() in 
+ReactContextBaseJavaModule has been deprecated 
+and marked for removal
+            GameRequestDialog gameRequestDialog 
+= new GameRequestDialog(getCurrentActivity());
+                                                 
+                       ^
+E:\native\AppFashion\node_modules\react-native-fb
+sdk-next\android\src\main\java\com\facebook\react
+native\androidsdk\FBLoginManagerModule.java:143: 
+warning: [removal] getCurrentActivity() in 
+ReactContextBaseJavaModule has been deprecated 
+and marked for removal
+        Activity activity = getCurrentActivity();
+                            ^
+E:\native\AppFashion\node_modules\react-native-fb
+sdk-next\android\src\main\java\com\facebook\react
+native\androidsdk\FBLoginManagerModule.java:158: 
+warning: [removal] getCurrentActivity() in 
+ReactContextBaseJavaModule has been deprecated 
+and marked for removal
+        Activity activity = getCurrentActivity();
+                            ^
+E:\native\AppFashion\node_modules\react-native-fb
+sdk-next\android\src\main\java\com\facebook\react
+native\androidsdk\FBMessageDialogModule.java:75: 
+warning: [removal] getCurrentActivity() in 
+ReactContextBaseJavaModule has been deprecated 
+and marked for removal
+        if (getCurrentActivity() != null) {
+            ^
+E:\native\AppFashion\node_modules\react-native-fb
+sdk-next\android\src\main\java\com\facebook\react
+native\androidsdk\FBMessageDialogModule.java:77: 
+warning: [removal] getCurrentActivity() in 
+ReactContextBaseJavaModule has been deprecated 
+and marked for removal
+            MessageDialog messageDialog = new 
+MessageDialog(getCurrentActivity());
+                                                 
+           ^
+E:\native\AppFashion\node_modules\react-native-fb
+sdk-next\android\src\main\java\com\facebook\react
+native\androidsdk\FBMessageDialogModule.java:91: 
+warning: [removal] getCurrentActivity() in 
+ReactContextBaseJavaModule has been deprecated 
+and marked for removal
+        if (getCurrentActivity() != null) {
+            ^
+E:\native\AppFashion\node_modules\react-native-fb
+sdk-next\android\src\main\java\com\facebook\react
+native\androidsdk\FBMessageDialogModule.java:93: 
+warning: [removal] getCurrentActivity() in 
+ReactContextBaseJavaModule has been deprecated 
+and marked for removal
+            MessageDialog messageDialog = new 
+MessageDialog(getCurrentActivity());
+                                                 
+           ^
+E:\native\AppFashion\node_modules\react-native-fb
+sdk-next\android\src\main\java\com\facebook\react
+native\androidsdk\FBShareDialogModule.java:70: 
+warning: [removal] getCurrentActivity() in 
+ReactContextBaseJavaModule has been deprecated 
+and marked for removal
+        if (getCurrentActivity() != null) {
+            ^
+E:\native\AppFashion\node_modules\react-native-fb
+sdk-next\android\src\main\java\com\facebook\react
+native\androidsdk\FBShareDialogModule.java:71: 
+warning: [removal] getCurrentActivity() in 
+ReactContextBaseJavaModule has been deprecated 
+and marked for removal
+            ShareDialog shareDialog = new 
+ShareDialog(getCurrentActivity());
+                                                 
+     ^
+E:\native\AppFashion\node_modules\react-native-fb
+sdk-next\android\src\main\java\com\facebook\react
+native\androidsdk\FBShareDialogModule.java:84: 
+warning: [removal] getCurrentActivity() in 
+ReactContextBaseJavaModule has been deprecated 
+and marked for removal
+        if (getCurrentActivity() != null) {
+            ^
+E:\native\AppFashion\node_modules\react-native-fb
+sdk-next\android\src\main\java\com\facebook\react
+native\androidsdk\FBShareDialogModule.java:85: 
+warning: [removal] getCurrentActivity() in 
+ReactContextBaseJavaModule has been deprecated 
+and marked for removal
+            ShareDialog shareDialog = new 
+ShareDialog(getCurrentActivity());
+                                                 
+     ^
+Note: Some input files use or override a 
+deprecated API.
+Note: Recompile with -Xlint:deprecation for 
+details.
+Note: E:\native\AppFashion\node_modules\react-nat
+ive-fbsdk-next\android\src\main\java\com\facebook
+\reactnative\androidsdk\Utility.java uses 
+unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for 
+details.
+12 warnings
+
+> Task :react-native-gesture-handler:compileReleaseJavaWithJavac
+Note: E:\native\AppFashion\node_modules\react-nat
+ive-gesture-handler\android\paper\src\main\java\c
+om\swmansion\gesturehandler\NativeRNGestureHandle
+rModuleSpec.java uses or overrides a deprecated 
+API.
+Note: Recompile with -Xlint:deprecation for 
+details.
+
+> Task :react-native-geolocation-service:packageReleaseResources
+> Task :react-native-geolocation-service:javaPreCompileRelease
+> Task :react-native-linear-gradient:generateReleaseBuildConfig
+> Task :react-native-linear-gradient:generateReleaseResValues
+> Task :react-native-geolocation-service:parseReleaseLocalResources
+> Task :react-native-linear-gradient:generateReleaseResources
+> Task :react-native-fbsdk-next:bundleLibRuntimeToDirRelease
+> Task :react-native-geolocation-service:generateReleaseRFile
+> Task :react-native-linear-gradient:packageReleaseResources
+> Task :react-native-gesture-handler:bundleLibRuntimeToDirRelease
+
+> Task :react-native-geolocation-service:compileReleaseJavaWithJavac
+Note: Some input files use or override a 
+deprecated API.
+Note: Recompile with -Xlint:deprecation for 
+details.
+
+> Task :react-native-linear-gradient:javaPreCompileRelease
+> Task :react-native-geolocation-service:bundleLibRuntimeToDirRelease
+> Task :react-native-linear-gradient:parseReleaseLocalResources
+> Task :react-native-razorpay:generateReleaseBuildConfig
+> Task :react-native-razorpay:generateReleaseResValues
+> Task :react-native-linear-gradient:generateReleaseRFile
+> Task :react-native-razorpay:generateReleaseResources
+> Task :react-native-linear-gradient:compileReleaseJavaWithJavac
+> Task :react-native-linear-gradient:bundleLibRuntimeToDirRelease
+> Task :react-native-razorpay:packageReleaseResources
+> Task :react-native-razorpay:parseReleaseLocalResources
+> Task :react-native-razorpay:javaPreCompileRelease
+> Task :react-native-razorpay:generateReleaseRFile
+> Task :react-native-vector-icons:generateReleaseBuildConfig
+
+> Task :react-native-razorpay:compileReleaseJavaWithJavac
+E:\native\AppFashion\node_modules\react-native-ra
+zorpay\android\src\main\java\com\razorpay\rn\Razo
+rpayModule.java:59: warning: [removal] 
+getCurrentActivity() in 
+ReactContextBaseJavaModule has been deprecated 
+and marked for removal
+    Activity currentActivity = 
+getCurrentActivity();
+                               ^
+E:\native\AppFashion\node_modules\react-native-ra
+zorpay\android\src\main\java\com\razorpay\rn\Razo
+rpayModule.java:77: warning: [removal] 
+getCurrentActivity() in 
+ReactContextBaseJavaModule has been deprecated 
+and marked for removal
+     Checkout.handleActivityResult(getCurrentActi
+vity(), requestCode, resultCode, data, this, 
+this);
+                                   ^
+Note: E:\native\AppFashion\node_modules\react-nat
+ive-razorpay\android\src\main\java\com\razorpay\r
+n\RazorpayModule.java uses or overrides a 
+deprecated API.
+Note: Recompile with -Xlint:deprecation for 
+details.
+2 warnings
+
+> Task :react-native-vector-icons:generateReleaseResValues
+> Task :react-native-razorpay:bundleLibRuntimeToDirRelease
+> Task :react-native-vector-icons:generateReleaseResources
+> Task :react-native-vector-icons:packageReleaseResources
+> Task :react-native-vector-icons:javaPreCompileRelease
+> Task :react-native-vector-icons:parseReleaseLocalResources
+> Task :react-native-vector-icons:generateReleaseRFile
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:buildKotlinToolingMetadata
+
+> Task :react-native-vector-icons:compileReleaseJavaWithJavac
+
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateReleaseBuildConfig
+> Task :react-native-vector-icons:bundleLibRuntimeToDirRelease
+> Task :react-native-community_blur:writeReleaseAarMetadata
+> Task :react-native-async-storage_async-storage:writeReleaseAarMetadata
+Note: Some input files use or override a 
+deprecated API.
+Note: Recompile with -Xlint:deprecation for 
+details.
+> Task :react-native-geolocation-service:writeReleaseAarMetadata
+> Task :react-native-fbsdk-next:writeReleaseAarMetadata
+> Task :react-native-gesture-handler:writeReleaseAarMetadata
+> Task :react-native-google-signin_google-signin:writeReleaseAarMetadata
+> Task :react-native-linear-gradient:writeReleaseAarMetadata
+> Task :react-native-razorpay:writeReleaseAarMetadata
+> Task :react-native-safe-area-context:writeReleaseAarMetadata
+> Task :react-native-screens:writeReleaseAarMetadata
+> Task :react-native-vector-icons:writeReleaseAarMetadata
+
+> Task :app:createBundleReleaseJsAndAssets
+ WARN  the transform cache was reset.
+                Welcome to Metro v0.82.5
+              Fast - Scalable - Integrated
+
+
+
+> Task :react-native-screens:compileReleaseKotlin
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/RNScreensPackage.kt:58:9 The corresponding parameter in the supertype 'BaseReactPackage' is named 'name'. This may cause problems when calling this function with named arguments.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/RNScreensPackage.kt:59:9 The corresponding parameter in the supertype 'BaseReactPackage' is named 'reactContext'. This may cause problems when calling this function with named arguments.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/RNScreensPackage.kt:72:17 'constructor(name: String, className: String, canOverrideExistingModule: Boolean, needsEagerInit: Boolean, hasConstants: Boolean, isCxxModule: Boolean, isTurboModule: Boolean): ReactModuleInfo' is deprecated. This constructor is deprecated and will be removed in the future. Use ReactModuleInfo(String, String, boolean, boolean, boolean, boolean)].
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/Screen.kt:49:77 Unchecked cast of '(CoordinatorLayout.Behavior<View!>?..CoordinatorLayout.Behavior<*>?)' to 'BottomSheetBehavior<Screen>'.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:218:31 'var targetElevation: Float' is deprecated. Deprecated in Java.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:221:13 'fun setHasOptionsMenu(p0: Boolean): Unit' is deprecated. Deprecated in Java.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:398:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:405:22 'fun onPrepareOptionsMenu(p0: Menu): Unit' is deprecated. Deprecated in Java.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:408:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:413:22 'fun onCreateOptionsMenu(p0: Menu, p1: MenuInflater): Unit' is deprecated. Deprecated in Java.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:48:42 'fun replaceSystemWindowInsets(p0: Int, p1: Int, p2: Int, p3: Int): WindowInsetsCompat' is deprecated. Deprecated in Java.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:49:39 'val systemWindowInsetLeft: Int' is deprecated. Deprecated in Java.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:51:39 'val systemWindowInsetRight: Int' is deprecated. Deprecated in Java.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:52:39 'val systemWindowInsetBottom: Int' is deprecated. Deprecated in Java.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:7:8 'object ReactFeatureFlags : Any' is deprecated. Use com.facebook.react.internal.featureflags.ReactNativeFeatureFlags instead.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:25:13 'object ReactFeatureFlags : Any' is deprecated. Use com.facebook.react.internal.featureflags.ReactNativeFeatureFlags instead.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:71:9 The corresponding parameter in the supertype 'RootView' is named 'childView'. This may cause problems when calling this function with named arguments.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:72:9 The corresponding parameter in the supertype 'RootView' is named 'ev'. This may cause problems when calling this function with named arguments.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:79:46 The corresponding parameter in the supertype 'RootView' is named 'ev'. This may cause problems when calling this function with named arguments.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:83:9 The corresponding parameter in the supertype 'RootView' is named 'childView'. This may cause problems when calling this function with named arguments.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:84:9 The corresponding parameter in the supertype 'RootView' is named 'ev'. This may cause problems when calling this function with named arguments.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:95:34 The corresponding parameter in the supertype 'RootView' is named 't'. This may cause problems when calling this function with named arguments.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/DimmingView.kt:63:9 The corresponding parameter in the supertype 'ReactCompoundView' is named 'touchX'. This may cause problems when calling this function with named arguments.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/DimmingView.kt:64:9 The corresponding parameter in the supertype 'ReactCompoundView' is named 'touchY'. This may cause problems when calling this function with named arguments.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/DimmingView.kt:68:9 The corresponding parameter in the supertype 'ReactCompoundViewGroup' is named 'touchX'. This may cause problems when calling this function with named arguments.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/DimmingView.kt:69:9 The corresponding parameter in the supertype 'ReactCompoundViewGroup' is named 'touchY'. This may cause problems when calling this function with named arguments.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/tabs/TabsHostViewManager.kt:37:9 The corresponding parameter in the supertype 'TabsHostViewManager' is named 'view'. This may cause problems when calling this function with named arguments.
+w: file:///E:/native/AppFashion/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/safearea/SafeAreaView.kt:183:31 'val uiImplementation: UIImplementation!' is deprecated. Deprecated in Java.
+
+> Task :app:createBundleReleaseJsAndAssets
+Writing bundle output to: android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle
+Writing sourcemap output to: android\app\build\intermediates\sourcemaps\react\release\index.android.bundle.packager.map
+Done writing bundle output
+Done writing sourcemap output
+Copying 6 asset files
+Done copying assets
+
+> Task :react-native-screens:compileReleaseJavaWithJavac
+> Task :app:generateReleaseResValues
+> Task :app:checkReleaseAarMetadata
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :react-native-screens:bundleLibRuntimeToDirRelease
+> Task :app:packageReleaseResources
+> Task :app:parseReleaseLocalResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :react-native-async-storage_async-storage:extractDeepLinksRelease
+> Task :react-native-community_blur:extractDeepLinksRelease
+> Task :react-native-fbsdk-next:extractDeepLinksRelease
+> Task :react-native-geolocation-service:extractDeepLinksRelease
+> Task :react-native-gesture-handler:extractDeepLinksRelease
+> Task :react-native-google-signin_google-signin:extractDeepLinksRelease
+
+> Task :react-native-fbsdk-next:processReleaseManifest
+package="com.facebook.reactnative.androidsdk" found in source AndroidManifest.xml: E:\native\AppFashion\node_modules\react-native-fbsdk-next\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.facebook.reactnative.androidsdk" from the source AndroidManifest.xml: E:\native\AppFashion\node_modules\react-native-fbsdk-next\android\src\main\AndroidManifest.xml.
+E:\native\AppFashion\node_modules\react-native-fbsdk-next\android\src\main\AndroidManifest.xml:41:9-44:48 Warning:
+	property#android.adservices.AD_SERVICES_CONFIG@android:resource was tagged at AndroidManifest.xml:41 to replace other declarations but no other declaration present
+
+> Task :react-native-async-storage_async-storage:processReleaseManifest
+package="com.reactnativecommunity.asyncstorage" found in source AndroidManifest.xml: E:\native\AppFashion\node_modules\@react-native-async-storage\async-storage\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.reactnativecommunity.asyncstorage" from the source AndroidManifest.xml: E:\native\AppFashion\node_modules\@react-native-async-storage\async-storage\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-gesture-handler:processReleaseManifest
+
+> Task :react-native-google-signin_google-signin:processReleaseManifest
+package="com.reactnativegooglesignin" found in source AndroidManifest.xml: E:\native\AppFashion\node_modules\@react-native-google-signin\google-signin\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.reactnativegooglesignin" from the source AndroidManifest.xml: E:\native\AppFashion\node_modules\@react-native-google-signin\google-signin\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-community_blur:processReleaseManifest
+package="com.reactnativecommunity.blurview" found in source AndroidManifest.xml: E:\native\AppFashion\node_modules\@react-native-community\blur\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.reactnativecommunity.blurview" from the source AndroidManifest.xml: E:\native\AppFashion\node_modules\@react-native-community\blur\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-linear-gradient:extractDeepLinksRelease
+
+> Task :react-native-geolocation-service:processReleaseManifest
+package="com.agontuk.RNFusedLocation" found in source AndroidManifest.xml: E:\native\AppFashion\node_modules\react-native-geolocation-service\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.agontuk.RNFusedLocation" from the source AndroidManifest.xml: E:\native\AppFashion\node_modules\react-native-geolocation-service\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-razorpay:extractDeepLinksRelease
+> Task :react-native-safe-area-context:extractDeepLinksRelease
+
+> Task :react-native-razorpay:processReleaseManifest
+package="com.razorpay.rn" found in source AndroidManifest.xml: E:\native\AppFashion\node_modules\react-native-razorpay\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.razorpay.rn" from the source AndroidManifest.xml: E:\native\AppFashion\node_modules\react-native-razorpay\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-linear-gradient:processReleaseManifest
+package="com.BV.LinearGradient" found in source AndroidManifest.xml: E:\native\AppFashion\node_modules\react-native-linear-gradient\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.BV.LinearGradient" from the source AndroidManifest.xml: E:\native\AppFashion\node_modules\react-native-linear-gradient\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-screens:extractDeepLinksRelease
+> Task :react-native-vector-icons:extractDeepLinksRelease
+> Task :react-native-screens:processReleaseManifest
+
+> Task :react-native-safe-area-context:processReleaseManifest
+package="com.th3rdwave.safeareacontext" found in source AndroidManifest.xml: E:\native\AppFashion\node_modules\react-native-safe-area-context\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.th3rdwave.safeareacontext" from the source AndroidManifest.xml: E:\native\AppFashion\node_modules\react-native-safe-area-context\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-async-storage_async-storage:compileReleaseLibraryResources
+> Task :react-native-community_blur:compileReleaseLibraryResources
+> Task :react-native-fbsdk-next:compileReleaseLibraryResources
+
+> Task :react-native-vector-icons:processReleaseManifest
+package="com.oblador.vectoricons" found in source AndroidManifest.xml: E:\native\AppFashion\node_modules\react-native-vector-icons\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.oblador.vectoricons" from the source AndroidManifest.xml: E:\native\AppFashion\node_modules\react-native-vector-icons\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-geolocation-service:compileReleaseLibraryResources
+> Task :app:mergeReleaseResources
+
+> Task :app:processReleaseMainManifest
+[com.razorpay:standard-core:1.7.1] C:\Users\amitp\.gradle\caches\8.14.1\transforms\8d773ac15ca6c5919ae6cbfaacbaba4d\transformed\standard-core-1.7.1\AndroidManifest.xml Warning:
+	Namespace 'com.razorpay' is used in multiple modules and/or libraries: com.razorpay:standard-core:1.7.1, com.razorpay:core:1.0.1. Please ensure that all modules and libraries have a unique namespace. For more information, See https://developer.android.com/studio/build/configure-app-module#set-namespace
+E:\native\AppFashion\android\app\src\main\AndroidManifest.xml Warning:
+	property#android.adservices.AD_SERVICES_CONFIG@android:resource was tagged at AndroidManifest.xml:0 to replace other declarations but no other declaration present
+
+> Task :app:processReleaseManifest
+> Task :react-native-gesture-handler:compileReleaseLibraryResources
+> Task :react-native-google-signin_google-signin:compileReleaseLibraryResources
+> Task :react-native-linear-gradient:compileReleaseLibraryResources
+> Task :react-native-razorpay:compileReleaseLibraryResources
+> Task :react-native-safe-area-context:compileReleaseLibraryResources
+> Task :react-native-vector-icons:compileReleaseLibraryResources
+> Task :app:processReleaseManifestForPackage
+> Task :react-native-community_blur:bundleLibCompileToJarRelease
+> Task :react-native-async-storage_async-storage:bundleLibCompileToJarRelease
+> Task :react-native-fbsdk-next:bundleLibCompileToJarRelease
+> Task :react-native-screens:compileReleaseLibraryResources
+> Task :react-native-geolocation-service:bundleLibCompileToJarRelease
+> Task :react-native-linear-gradient:bundleLibCompileToJarRelease
+> Task :react-native-google-signin_google-signin:bundleLibCompileToJarRelease
+> Task :react-native-razorpay:bundleLibCompileToJarRelease
+> Task :app:javaPreCompileRelease
+> Task :app:desugarReleaseFileDependencies
+> Task :app:mergeReleaseStartupProfile UP-TO-DATE
+> Task :react-native-vector-icons:bundleLibCompileToJarRelease
+> Task :react-native-safe-area-context:bundleLibCompileToJarRelease
+> Task :react-native-gesture-handler:bundleLibCompileToJarRelease
+> Task :react-native-screens:bundleLibCompileToJarRelease
+> Task :app:processReleaseResources
+> Task :react-native-async-storage_async-storage:prepareReleaseArtProfile UP-TO-DATE
+> Task :react-native-community_blur:prepareReleaseArtProfile UP-TO-DATE
+> Task :react-native-fbsdk-next:prepareReleaseArtProfile UP-TO-DATE
+> Task :react-native-geolocation-service:prepareReleaseArtProfile UP-TO-DATE
+> Task :react-native-gesture-handler:prepareReleaseArtProfile UP-TO-DATE
+> Task :react-native-google-signin_google-signin:prepareReleaseArtProfile UP-TO-DATE
+> Task :react-native-linear-gradient:prepareReleaseArtProfile UP-TO-DATE
+> Task :react-native-razorpay:prepareReleaseArtProfile UP-TO-DATE
+> Task :react-native-safe-area-context:prepareReleaseArtProfile UP-TO-DATE
+> Task :react-native-screens:prepareReleaseArtProfile UP-TO-DATE
+> Task :react-native-vector-icons:prepareReleaseArtProfile UP-TO-DATE
+> Task :react-native-safe-area-context:bundleLibRuntimeToJarRelease
+> Task :react-native-async-storage_async-storage:bundleLibRuntimeToJarRelease
+> Task :react-native-gesture-handler:bundleLibRuntimeToJarRelease
+> Task :app:mergeReleaseArtProfile
+> Task :react-native-community_blur:bundleLibRuntimeToJarRelease
+> Task :react-native-fbsdk-next:bundleLibRuntimeToJarRelease
+> Task :react-native-google-signin_google-signin:bundleLibRuntimeToJarRelease
+> Task :react-native-linear-gradient:bundleLibRuntimeToJarRelease
+> Task :react-native-razorpay:bundleLibRuntimeToJarRelease
+> Task :react-native-vector-icons:bundleLibRuntimeToJarRelease
+> Task :react-native-screens:bundleLibRuntimeToJarRelease
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :react-native-geolocation-service:bundleLibRuntimeToJarRelease
+> Task :app:copyReactNativeVectorIconFonts
+> Task :app:generateReleaseAssets
+> Task :react-native-async-storage_async-storage:mergeReleaseShaders
+> Task :react-native-async-storage_async-storage:compileReleaseShaders NO-SOURCE
+> Task :react-native-async-storage_async-storage:generateReleaseAssets UP-TO-DATE
+> Task :react-native-async-storage_async-storage:mergeReleaseAssets
+> Task :react-native-community_blur:mergeReleaseShaders
+> Task :react-native-community_blur:compileReleaseShaders NO-SOURCE
+> Task :react-native-community_blur:generateReleaseAssets UP-TO-DATE
+> Task :react-native-community_blur:mergeReleaseAssets
+> Task :react-native-fbsdk-next:mergeReleaseShaders
+> Task :react-native-fbsdk-next:compileReleaseShaders NO-SOURCE
+> Task :react-native-fbsdk-next:generateReleaseAssets UP-TO-DATE
+> Task :react-native-fbsdk-next:mergeReleaseAssets
+> Task :react-native-geolocation-service:mergeReleaseShaders
+> Task :react-native-geolocation-service:compileReleaseShaders NO-SOURCE
+> Task :react-native-geolocation-service:generateReleaseAssets UP-TO-DATE
+> Task :react-native-geolocation-service:mergeReleaseAssets
+> Task :react-native-gesture-handler:mergeReleaseShaders
+> Task :react-native-gesture-handler:compileReleaseShaders NO-SOURCE
+> Task :react-native-gesture-handler:generateReleaseAssets UP-TO-DATE
+> Task :react-native-gesture-handler:mergeReleaseAssets
+> Task :react-native-google-signin_google-signin:mergeReleaseShaders
+> Task :react-native-google-signin_google-signin:compileReleaseShaders NO-SOURCE
+> Task :react-native-google-signin_google-signin:generateReleaseAssets UP-TO-DATE
+> Task :react-native-google-signin_google-signin:mergeReleaseAssets
+> Task :react-native-linear-gradient:mergeReleaseShaders
+> Task :react-native-linear-gradient:compileReleaseShaders NO-SOURCE
+> Task :react-native-linear-gradient:generateReleaseAssets UP-TO-DATE
+> Task :react-native-linear-gradient:mergeReleaseAssets
+> Task :react-native-razorpay:mergeReleaseShaders
+> Task :react-native-razorpay:compileReleaseShaders NO-SOURCE
+> Task :react-native-razorpay:generateReleaseAssets UP-TO-DATE
+> Task :react-native-razorpay:mergeReleaseAssets
+> Task :react-native-safe-area-context:mergeReleaseShaders
+> Task :react-native-safe-area-context:compileReleaseShaders NO-SOURCE
+> Task :react-native-safe-area-context:generateReleaseAssets UP-TO-DATE
+> Task :react-native-safe-area-context:mergeReleaseAssets
+> Task :react-native-screens:mergeReleaseShaders
+> Task :react-native-screens:compileReleaseShaders NO-SOURCE
+> Task :react-native-screens:generateReleaseAssets UP-TO-DATE
+> Task :react-native-screens:mergeReleaseAssets
+> Task :react-native-vector-icons:mergeReleaseShaders
+> Task :react-native-vector-icons:compileReleaseShaders NO-SOURCE
+> Task :react-native-vector-icons:generateReleaseAssets UP-TO-DATE
+> Task :react-native-vector-icons:mergeReleaseAssets
+> Task :app:mergeReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:extractProguardFiles
+> Task :react-native-async-storage_async-storage:processReleaseJavaRes NO-SOURCE
+> Task :app:compressReleaseAssets
+> Task :app:compileReleaseKotlin
+> Task :react-native-async-storage_async-storage:createFullJarRelease
+> Task :app:compileReleaseJavaWithJavac
+> Task :app:dexBuilderRelease
+> Task :react-native-async-storage_async-storage:extractProguardFiles
+> Task :app:mergeReleaseGlobalSynthetics
+> Task :app:mergeExtDexRelease
+> Task :react-native-async-storage_async-storage:generateReleaseLintModel
+> Task :react-native-async-storage_async-storage:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-community_blur:processReleaseJavaRes NO-SOURCE
+> Task :react-native-community_blur:createFullJarRelease
+> Task :react-native-community_blur:extractProguardFiles
+> Task :react-native-community_blur:generateReleaseLintModel
+> Task :react-native-community_blur:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-fbsdk-next:processReleaseJavaRes NO-SOURCE
+> Task :react-native-fbsdk-next:createFullJarRelease
+> Task :react-native-fbsdk-next:extractProguardFiles
+> Task :react-native-fbsdk-next:generateReleaseLintModel
+> Task :react-native-fbsdk-next:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-geolocation-service:processReleaseJavaRes NO-SOURCE
+> Task :react-native-geolocation-service:createFullJarRelease
+> Task :react-native-geolocation-service:extractProguardFiles
+> Task :react-native-geolocation-service:generateReleaseLintModel
+> Task :react-native-geolocation-service:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-gesture-handler:processReleaseJavaRes
+> Task :react-native-gesture-handler:createFullJarRelease
+> Task :react-native-gesture-handler:extractProguardFiles
+> Task :react-native-gesture-handler:generateReleaseLintModel
+> Task :react-native-gesture-handler:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-google-signin_google-signin:processReleaseJavaRes
+> Task :react-native-google-signin_google-signin:createFullJarRelease
+> Task :react-native-google-signin_google-signin:extractProguardFiles
+> Task :react-native-google-signin_google-signin:generateReleaseLintModel
+> Task :react-native-google-signin_google-signin:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-linear-gradient:processReleaseJavaRes NO-SOURCE
+> Task :react-native-linear-gradient:createFullJarRelease
+> Task :react-native-linear-gradient:extractProguardFiles
+> Task :react-native-linear-gradient:generateReleaseLintModel
+> Task :react-native-linear-gradient:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-razorpay:processReleaseJavaRes NO-SOURCE
+> Task :react-native-razorpay:createFullJarRelease
+> Task :react-native-razorpay:extractProguardFiles
+> Task :react-native-razorpay:generateReleaseLintModel
+> Task :react-native-razorpay:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-safe-area-context:processReleaseJavaRes
+> Task :react-native-safe-area-context:createFullJarRelease
+> Task :react-native-safe-area-context:extractProguardFiles
+> Task :react-native-safe-area-context:generateReleaseLintModel
+> Task :react-native-safe-area-context:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-screens:processReleaseJavaRes
+> Task :react-native-screens:createFullJarRelease
+> Task :react-native-screens:extractProguardFiles
+> Task :react-native-screens:generateReleaseLintModel
+> Task :react-native-screens:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-vector-icons:processReleaseJavaRes NO-SOURCE
+> Task :react-native-vector-icons:createFullJarRelease
+> Task :react-native-vector-icons:extractProguardFiles
+> Task :react-native-vector-icons:generateReleaseLintModel
+> Task :react-native-vector-icons:prepareLintJarForPublish UP-TO-DATE
+> Task :app:generateReleaseLintVitalReportModel
+> Task :react-native-google-signin_google-signin:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-google-signin_google-signin:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-google-signin_google-signin:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :react-native-google-signin_google-signin:extractReleaseAnnotations
+> Task :react-native-google-signin_google-signin:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-google-signin_google-signin:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :react-native-gesture-handler:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-gesture-handler:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-gesture-handler:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :react-native-gesture-handler:extractReleaseAnnotations
+> Task :react-native-gesture-handler:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-gesture-handler:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :react-native-safe-area-context:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-safe-area-context:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-safe-area-context:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :react-native-safe-area-context:extractReleaseAnnotations
+> Task :react-native-safe-area-context:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-safe-area-context:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :react-native-screens:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :react-native-screens:extractReleaseAnnotations
+> Task :react-native-screens:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-screens:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :react-native-async-storage_async-storage:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-async-storage_async-storage:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-async-storage_async-storage:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :react-native-screens:stripReleaseDebugSymbols
+> Task :react-native-screens:mergeReleaseJavaResource
+> Task :react-native-async-storage_async-storage:extractReleaseAnnotations
+> Task :react-native-gesture-handler:mergeReleaseJavaResource
+> Task :react-native-google-signin_google-signin:mergeReleaseJavaResource
+> Task :react-native-safe-area-context:mergeReleaseJavaResource
+> Task :react-native-screens:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-google-signin_google-signin:syncReleaseLibJars
+> Task :react-native-google-signin_google-signin:bundleReleaseLocalLintAar
+> Task :react-native-gesture-handler:syncReleaseLibJars
+> Task :react-native-gesture-handler:bundleReleaseLocalLintAar
+> Task :react-native-safe-area-context:syncReleaseLibJars
+> Task :react-native-safe-area-context:bundleReleaseLocalLintAar
+> Task :react-native-screens:syncReleaseLibJars
+> Task :react-native-screens:bundleReleaseLocalLintAar
+> Task :react-native-async-storage_async-storage:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-async-storage_async-storage:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :react-native-community_blur:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-community_blur:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :react-native-community_blur:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-async-storage_async-storage:mergeReleaseJavaResource
+> Task :react-native-community_blur:extractReleaseAnnotations
+> Task :react-native-async-storage_async-storage:syncReleaseLibJars
+> Task :react-native-async-storage_async-storage:bundleReleaseLocalLintAar
+> Task :react-native-community_blur:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-community_blur:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :app:mergeDexRelease
+> Task :react-native-community_blur:mergeReleaseJavaResource
+> Task :react-native-community_blur:syncReleaseLibJars
+> Task :react-native-community_blur:bundleReleaseLocalLintAar
+> Task :react-native-fbsdk-next:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-fbsdk-next:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-fbsdk-next:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :react-native-fbsdk-next:extractReleaseAnnotations
+> Task :react-native-fbsdk-next:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-fbsdk-next:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :react-native-geolocation-service:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-geolocation-service:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-fbsdk-next:mergeReleaseJavaResource
+> Task :react-native-geolocation-service:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :react-native-fbsdk-next:syncReleaseLibJars
+> Task :react-native-fbsdk-next:bundleReleaseLocalLintAar
+> Task :react-native-geolocation-service:extractReleaseAnnotations
+> Task :react-native-geolocation-service:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-geolocation-service:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :react-native-linear-gradient:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-linear-gradient:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-geolocation-service:mergeReleaseJavaResource
+> Task :react-native-linear-gradient:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :react-native-geolocation-service:syncReleaseLibJars
+> Task :react-native-geolocation-service:bundleReleaseLocalLintAar
+> Task :react-native-linear-gradient:extractReleaseAnnotations
+> Task :react-native-linear-gradient:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-linear-gradient:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :react-native-razorpay:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-razorpay:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-razorpay:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :react-native-linear-gradient:mergeReleaseJavaResource
+> Task :react-native-razorpay:extractReleaseAnnotations
+> Task :react-native-linear-gradient:syncReleaseLibJars
+> Task :react-native-linear-gradient:bundleReleaseLocalLintAar
+> Task :react-native-razorpay:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-razorpay:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :react-native-vector-icons:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-vector-icons:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-razorpay:mergeReleaseJavaResource
+> Task :react-native-vector-icons:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :react-native-razorpay:syncReleaseLibJars
+> Task :react-native-razorpay:bundleReleaseLocalLintAar
+> Task :react-native-vector-icons:extractReleaseAnnotations
+> Task :react-native-vector-icons:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-vector-icons:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :react-native-vector-icons:mergeReleaseJavaResource
+> Task :app:compileReleaseArtProfile
+> Task :react-native-vector-icons:syncReleaseLibJars
+> Task :react-native-vector-icons:bundleReleaseLocalLintAar
+> Task :react-native-async-storage_async-storage:writeReleaseLintModelMetadata
+> Task :react-native-community_blur:writeReleaseLintModelMetadata
+> Task :react-native-fbsdk-next:writeReleaseLintModelMetadata
+> Task :react-native-geolocation-service:writeReleaseLintModelMetadata
+> Task :react-native-gesture-handler:writeReleaseLintModelMetadata
+> Task :react-native-google-signin_google-signin:writeReleaseLintModelMetadata
+> Task :react-native-linear-gradient:writeReleaseLintModelMetadata
+> Task :react-native-razorpay:writeReleaseLintModelMetadata
+> Task :react-native-safe-area-context:writeReleaseLintModelMetadata
+> Task :react-native-screens:writeReleaseLintModelMetadata
+> Task :react-native-vector-icons:writeReleaseLintModelMetadata
+> Task :react-native-async-storage_async-storage:generateReleaseLintVitalModel
+> Task :react-native-community_blur:generateReleaseLintVitalModel
+> Task :react-native-fbsdk-next:generateReleaseLintVitalModel
+> Task :react-native-geolocation-service:generateReleaseLintVitalModel
+> Task :react-native-gesture-handler:generateReleaseLintVitalModel
+> Task :react-native-google-signin_google-signin:generateReleaseLintVitalModel
+> Task :react-native-linear-gradient:generateReleaseLintVitalModel
+> Task :react-native-razorpay:generateReleaseLintVitalModel
+> Task :react-native-safe-area-context:generateReleaseLintVitalModel
+> Task :react-native-screens:generateReleaseLintVitalModel
+> Task :react-native-vector-icons:generateReleaseLintVitalModel
+> Task :app:processReleaseJavaRes
+> Task :app:optimizeReleaseResources
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :react-native-async-storage_async-storage:bundleReleaseAar
+> Task :react-native-async-storage_async-storage:mapReleaseSourceSetPaths
+> Task :react-native-async-storage_async-storage:mergeReleaseResources
+> Task :react-native-community_blur:lintVitalAnalyzeRelease
+> Task :react-native-fbsdk-next:lintVitalAnalyzeRelease
+> Task :react-native-geolocation-service:lintVitalAnalyzeRelease
+> Task :app:mergeReleaseJavaResource
+> Task :react-native-community_blur:bundleReleaseAar
+> Task :react-native-community_blur:mapReleaseSourceSetPaths
+> Task :react-native-linear-gradient:lintVitalAnalyzeRelease
+> Task :react-native-razorpay:lintVitalAnalyzeRelease
+> Task :react-native-async-storage_async-storage:lintVitalAnalyzeRelease
+> Task :react-native-community_blur:mergeReleaseResources
+> Task :react-native-fbsdk-next:bundleReleaseAar
+> Task :react-native-google-signin_google-signin:lintVitalAnalyzeRelease
+> Task :react-native-fbsdk-next:mapReleaseSourceSetPaths
+> Task :react-native-vector-icons:lintVitalAnalyzeRelease
+> Task :react-native-async-storage_async-storage:verifyReleaseResources
+> Task :react-native-safe-area-context:lintVitalAnalyzeRelease
+> Task :react-native-gesture-handler:lintVitalAnalyzeRelease
+> Task :react-native-community_blur:verifyReleaseResources
+> Task :react-native-fbsdk-next:mergeReleaseResources
+> Task :react-native-async-storage_async-storage:assembleRelease
+> Task :react-native-community_blur:assembleRelease
+> Task :react-native-geolocation-service:bundleReleaseAar
+> Task :react-native-geolocation-service:mapReleaseSourceSetPaths
+> Task :react-native-geolocation-service:mergeReleaseResources
+> Task :react-native-gesture-handler:bundleReleaseAar
+> Task :react-native-gesture-handler:mapReleaseSourceSetPaths
+> Task :react-native-screens:lintVitalAnalyzeRelease
+> Task :react-native-fbsdk-next:verifyReleaseResources
+> Task :react-native-gesture-handler:mergeReleaseResources
+> Task :react-native-fbsdk-next:assembleRelease
+> Task :react-native-google-signin_google-signin:bundleReleaseAar
+> Task :react-native-google-signin_google-signin:mapReleaseSourceSetPaths
+> Task :react-native-geolocation-service:verifyReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :react-native-google-signin_google-signin:mergeReleaseResources
+> Task :react-native-geolocation-service:assembleRelease
+> Task :react-native-linear-gradient:bundleReleaseAar
+> Task :app:lintVitalReportRelease
+> Task :react-native-gesture-handler:verifyReleaseResources
+> Task :react-native-linear-gradient:mapReleaseSourceSetPaths
+> Task :app:lintVitalRelease
+> Task :react-native-gesture-handler:assembleRelease
+> Task :react-native-linear-gradient:mergeReleaseResources
+> Task :react-native-razorpay:bundleReleaseAar
+> Task :react-native-google-signin_google-signin:verifyReleaseResources
+> Task :react-native-razorpay:mapReleaseSourceSetPaths
+> Task :react-native-google-signin_google-signin:assembleRelease
+> Task :react-native-razorpay:mergeReleaseResources
+> Task :react-native-safe-area-context:bundleReleaseAar
+> Task :react-native-safe-area-context:mapReleaseSourceSetPaths
+> Task :react-native-linear-gradient:verifyReleaseResources
+> Task :react-native-safe-area-context:mergeReleaseResources
+> Task :react-native-linear-gradient:assembleRelease
+> Task :react-native-screens:bundleReleaseAar
+> Task :react-native-screens:mapReleaseSourceSetPaths
+> Task :react-native-razorpay:verifyReleaseResources
+> Task :react-native-screens:mergeReleaseResources
+> Task :react-native-razorpay:assembleRelease
+> Task :react-native-vector-icons:bundleReleaseAar
+> Task :react-native-vector-icons:mapReleaseSourceSetPaths
+> Task :react-native-safe-area-context:verifyReleaseResources
+> Task :react-native-vector-icons:mergeReleaseResources
+> Task :react-native-safe-area-context:assembleRelease
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+> Task :react-native-vector-icons:verifyReleaseResources
+> Task :react-native-vector-icons:assembleRelease
+> Task :react-native-screens:verifyReleaseResources
+> Task :react-native-screens:assembleRelease
+
+[Incubating] Problems report is available at: file:///E:/native/AppFashion/android/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 3m 12s
+512 actionable tasks: 446 executed, 66 up-to-date

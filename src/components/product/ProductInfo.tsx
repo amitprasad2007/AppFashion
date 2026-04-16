@@ -47,7 +47,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
             {/* Price Section */}
             <View style={styles.priceSection}>
                 <Text style={styles.currentPrice}>₹{price?.toLocaleString()}</Text>
-                {originalPrice && originalPrice > price && (
+                {(originalPrice || 0) > (price || 0) && (
                     <Text style={styles.originalPrice}>₹{originalPrice?.toLocaleString()}</Text>
                 )}
                 {savings > 0 && (

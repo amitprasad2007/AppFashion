@@ -1,0 +1,853 @@
+﻿> Task :gradle-plugin:settings-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:shared:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:shared:compileJava NO-SOURCE
+> Task :gradle-plugin:shared:processResources NO-SOURCE
+> Task :gradle-plugin:shared:classes UP-TO-DATE
+> Task :gradle-plugin:shared:jar UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:settings-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:jar UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:react-native-gradle-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:react-native-gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:jar UP-TO-DATE
+> Task :app:generateAutolinkingNewArchitectureFiles UP-TO-DATE
+> Task :app:generateAutolinkingPackageList UP-TO-DATE
+> Task :app:generateCodegenSchemaFromJavaScript SKIPPED
+> Task :app:generateCodegenArtifactsFromSchema SKIPPED
+> Task :app:generateReactNativeEntryPoint UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+
+> Task :app:configureCMakeRelWithDebInfo[arm64-v8a] FAILED
+C/C++: CMake Error at E:/native/AppFashion/android/app/build/generated/autolinking/src/main/jni/Android-autolinking.cmake:9 (add_subdirectory):
+C/C++:   add_subdirectory given source
+C/C++:   "E:/native/AppFashion/node_modules/@react-native-async-storage/async-storage/android/build/generated/source/codegen/jni/"
+C/C++:   which is not an existing directory.
+C/C++: Call Stack (most recent call first):
+C/C++:   E:/native/AppFashion/node_modules/react-native/ReactAndroid/cmake-utils/ReactNative-application.cmake:94 (include)
+C/C++:   CMakeLists.txt:31 (include)
+C/C++: CMake Error at E:/native/AppFashion/android/app/build/generated/autolinking/src/main/jni/Android-autolinking.cmake:10 (add_subdirectory):
+C/C++:   add_subdirectory given source
+C/C++:   "E:/native/AppFashion/node_modules/@react-native-community/blur/android/build/generated/source/codegen/jni/"
+C/C++:   which is not an existing directory.
+C/C++: Call Stack (most recent call first):
+C/C++:   E:/native/AppFashion/node_modules/react-native/ReactAndroid/cmake-utils/ReactNative-application.cmake:94 (include)
+C/C++:   CMakeLists.txt:31 (include)
+C/C++: CMake Error at E:/native/AppFashion/android/app/build/generated/autolinking/src/main/jni/Android-autolinking.cmake:11 (add_subdirectory):
+C/C++:   add_subdirectory given source
+C/C++:   "E:/native/AppFashion/node_modules/@react-native-google-signin/google-signin/android/build/generated/source/codegen/jni/"
+C/C++:   which is not an existing directory.
+C/C++: Call Stack (most recent call first):
+C/C++:   E:/native/AppFashion/node_modules/react-native/ReactAndroid/cmake-utils/ReactNative-application.cmake:94 (include)
+C/C++:   CMakeLists.txt:31 (include)
+C/C++: CMake Error at E:/native/AppFashion/android/app/build/generated/autolinking/src/main/jni/Android-autolinking.cmake:14 (add_subdirectory):
+C/C++:   add_subdirectory given source
+C/C++:   "E:/native/AppFashion/node_modules/react-native-gesture-handler/android/build/generated/source/codegen/jni/"
+C/C++:   which is not an existing directory.
+C/C++: Call Stack (most recent call first):
+C/C++:   E:/native/AppFashion/node_modules/react-native/ReactAndroid/cmake-utils/ReactNative-application.cmake:94 (include)
+C/C++:   CMakeLists.txt:31 (include)
+C/C++: CMake Error at E:/native/AppFashion/android/app/build/generated/autolinking/src/main/jni/Android-autolinking.cmake:19 (add_subdirectory):
+C/C++:   add_subdirectory given source
+C/C++:   "E:/native/AppFashion/node_modules/react-native-vector-icons/android/build/generated/source/codegen/jni/"
+C/C++:   which is not an existing directory.
+C/C++: Call Stack (most recent call first):
+C/C++:   E:/native/AppFashion/node_modules/react-native/ReactAndroid/cmake-utils/ReactNative-application.cmake:94 (include)
+C/C++:   CMakeLists.txt:31 (include)
+C/C++: CMake Error at E:/native/AppFashion/node_modules/react-native/ReactAndroid/cmake-utils/ReactNative-application.cmake:97 (target_link_libraries):
+C/C++:   Cannot specify link libraries for target "react_codegen_rnasyncstorage"
+C/C++:   which is not built by this project.
+C/C++: Call Stack (most recent call first):
+C/C++:   CMakeLists.txt:31 (include)
+
+[Incubating] Problems report is available at: file:///E:/native/AppFashion/android/build/reports/problems/problems-report.html
+.\gradlew : 
+At line:1 char:34
++ ... \AppFashion\android; .\gradlew assembleRelease > 
+build_error.log 2>&1
++                          
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:Str    
+ing) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task 
+':app:configureCMakeRelWithDebInfo[arm64-v8a]'.
+> [CXX1429] error when building with cmake using E:\nati
+ve\AppFashion\node_modules\react-native\ReactAndroid\cma
+ke-utils\default-app-setup\CMakeLists.txt: -- The C 
+compiler identification is Clang 18.0.2
+  -- The CXX compiler identification is Clang 18.0.2
+  -- Detecting C compiler ABI info
+  -- Detecting C compiler ABI info - done
+  -- Check for working C compiler: C:/Users/amitp/AppDat
+a/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/pr
+ebuilt/windows-x86_64/bin/clang.exe - skipped
+  -- Detecting C compile features
+  -- Detecting C compile features - done
+  -- Detecting CXX compiler ABI info
+  -- Detecting CXX compiler ABI info - done
+  -- Check for working CXX compiler: C:/Users/amitp/AppD
+ata/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/
+prebuilt/windows-x86_64/bin/clang++.exe - skipped
+  -- Detecting CXX compile features
+  -- Detecting CXX compile features - done
+  -- Configuring incomplete, errors occurred!
+  See also "E:/native/AppFashion/android/app/.cxx/RelWit
+hDebInfo/5c5c235x/arm64-v8a/CMakeFiles/CMakeOutput.log".
+  See also "E:/native/AppFashion/android/app/.cxx/RelWit
+hDebInfo/5c5c235x/arm64-v8a/CMakeFiles/CMakeError.log".
+  
+  C++ build system [configure] failed while executing:
+      @echo off
+      "C:\\Users\\amitp\\AppData\\Local\\Android\\Sdk\\c
+make\\3.22.1\\bin\\cmake.exe" ^
+        "-HE:\\native\\AppFashion\\node_modules\\react-n
+ative\\ReactAndroid\\cmake-utils\\default-app-setup" ^
+        "-DCMAKE_SYSTEM_NAME=Android" ^
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" ^
+        "-DCMAKE_SYSTEM_VERSION=24" ^
+        "-DANDROID_PLATFORM=android-24" ^
+        "-DANDROID_ABI=arm64-v8a" ^
+        "-DCMAKE_ANDROID_ARCH_ABI=arm64-v8a" ^
+        "-DANDROID_NDK=C:\\Users\\amitp\\AppData\\Local\
+\Android\\Sdk\\ndk\\27.1.12297006" ^
+        "-DCMAKE_ANDROID_NDK=C:\\Users\\amitp\\AppData\\
+Local\\Android\\Sdk\\ndk\\27.1.12297006" ^
+        "-DCMAKE_TOOLCHAIN_FILE=C:\\Users\\amitp\\AppDat
+a\\Local\\Android\\Sdk\\ndk\\27.1.12297006\\build\\cmake
+\\android.toolchain.cmake" ^
+        "-DCMAKE_MAKE_PROGRAM=C:\\Users\\amitp\\AppData\
+\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe" ^
+        "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=E:\\native\\Ap
+pFashion\\android\\app\\build\\intermediates\\cxx\\RelWi
+thDebInfo\\5c5c235x\\obj\\arm64-v8a" ^
+        "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=E:\\native\\Ap
+pFashion\\android\\app\\build\\intermediates\\cxx\\RelWi
+thDebInfo\\5c5c235x\\obj\\arm64-v8a" ^
+        "-DCMAKE_BUILD_TYPE=RelWithDebInfo" ^
+        "-DCMAKE_FIND_ROOT_PATH=E:\\native\\AppFashion\\
+android\\app\\.cxx\\RelWithDebInfo\\5c5c235x\\prefab\\ar
+m64-v8a\\prefab" ^
+        "-BE:\\native\\AppFashion\\android\\app\\.cxx\\R
+elWithDebInfo\\5c5c235x\\arm64-v8a" ^
+        -GNinja ^
+        "-DPROJECT_BUILD_DIR=E:\\native\\AppFashion\\and
+roid\\app\\build" ^
+        
+"-DPROJECT_ROOT_DIR=E:\\native\\AppFashion\\android" ^
+        "-DREACT_ANDROID_DIR=E:\\native\\AppFashion\\nod
+e_modules\\react-native\\ReactAndroid" ^
+        "-DANDROID_STL=c++_shared" ^
+        "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+    from E:\native\AppFashion\android\app
+  CMake Error at E:/native/AppFashion/android/app/build/
+generated/autolinking/src/main/jni/Android-autolinking.c
+make:9 (add_subdirectory):
+    add_subdirectory given source
+    "E:/native/AppFashion/node_modules/@react-native-asy
+nc-storage/async-storage/android/build/generated/source/
+codegen/jni/"
+    which is not an existing directory.
+  Call Stack (most recent call first):
+    E:/native/AppFashion/node_modules/react-native/React
+Android/cmake-utils/ReactNative-application.cmake:94 
+(include)
+    CMakeLists.txt:31 (include)
+  
+  
+  CMake Error at E:/native/AppFashion/android/app/build/
+generated/autolinking/src/main/jni/Android-autolinking.c
+make:10 (add_subdirectory):
+    add_subdirectory given source
+    "E:/native/AppFashion/node_modules/@react-native-com
+munity/blur/android/build/generated/source/codegen/jni/"
+    which is not an existing directory.
+  Call Stack (most recent call first):
+    E:/native/AppFashion/node_modules/react-native/React
+Android/cmake-utils/ReactNative-application.cmake:94 
+(include)
+    CMakeLists.txt:31 (include)
+  
+  
+  CMake Error at E:/native/AppFashion/android/app/build/
+generated/autolinking/src/main/jni/Android-autolinking.c
+make:11 (add_subdirectory):
+    add_subdirectory given source
+    "E:/native/AppFashion/node_modules/@react-native-goo
+gle-signin/google-signin/android/build/generated/source/
+codegen/jni/"
+    which is not an existing directory.
+  Call Stack (most recent call first):
+    E:/native/AppFashion/node_modules/react-native/React
+Android/cmake-utils/ReactNative-application.cmake:94 
+(include)
+    CMakeLists.txt:31 (include)
+  
+  
+  CMake Error at E:/native/AppFashion/android/app/build/
+generated/autolinking/src/main/jni/Android-autolinking.c
+make:14 (add_subdirectory):
+    add_subdirectory given source
+    "E:/native/AppFashion/node_modules/react-native-gest
+ure-handler/android/build/generated/source/codegen/jni/"
+    which is not an existing directory.
+  Call Stack (most recent call first):
+    E:/native/AppFashion/node_modules/react-native/React
+Android/cmake-utils/ReactNative-application.cmake:94 
+(include)
+    CMakeLists.txt:31 (include)
+  
+  
+  CMake Error at E:/native/AppFashion/android/app/build/
+generated/autolinking/src/main/jni/Android-autolinking.c
+make:19 (add_subdirectory):
+    add_subdirectory given source
+    "E:/native/AppFashion/node_modules/react-native-vect
+or-icons/android/build/generated/source/codegen/jni/"
+    which is not an existing directory.
+  Call Stack (most recent call first):
+    E:/native/AppFashion/node_modules/react-native/React
+Android/cmake-utils/ReactNative-application.cmake:94 
+(include)
+    CMakeLists.txt:31 (include)
+  
+  
+  CMake Error at E:/native/AppFashion/node_modules/react
+-native/ReactAndroid/cmake-utils/ReactNative-application
+.cmake:97 (target_link_libraries):
+    Cannot specify link libraries for target 
+"react_codegen_rnasyncstorage"
+    which is not built by this project.
+  Call Stack (most recent call first):
+    CMakeLists.txt:31 (include) : 
+com.android.ide.common.process.ProcessException: -- The 
+C compiler identification is Clang 18.0.2
+  -- The CXX compiler identification is Clang 18.0.2
+  -- Detecting C compiler ABI info
+  -- Detecting C compiler ABI info - done
+  -- Check for working C compiler: C:/Users/amitp/AppDat
+a/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/pr
+ebuilt/windows-x86_64/bin/clang.exe - skipped
+  -- Detecting C compile features
+  -- Detecting C compile features - done
+  -- Detecting CXX compiler ABI info
+  -- Detecting CXX compiler ABI info - done
+  -- Check for working CXX compiler: C:/Users/amitp/AppD
+ata/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/
+prebuilt/windows-x86_64/bin/clang++.exe - skipped
+  -- Detecting CXX compile features
+  -- Detecting CXX compile features - done
+  -- Configuring incomplete, errors occurred!
+  See also "E:/native/AppFashion/android/app/.cxx/RelWit
+hDebInfo/5c5c235x/arm64-v8a/CMakeFiles/CMakeOutput.log".
+  See also "E:/native/AppFashion/android/app/.cxx/RelWit
+hDebInfo/5c5c235x/arm64-v8a/CMakeFiles/CMakeError.log".
+  
+  C++ build system [configure] failed while executing:
+      @echo off
+      "C:\\Users\\amitp\\AppData\\Local\\Android\\Sdk\\c
+make\\3.22.1\\bin\\cmake.exe" ^
+        "-HE:\\native\\AppFashion\\node_modules\\react-n
+ative\\ReactAndroid\\cmake-utils\\default-app-setup" ^
+        "-DCMAKE_SYSTEM_NAME=Android" ^
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" ^
+        "-DCMAKE_SYSTEM_VERSION=24" ^
+        "-DANDROID_PLATFORM=android-24" ^
+        "-DANDROID_ABI=arm64-v8a" ^
+        "-DCMAKE_ANDROID_ARCH_ABI=arm64-v8a" ^
+        "-DANDROID_NDK=C:\\Users\\amitp\\AppData\\Local\
+\Android\\Sdk\\ndk\\27.1.12297006" ^
+        "-DCMAKE_ANDROID_NDK=C:\\Users\\amitp\\AppData\\
+Local\\Android\\Sdk\\ndk\\27.1.12297006" ^
+        "-DCMAKE_TOOLCHAIN_FILE=C:\\Users\\amitp\\AppDat
+a\\Local\\Android\\Sdk\\ndk\\27.1.12297006\\build\\cmake
+\\android.toolchain.cmake" ^
+        "-DCMAKE_MAKE_PROGRAM=C:\\Users\\amitp\\AppData\
+\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe" ^
+        "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=E:\\native\\Ap
+pFashion\\android\\app\\build\\intermediates\\cxx\\RelWi
+thDebInfo\\5c5c235x\\obj\\arm64-v8a" ^
+        "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=E:\\native\\Ap
+pFashion\\android\\app\\build\\intermediates\\cxx\\RelWi
+thDebInfo\\5c5c235x\\obj\\arm64-v8a" ^
+        "-DCMAKE_BUILD_TYPE=RelWithDebInfo" ^
+        "-DCMAKE_FIND_ROOT_PATH=E:\\native\\AppFashion\\
+android\\app\\.cxx\\RelWithDebInfo\\5c5c235x\\prefab\\ar
+m64-v8a\\prefab" ^
+        "-BE:\\native\\AppFashion\\android\\app\\.cxx\\R
+elWithDebInfo\\5c5c235x\\arm64-v8a" ^
+        -GNinja ^
+        "-DPROJECT_BUILD_DIR=E:\\native\\AppFashion\\and
+roid\\app\\build" ^
+        
+"-DPROJECT_ROOT_DIR=E:\\native\\AppFashion\\android" ^
+        "-DREACT_ANDROID_DIR=E:\\native\\AppFashion\\nod
+e_modules\\react-native\\ReactAndroid" ^
+        "-DANDROID_STL=c++_shared" ^
+        "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+    from E:\native\AppFashion\android\app
+  CMake Error at E:/native/AppFashion/android/app/build/
+generated/autolinking/src/main/jni/Android-autolinking.c
+make:9 (add_subdirectory):
+    add_subdirectory given source
+    "E:/native/AppFashion/node_modules/@react-native-asy
+nc-storage/async-storage/android/build/generated/source/
+codegen/jni/"
+    which is not an existing directory.
+  Call Stack (most recent call first):
+    E:/native/AppFashion/node_modules/react-native/React
+Android/cmake-utils/ReactNative-application.cmake:94 
+(include)
+    CMakeLists.txt:31 (include)
+  
+  
+  CMake Error at E:/native/AppFashion/android/app/build/
+generated/autolinking/src/main/jni/Android-autolinking.c
+make:10 (add_subdirectory):
+    add_subdirectory given source
+    "E:/native/AppFashion/node_modules/@react-native-com
+munity/blur/android/build/generated/source/codegen/jni/"
+    which is not an existing directory.
+  Call Stack (most recent call first):
+    E:/native/AppFashion/node_modules/react-native/React
+Android/cmake-utils/ReactNative-application.cmake:94 
+(include)
+    CMakeLists.txt:31 (include)
+  
+  
+  CMake Error at E:/native/AppFashion/android/app/build/
+generated/autolinking/src/main/jni/Android-autolinking.c
+make:11 (add_subdirectory):
+    add_subdirectory given source
+    "E:/native/AppFashion/node_modules/@react-native-goo
+gle-signin/google-signin/android/build/generated/source/
+codegen/jni/"
+    which is not an existing directory.
+  Call Stack (most recent call first):
+    E:/native/AppFashion/node_modules/react-native/React
+Android/cmake-utils/ReactNative-application.cmake:94 
+(include)
+    CMakeLists.txt:31 (include)
+  
+  
+  CMake Error at E:/native/AppFashion/android/app/build/
+generated/autolinking/src/main/jni/Android-autolinking.c
+make:14 (add_subdirectory):
+    add_subdirectory given source
+    "E:/native/AppFashion/node_modules/react-native-gest
+ure-handler/android/build/generated/source/codegen/jni/"
+    which is not an existing directory.
+  Call Stack (most recent call first):
+    E:/native/AppFashion/node_modules/react-native/React
+Android/cmake-utils/ReactNative-application.cmake:94 
+(include)
+    CMakeLists.txt:31 (include)
+  
+  
+  CMake Error at E:/native/AppFashion/android/app/build/
+generated/autolinking/src/main/jni/Android-autolinking.c
+make:19 (add_subdirectory):
+    add_subdirectory given source
+    "E:/native/AppFashion/node_modules/react-native-vect
+or-icons/android/build/generated/source/codegen/jni/"
+    which is not an existing directory.
+  Call Stack (most recent call first):
+    E:/native/AppFashion/node_modules/react-native/React
+Android/cmake-utils/ReactNative-application.cmake:94 
+(include)
+    CMakeLists.txt:31 (include)
+  
+  
+  CMake Error at E:/native/AppFashion/node_modules/react
+-native/ReactAndroid/cmake-utils/ReactNative-application
+.cmake:97 (target_link_libraries):
+    Cannot specify link libraries for target 
+"react_codegen_rnasyncstorage"
+    which is not built by this project.
+  Call Stack (most recent call first):
+    CMakeLists.txt:31 (include)
+  	at com.android.build.gradle.internal.cxx.process.Exec
+uteProcessKt.execute(ExecuteProcess.kt:288)
+  	at com.android.build.gradle.internal.cxx.process.Exec
+uteProcessKt$executeProcess$1.invoke(ExecuteProcess.kt:1
+08)
+  	at com.android.build.gradle.internal.cxx.process.Exec
+uteProcessKt$executeProcess$1.invoke(ExecuteProcess.kt:1
+06)
+  	at com.android.build.gradle.internal.cxx.timing.Timin
+gEnvironmentKt.time(TimingEnvironment.kt:32)
+  	at com.android.build.gradle.internal.cxx.process.Exec
+uteProcessKt.executeProcess(ExecuteProcess.kt:106)
+  	at com.android.build.gradle.internal.cxx.process.Exec
+uteProcessKt.executeProcess$default(ExecuteProcess.kt:85
+)
+  	at com.android.build.gradle.tasks.CmakeQueryMetadataG
+enerator.executeProcess(CmakeFileApiMetadataGenerator.kt
+:59)
+  	at com.android.build.gradle.tasks.ExternalNativeJsonG
+enerator$configureOneAbi$1$1$3.invoke(ExternalNativeJson
+Generator.kt:247)
+  	at com.android.build.gradle.tasks.ExternalNativeJsonG
+enerator$configureOneAbi$1$1$3.invoke(ExternalNativeJson
+Generator.kt:247)
+  	at com.android.build.gradle.internal.cxx.timing.Timin
+gEnvironmentKt.time(TimingEnvironment.kt:32)
+  	at com.android.build.gradle.tasks.ExternalNativeJsonG
+enerator.configureOneAbi(ExternalNativeJsonGenerator.kt:
+247)
+  	at com.android.build.gradle.tasks.ExternalNativeJsonG
+enerator.configure(ExternalNativeJsonGenerator.kt:113)
+  	at com.android.build.gradle.tasks.ExternalNativeBuild
+JsonTask.doTaskAction(ExternalNativeBuildJsonTask.kt:89)
+  	at com.android.build.gradle.internal.tasks.UnsafeOutp
+utsTask$taskAction$$inlined$recordTaskAction$1.invoke(Ba
+seTask.kt:59)
+  	at com.android.build.gradle.internal.tasks.Blocks.rec
+ordSpan(Blocks.java:51)
+  	at com.android.build.gradle.internal.tasks.UnsafeOutp
+utsTask.taskAction(UnsafeOutputsTask.kt:81)
+  	at java.base/jdk.internal.reflect.NativeMethodAccesso
+rImpl.invoke0(Native Method)
+  	at java.base/jdk.internal.reflect.NativeMethodAccesso
+rImpl.invoke(NativeMethodAccessorImpl.java:77)
+  	at java.base/jdk.internal.reflect.DelegatingMethodAcc
+essorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+  	at java.base/java.lang.reflect.Method.invoke(Method.j
+ava:569)
+  	at org.gradle.internal.reflect.JavaMethod.invoke(Java
+Method.java:125)
+  	at org.gradle.api.internal.project.taskfactory.Standa
+rdTaskAction.doExecute(StandardTaskAction.java:58)
+  	at org.gradle.api.internal.project.taskfactory.Standa
+rdTaskAction.execute(StandardTaskAction.java:51)
+  	at org.gradle.api.internal.project.taskfactory.Standa
+rdTaskAction.execute(StandardTaskAction.java:29)
+  	at org.gradle.api.internal.tasks.execution.TaskExecut
+ion$3.run(TaskExecution.java:244)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner$1.execute(DefaultBuildOperationRunner.java:30)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner$1.execute(DefaultBuildOperationRunner.java:27)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner$2.execute(DefaultBuildOperationRunner.java:67)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner$2.execute(DefaultBuildOperationRunner.java:60)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner.execute(DefaultBuildOperationRunner.java:167)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner.execute(DefaultBuildOperationRunner.java:60)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner.run(DefaultBuildOperationRunner.java:48)
+  	at org.gradle.api.internal.tasks.execution.TaskExecut
+ion.executeAction(TaskExecution.java:229)
+  	at org.gradle.api.internal.tasks.execution.TaskExecut
+ion.executeActions(TaskExecution.java:212)
+  	at org.gradle.api.internal.tasks.execution.TaskExecut
+ion.executeWithPreviousOutputFiles(TaskExecution.java:19
+5)
+  	at org.gradle.api.internal.tasks.execution.TaskExecut
+ion.execute(TaskExecution.java:162)
+  	at org.gradle.internal.execution.steps.ExecuteStep.ex
+ecuteInternal(ExecuteStep.java:105)
+  	at org.gradle.internal.execution.steps.ExecuteStep.ac
+cess$000(ExecuteStep.java:44)
+  	at org.gradle.internal.execution.steps.ExecuteStep$1.
+call(ExecuteStep.java:59)
+  	at org.gradle.internal.execution.steps.ExecuteStep$1.
+call(ExecuteStep.java:56)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner$CallableBuildOperationWorker.execute(DefaultBui
+ldOperationRunner.java:210)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner$CallableBuildOperationWorker.execute(DefaultBui
+ldOperationRunner.java:205)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner$2.execute(DefaultBuildOperationRunner.java:67)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner$2.execute(DefaultBuildOperationRunner.java:60)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner.execute(DefaultBuildOperationRunner.java:167)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner.execute(DefaultBuildOperationRunner.java:60)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner.call(DefaultBuildOperationRunner.java:54)
+  	at org.gradle.internal.execution.steps.ExecuteStep.ex
+ecute(ExecuteStep.java:56)
+  	at org.gradle.internal.execution.steps.ExecuteStep.ex
+ecute(ExecuteStep.java:44)
+  	at org.gradle.internal.execution.steps.CancelExecutio
+nStep.execute(CancelExecutionStep.java:42)
+  	at org.gradle.internal.execution.steps.TimeoutStep.ex
+ecuteWithoutTimeout(TimeoutStep.java:75)
+  	at org.gradle.internal.execution.steps.TimeoutStep.ex
+ecute(TimeoutStep.java:55)
+  	at org.gradle.internal.execution.steps.PreCreateOutpu
+tParentsStep.execute(PreCreateOutputParentsStep.java:50)
+  	at org.gradle.internal.execution.steps.PreCreateOutpu
+tParentsStep.execute(PreCreateOutputParentsStep.java:28)
+  	at org.gradle.internal.execution.steps.RemovePrevious
+OutputsStep.execute(RemovePreviousOutputsStep.java:67)
+  	at org.gradle.internal.execution.steps.RemovePrevious
+OutputsStep.execute(RemovePreviousOutputsStep.java:37)
+  	at org.gradle.internal.execution.steps.BroadcastChang
+ingOutputsStep.execute(BroadcastChangingOutputsStep.java
+:61)
+  	at org.gradle.internal.execution.steps.BroadcastChang
+ingOutputsStep.execute(BroadcastChangingOutputsStep.java
+:26)
+  	at org.gradle.internal.execution.steps.CaptureOutputs
+AfterExecutionStep.execute(CaptureOutputsAfterExecutionS
+tep.java:69)
+  	at org.gradle.internal.execution.steps.CaptureOutputs
+AfterExecutionStep.execute(CaptureOutputsAfterExecutionS
+tep.java:46)
+  	at org.gradle.internal.execution.steps.ResolveInputCh
+angesStep.execute(ResolveInputChangesStep.java:40)
+  	at org.gradle.internal.execution.steps.ResolveInputCh
+angesStep.execute(ResolveInputChangesStep.java:29)
+  	at org.gradle.internal.execution.steps.BuildCacheStep
+.executeWithoutCache(BuildCacheStep.java:189)
+  	at org.gradle.internal.execution.steps.BuildCacheStep
+.lambda$execute$1(BuildCacheStep.java:75)
+  	at 
+org.gradle.internal.Either$Right.fold(Either.java:175)
+  	at org.gradle.internal.execution.caching.CachingState
+.fold(CachingState.java:62)
+  	at org.gradle.internal.execution.steps.BuildCacheStep
+.execute(BuildCacheStep.java:73)
+  	at org.gradle.internal.execution.steps.BuildCacheStep
+.execute(BuildCacheStep.java:48)
+  	at org.gradle.internal.execution.steps.StoreExecution
+StateStep.execute(StoreExecutionStateStep.java:46)
+  	at org.gradle.internal.execution.steps.StoreExecution
+StateStep.execute(StoreExecutionStateStep.java:35)
+  	at org.gradle.internal.execution.steps.SkipUpToDateSt
+ep.executeBecause(SkipUpToDateStep.java:75)
+  	at org.gradle.internal.execution.steps.SkipUpToDateSt
+ep.lambda$execute$2(SkipUpToDateStep.java:53)
+  	at java.base/java.util.Optional.orElseGet(Optional.ja
+va:364)
+  	at org.gradle.internal.execution.steps.SkipUpToDateSt
+ep.execute(SkipUpToDateStep.java:53)
+  	at org.gradle.internal.execution.steps.SkipUpToDateSt
+ep.execute(SkipUpToDateStep.java:35)
+  	at org.gradle.internal.execution.steps.legacy.MarkSna
+pshottingInputsFinishedStep.execute(MarkSnapshottingInpu
+tsFinishedStep.java:37)
+  	at org.gradle.internal.execution.steps.legacy.MarkSna
+pshottingInputsFinishedStep.execute(MarkSnapshottingInpu
+tsFinishedStep.java:27)
+  	at org.gradle.internal.execution.steps.ResolveIncreme
+ntalCachingStateStep.executeDelegate(ResolveIncrementalC
+achingStateStep.java:49)
+  	at org.gradle.internal.execution.steps.ResolveIncreme
+ntalCachingStateStep.executeDelegate(ResolveIncrementalC
+achingStateStep.java:27)
+  	at org.gradle.internal.execution.steps.AbstractResolv
+eCachingStateStep.execute(AbstractResolveCachingStateSte
+p.java:71)
+  	at org.gradle.internal.execution.steps.AbstractResolv
+eCachingStateStep.execute(AbstractResolveCachingStateSte
+p.java:39)
+  	at org.gradle.internal.execution.steps.ResolveChanges
+Step.execute(ResolveChangesStep.java:65)
+  	at org.gradle.internal.execution.steps.ResolveChanges
+Step.execute(ResolveChangesStep.java:36)
+  	at org.gradle.internal.execution.steps.ValidateStep.e
+xecute(ValidateStep.java:107)
+  	at org.gradle.internal.execution.steps.ValidateStep.e
+xecute(ValidateStep.java:56)
+  	at org.gradle.internal.execution.steps.AbstractCaptur
+eStateBeforeExecutionStep.execute(AbstractCaptureStateBe
+foreExecutionStep.java:64)
+  	at org.gradle.internal.execution.steps.AbstractCaptur
+eStateBeforeExecutionStep.execute(AbstractCaptureStateBe
+foreExecutionStep.java:43)
+  	at org.gradle.internal.execution.steps.AbstractSkipEm
+ptyWorkStep.executeWithNonEmptySources(AbstractSkipEmpty
+WorkStep.java:125)
+  	at org.gradle.internal.execution.steps.AbstractSkipEm
+ptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:56)
+  	at org.gradle.internal.execution.steps.AbstractSkipEm
+ptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:36)
+  	at org.gradle.internal.execution.steps.legacy.MarkSna
+pshottingInputsStartedStep.execute(MarkSnapshottingInput
+sStartedStep.java:38)
+  	at org.gradle.internal.execution.steps.LoadPreviousEx
+ecutionStateStep.execute(LoadPreviousExecutionStateStep.
+java:36)
+  	at org.gradle.internal.execution.steps.LoadPreviousEx
+ecutionStateStep.execute(LoadPreviousExecutionStateStep.
+java:23)
+  	at org.gradle.internal.execution.steps.HandleStaleOut
+putsStep.execute(HandleStaleOutputsStep.java:75)
+  	at org.gradle.internal.execution.steps.HandleStaleOut
+putsStep.execute(HandleStaleOutputsStep.java:41)
+  	at org.gradle.internal.execution.steps.AssignMutableW
+orkspaceStep.lambda$execute$0(AssignMutableWorkspaceStep
+.java:35)
+  	at org.gradle.api.internal.tasks.execution.TaskExecut
+ion$4.withWorkspace(TaskExecution.java:289)
+  	at org.gradle.internal.execution.steps.AssignMutableW
+orkspaceStep.execute(AssignMutableWorkspaceStep.java:31)
+  	at org.gradle.internal.execution.steps.AssignMutableW
+orkspaceStep.execute(AssignMutableWorkspaceStep.java:22)
+  	at org.gradle.internal.execution.steps.ChoosePipeline
+Step.execute(ChoosePipelineStep.java:40)
+  	at org.gradle.internal.execution.steps.ChoosePipeline
+Step.execute(ChoosePipelineStep.java:23)
+  	at org.gradle.internal.execution.steps.ExecuteWorkBui
+ldOperationFiringStep.lambda$execute$2(ExecuteWorkBuildO
+perationFiringStep.java:67)
+  	at java.base/java.util.Optional.orElseGet(Optional.ja
+va:364)
+  	at org.gradle.internal.execution.steps.ExecuteWorkBui
+ldOperationFiringStep.execute(ExecuteWorkBuildOperationF
+iringStep.java:67)
+  	at org.gradle.internal.execution.steps.ExecuteWorkBui
+ldOperationFiringStep.execute(ExecuteWorkBuildOperationF
+iringStep.java:39)
+  	at org.gradle.internal.execution.steps.IdentityCacheS
+tep.execute(IdentityCacheStep.java:46)
+  	at org.gradle.internal.execution.steps.IdentityCacheS
+tep.execute(IdentityCacheStep.java:34)
+  	at org.gradle.internal.execution.steps.IdentifyStep.e
+xecute(IdentifyStep.java:48)
+  	at org.gradle.internal.execution.steps.IdentifyStep.e
+xecute(IdentifyStep.java:35)
+  	at org.gradle.internal.execution.impl.DefaultExecutio
+nEngine$1.execute(DefaultExecutionEngine.java:64)
+  	at org.gradle.api.internal.tasks.execution.ExecuteAct
+ionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecut
+er.java:127)
+  	at org.gradle.api.internal.tasks.execution.ExecuteAct
+ionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java
+:116)
+  	at org.gradle.api.internal.tasks.execution.ProblemsTa
+skPathTrackingTaskExecuter.execute(ProblemsTaskPathTrack
+ingTaskExecuter.java:41)
+  	at org.gradle.api.internal.tasks.execution.FinalizePr
+opertiesTaskExecuter.execute(FinalizePropertiesTaskExecu
+ter.java:46)
+  	at org.gradle.api.internal.tasks.execution.ResolveTas
+kExecutionModeExecuter.execute(ResolveTaskExecutionModeE
+xecuter.java:51)
+  	at org.gradle.api.internal.tasks.execution.SkipTaskWi
+thNoActionsExecuter.execute(SkipTaskWithNoActionsExecute
+r.java:57)
+  	at org.gradle.api.internal.tasks.execution.SkipOnlyIf
+TaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+  	at org.gradle.api.internal.tasks.execution.CatchExcep
+tionTaskExecuter.execute(CatchExceptionTaskExecuter.java
+:36)
+  	at org.gradle.api.internal.tasks.execution.EventFirin
+gTaskExecuter$1.executeTask(EventFiringTaskExecuter.java
+:77)
+  	at org.gradle.api.internal.tasks.execution.EventFirin
+gTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
+  	at org.gradle.api.internal.tasks.execution.EventFirin
+gTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner$CallableBuildOperationWorker.execute(DefaultBui
+ldOperationRunner.java:210)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner$CallableBuildOperationWorker.execute(DefaultBui
+ldOperationRunner.java:205)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner$2.execute(DefaultBuildOperationRunner.java:67)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner$2.execute(DefaultBuildOperationRunner.java:60)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner.execute(DefaultBuildOperationRunner.java:167)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner.execute(DefaultBuildOperationRunner.java:60)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner.call(DefaultBuildOperationRunner.java:54)
+  	at org.gradle.api.internal.tasks.execution.EventFirin
+gTaskExecuter.execute(EventFiringTaskExecuter.java:52)
+  	at org.gradle.execution.plan.LocalTaskNodeExecutor.ex
+ecute(LocalTaskNodeExecutor.java:42)
+  	at org.gradle.execution.taskgraph.DefaultTaskExecutio
+nGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExec
+utionGraph.java:331)
+  	at org.gradle.execution.taskgraph.DefaultTaskExecutio
+nGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExec
+utionGraph.java:318)
+  	at org.gradle.execution.taskgraph.DefaultTaskExecutio
+nGraph$BuildOperationAwareExecutionAction.lambda$execute
+$0(DefaultTaskExecutionGraph.java:314)
+  	at org.gradle.internal.operations.CurrentBuildOperati
+onRef.with(CurrentBuildOperationRef.java:85)
+  	at org.gradle.execution.taskgraph.DefaultTaskExecutio
+nGraph$BuildOperationAwareExecutionAction.execute(Defaul
+tTaskExecutionGraph.java:314)
+  	at org.gradle.execution.taskgraph.DefaultTaskExecutio
+nGraph$BuildOperationAwareExecutionAction.execute(Defaul
+tTaskExecutionGraph.java:303)
+  	at org.gradle.execution.plan.DefaultPlanExecutor$Exec
+utorWorker.execute(DefaultPlanExecutor.java:459)
+  	at org.gradle.execution.plan.DefaultPlanExecutor$Exec
+utorWorker.run(DefaultPlanExecutor.java:376)
+  	at org.gradle.execution.plan.DefaultPlanExecutor.proc
+ess(DefaultPlanExecutor.java:111)
+  	at org.gradle.execution.taskgraph.DefaultTaskExecutio
+nGraph.executeWithServices(DefaultTaskExecutionGraph.jav
+a:138)
+  	at org.gradle.execution.taskgraph.DefaultTaskExecutio
+nGraph.execute(DefaultTaskExecutionGraph.java:123)
+  	at org.gradle.execution.SelectedTaskExecutionAction.e
+xecute(SelectedTaskExecutionAction.java:35)
+  	at org.gradle.execution.DryRunBuildExecutionAction.ex
+ecute(DryRunBuildExecutionAction.java:51)
+  	at org.gradle.execution.BuildOperationFiringBuildWork
+erExecutor$ExecuteTasks.call(BuildOperationFiringBuildWo
+rkerExecutor.java:54)
+  	at org.gradle.execution.BuildOperationFiringBuildWork
+erExecutor$ExecuteTasks.call(BuildOperationFiringBuildWo
+rkerExecutor.java:43)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner$CallableBuildOperationWorker.execute(DefaultBui
+ldOperationRunner.java:210)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner$CallableBuildOperationWorker.execute(DefaultBui
+ldOperationRunner.java:205)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner$2.execute(DefaultBuildOperationRunner.java:67)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner$2.execute(DefaultBuildOperationRunner.java:60)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner.execute(DefaultBuildOperationRunner.java:167)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner.execute(DefaultBuildOperationRunner.java:60)
+  	at org.gradle.internal.operations.DefaultBuildOperati
+onRunner.call(DefaultBuildOperationRunner.java:54)
+  	at org.gradle.execution.BuildOperationFiringBuildWork
+erExecutor.execute(BuildOperationFiringBuildWorkerExecut
+or.java:40)
+  	at org.gradle.internal.build.DefaultBuildLifecycleCon
+troller.lambda$executeTasks$10(DefaultBuildLifecycleCont
+roller.java:313)
+  	at org.gradle.internal.model.StateTransitionControlle
+r.doTransition(StateTransitionController.java:266)
+  	at org.gradle.internal.model.StateTransitionControlle
+r.lambda$tryTransition$8(StateTransitionController.java:
+177)
+  	at org.gradle.internal.work.DefaultSynchronizer.withL
+ock(DefaultSynchronizer.java:46)
+  	at org.gradle.internal.model.StateTransitionControlle
+r.tryTransition(StateTransitionController.java:177)
+  	at org.gradle.internal.build.DefaultBuildLifecycleCon
+troller.executeTasks(DefaultBuildLifecycleController.jav
+a:304)
+  	at org.gradle.internal.build.DefaultBuildWorkGraphCon
+troller$DefaultBuildWorkGraph.runWork(DefaultBuildWorkGr
+aphController.java:220)
+  	at org.gradle.internal.work.DefaultWorkerLeaseService
+.withLocks(DefaultWorkerLeaseService.java:263)
+  	at org.gradle.internal.work.DefaultWorkerLeaseService
+.runAsWorkerThread(DefaultWorkerLeaseService.java:127)
+  	at org.gradle.composite.internal.DefaultBuildControll
+er.doRun(DefaultBuildController.java:181)
+  	at org.gradle.composite.internal.DefaultBuildControll
+er.access$000(DefaultBuildController.java:50)
+  	at org.gradle.composite.internal.DefaultBuildControll
+er$BuildOpRunnable.lambda$run$0(DefaultBuildController.j
+ava:198)
+  	at org.gradle.internal.operations.CurrentBuildOperati
+onRef.with(CurrentBuildOperationRef.java:85)
+  	at org.gradle.composite.internal.DefaultBuildControll
+er$BuildOpRunnable.run(DefaultBuildController.java:198)
+
+  	at java.base/java.util.concurrent.Executors$RunnableA
+dapter.call(Executors.java:539)
+  	at java.base/java.util.concurrent.FutureTask.run(Futu
+reTask.java:264)
+  	at org.gradle.internal.concurrent.ExecutorPolicy$Catc
+hAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+  	at org.gradle.internal.concurrent.AbstractManagedExec
+utor$1.run(AbstractManagedExecutor.java:48)
+  	at java.base/java.util.concurrent.ThreadPoolExecutor.
+runWorker(ThreadPoolExecutor.java:1136)
+  	at java.base/java.util.concurrent.ThreadPoolExecutor$
+Worker.run(ThreadPoolExecutor.java:635)
+  	at java.base/java.lang.Thread.run(Thread.java:840)
+  Caused by: 
+com.android.ide.common.process.ProcessException: Error 
+while executing process C:\Users\amitp\AppData\Local\And
+roid\Sdk\cmake\3.22.1\bin\cmake.exe with arguments {-HE:
+\native\AppFashion\node_modules\react-native\ReactAndroi
+d\cmake-utils\default-app-setup 
+-DCMAKE_SYSTEM_NAME=Android 
+-DCMAKE_EXPORT_COMPILE_COMMANDS=ON 
+-DCMAKE_SYSTEM_VERSION=24 -DANDROID_PLATFORM=android-24 
+-DANDROID_ABI=arm64-v8a 
+-DCMAKE_ANDROID_ARCH_ABI=arm64-v8a -DANDROID_NDK=C:\User
+s\amitp\AppData\Local\Android\Sdk\ndk\27.1.12297006 -DCM
+AKE_ANDROID_NDK=C:\Users\amitp\AppData\Local\Android\Sdk
+\ndk\27.1.12297006 -DCMAKE_TOOLCHAIN_FILE=C:\Users\amitp
+\AppData\Local\Android\Sdk\ndk\27.1.12297006\build\cmake
+\android.toolchain.cmake -DCMAKE_MAKE_PROGRAM=C:\Users\a
+mitp\AppData\Local\Android\Sdk\cmake\3.22.1\bin\ninja.ex
+e -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=E:\native\AppFashion\
+android\app\build\intermediates\cxx\RelWithDebInfo\5c5c2
+35x\obj\arm64-v8a -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=E:\na
+tive\AppFashion\android\app\build\intermediates\cxx\RelW
+ithDebInfo\5c5c235x\obj\arm64-v8a 
+-DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_FIND_ROOT_PATH
+=E:\native\AppFashion\android\app\.cxx\RelWithDebInfo\5c
+5c235x\prefab\arm64-v8a\prefab -BE:\native\AppFashion\an
+droid\app\.cxx\RelWithDebInfo\5c5c235x\arm64-v8a 
+-GNinja -DPROJECT_BUILD_DIR=E:\native\AppFashion\android
+\app\build 
+-DPROJECT_ROOT_DIR=E:\native\AppFashion\android -DREACT_
+ANDROID_DIR=E:\native\AppFashion\node_modules\react-nati
+ve\ReactAndroid -DANDROID_STL=c++_shared 
+-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON}
+  	at com.android.build.gradle.internal.process.GradlePr
+ocessResult.buildProcessException(GradleProcessResult.ja
+va:73)
+  	at com.android.build.gradle.internal.process.GradlePr
+ocessResult.assertNormalExitValue(GradleProcessResult.ja
+va:48)
+  	at com.android.build.gradle.internal.cxx.process.Exec
+uteProcessKt.execute(ExecuteProcess.kt:277)
+  	... 173 more
+  Caused by: org.gradle.process.internal.ExecException: 
+Process 'command 'C:\Users\amitp\AppData\Local\Android\S
+dk\cmake\3.22.1\bin\cmake.exe'' finished with non-zero 
+exit value 1
+  	at org.gradle.process.internal.DefaultExecHandle$Exec
+ResultImpl.assertNormalExitValue(DefaultExecHandle.java:
+442)
+  	at com.android.build.gradle.internal.process.GradlePr
+ocessResult.assertNormalExitValue(GradleProcessResult.ja
+va:46)
+  	... 174 more
+
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log 
+output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 4s
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+14 actionable tasks: 1 executed, 13 up-to-date

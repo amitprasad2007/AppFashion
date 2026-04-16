@@ -132,7 +132,7 @@ export class AuthService extends ProductService {
         }
     }
 
-    async oauthLogin(provider: 'google' | 'facebook' | 'apple', token: string, userInfo?: any): Promise<AuthResponse> {
+    async oauthLogin(provider: 'googleMobile' | 'facebookMobile' | 'appleMobile', token: string, userInfo?: any): Promise<AuthResponse> {
         try {
             const response = await this.fetchApi<AuthResponse>('/auth/oauth/login', {
                 method: 'POST',
@@ -170,12 +170,12 @@ export class AuthService extends ProductService {
         }
     }
 
-    getOAuthRedirectUrl(provider: 'google' | 'facebook' | 'apple'): string {
+    getOAuthRedirectUrl(provider: 'googleMobile' | 'facebookMobile' | 'appleMobile'): string {
         const baseUrl = getApiBaseUrl().replace('/api', '');
         return `${baseUrl}/auth/${provider}`;
     }
 
-    async handleOAuthCallback(provider: 'google' | 'facebook' | 'apple', params: { [key: string]: string }): Promise<AuthResponse> {
+    async handleOAuthCallback(provider: 'googleMobile' | 'facebookMobile' | 'appleMobile', params: { [key: string]: string }): Promise<AuthResponse> {
         try {
             const baseUrl = getApiBaseUrl().replace('/api', '');
             const callbackUrl = `${baseUrl}/auth/${provider}/callback`;
