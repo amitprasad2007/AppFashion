@@ -210,7 +210,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [clearAuthData, saveAuthData]);
 
   // Send OTP function
-  const sendOtp = useCallback(async (phone: string): Promise<{ success: boolean; message: string }> {
+  const sendOtp = useCallback(async (phone: string): Promise<{ success: boolean; message: string }> => {
     try {
       dispatch({ type: 'LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
@@ -229,7 +229,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // Verify OTP function
-  const verifyOtp = useCallback(async (phone: string, otp: string): Promise<AuthResponse> {
+  const verifyOtp = useCallback(async (phone: string, otp: string): Promise<AuthResponse> => {
     try {
       dispatch({ type: 'LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
@@ -432,7 +432,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Send OAuth user info to backend
       console.log(`📤 Sending ${provider} user info to backend...`);
-      const response = await apiService.oauthLogin(provider, userInfo.id, {
+      const response = await apiService.oauthLogin(`${provider}Mobile` as 'googleMobile' | 'facebookMobile' | 'appleMobile', userInfo.id, {
         email: userInfo.email,
         name: userInfo.name,
         firstName: userInfo.firstName,
