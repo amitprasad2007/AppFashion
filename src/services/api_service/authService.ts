@@ -3,6 +3,53 @@ import { LoginCredentials, RegisterCredentials, AuthResponse, AuthUser, UserData
 import { getApiBaseUrl } from '../../utils/networkConfig';
 
 export class AuthService extends ProductService {
+    async sendOtp(phone: string): Promise<{ success: boolean; message: string }> {
+        try {
+            const response = await this.fetchApi<any>('/send-otp', {
+                method: 'POST',
+                body: JSON.stringify({ phone }),
+            });
+            return {
+                success: true,
+                message: response.message || 'OTP sent successfully',
+            };
+        } catch (error) {
+            console.error('Error sending OTP:', error);
+            return {
+                success: false,
+                message: error instanceof Error ? error.message : 'Failed to send OTP',
+            };
+        }
+    }
+
+    async verifyOtp(phone: string, otp: string): Promise<AuthResponse> {
+        try {
+            const response = await this.fetchApi<any>('/verify-otp', {
+                method: 'POST',
+                body: JSON.stringify({ phone, otp }),
+            });
+
+            const authResponse: AuthResponse = {
+                success: true,
+                message: response.message || 'OTP verified successfully',
+                user: response.customer,
+                token: response.token,
+            };
+
+            if (authResponse.token) {
+                this.setAuthToken(authResponse.token);
+            }
+
+            return authResponse;
+        } catch (error) {
+            console.error('Error verifying OTP:', error);
+            return {
+                success: false,
+                message: error instanceof Error ? error.message : 'Invalid OTP',
+            };
+        }
+    }
+
     async login(credentials: LoginCredentials): Promise<AuthResponse> {
         try {
             const response = await this.fetchApi<any>('/login', {

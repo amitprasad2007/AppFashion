@@ -27,6 +27,8 @@ type AuthAction =
 // Auth Context Interface
 interface AuthContextType {
   state: AuthState;
+  sendOtp: (phone: string) => Promise<{ success: boolean; message: string }>;
+  verifyOtp: (phone: string, otp: string) => Promise<AuthResponse>;
   login: (credentials: LoginCredentials) => Promise<AuthResponse>;
   register: (credentials: RegisterCredentials) => Promise<AuthResponse>;
   logout: () => Promise<void>;
@@ -206,6 +208,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       dispatch({ type: 'LOGOUT' });
     }
   }, [clearAuthData, saveAuthData]);
+
+  // Send OTP function
+  const sendOtp = useCallback(async (phone: string): Promise<{ success: boolean; message: string }> {
+    try {
+      dispatch({ type: 'LOADING', payload: true });
+      dispatch({ type: 'CLEAR_ERROR' });
+      const response = await apiService.sendOtp(phone);
+      if (!response.success) {
+        dispatch({ type: 'LOGIN_FAILURE', payload: response.message || 'Failed to send OTP' });
+      }
+      return response;
+    } catch (error: any) {
+      const errorMessage = error.message || 'Network error. Please try again.';
+      dispatch({ type: 'LOGIN_FAILURE', payload: errorMessage });
+      throw error;
+    } finally {
+      dispatch({ type: 'LOADING', payload: false });
+    }
+  }, []);
+
+  // Verify OTP function
+  const verifyOtp = useCallback(async (phone: string, otp: string): Promise<AuthResponse> {
+    try {
+      dispatch({ type: 'LOADING', payload: true });
+      dispatch({ type: 'CLEAR_ERROR' });
+
+      const response = await apiService.verifyOtp(phone, otp);
+
+      if (response.success && response.user && response.token) {
+        await saveAuthData(response.token, response.user, response.refreshToken);
+        dispatch({
+          type: 'LOGIN_SUCCESS',
+          payload: {
+            user: response.user,
+            token: response.token,
+            refreshToken: response.refreshToken,
+          },
+        });
+      } else {
+        dispatch({
+          type: 'LOGIN_FAILURE',
+          payload: response.message || 'OTP verification failed',
+        });
+      }
+
+      return response;
+    } catch (error: any) {
+      const errorMessage = error.message || 'Network error. Please try again.';
+      dispatch({ type: 'LOGIN_FAILURE', payload: errorMessage });
+      throw error;
+    }
+  }, [saveAuthData]);
 
   // Login function
   const login = useCallback(async (credentials: LoginCredentials): Promise<AuthResponse> => {
@@ -490,6 +544,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const contextValue: AuthContextType = useMemo(() => ({
     state,
+    sendOtp,
+    verifyOtp,
     login,
     register,
     logout,
@@ -501,6 +557,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     handleOAuthCallback,
   }), [
     state,
+    sendOtp,
+    verifyOtp,
     login,
     register,
     logout,

@@ -1,8 +1,9 @@
 import React from 'react';
-import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
+import { Text, View, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useAuth } from '../contexts/AuthContext';
 
 // Import Screens
 import HomeScreen from '../screens/HomeScreen';
@@ -16,8 +17,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import WishlistScreen from '../screens/WishlistScreen';
 import RecentlyViewedScreen from '../screens/RecentlyViewedScreen';
-import LoginScreen from '../screens/auth/LoginScreen';
-import RegisterScreen from '../screens/auth/RegisterScreen';
+import MobileLoginScreen from '../screens/auth/MobileLoginScreen';
 import OrderConfirmationScreen from '../screens/OrderConfirmationScreen';
 import AddressesScreen from '../screens/AddressesScreen';
 import OrderDetailsScreen from '../screens/OrderDetailsScreen';
@@ -96,6 +96,16 @@ const TabIcon = ({ icon, color }: { icon: string; color: string }) => (
 
 // Main Stack Navigator
 const AppNavigator = () => {
+  const { state } = useAuth();
+
+  if (state.isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+        <ActivityIndicator size="large" color="#ff6b6b" />
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
       <Stack.Navigator
@@ -117,34 +127,34 @@ const AppNavigator = () => {
           },
         }}>
 
-        {/* Main Tab Navigator */}
-        <Stack.Screen name="MainTabs" component={TabNavigator} />
-        <Stack.Screen name="Home" component={HomeScreen} />
+        {state.isAuthenticated ? (
+          <>
+            {/* Main Tab Navigator */}
+            <Stack.Screen name="MainTabs" component={TabNavigator} />
+            <Stack.Screen name="Home" component={HomeScreen} />
 
-        {/* Product Screens */}
-        <Stack.Screen name="ProductList" component={ProductListScreen} />
-        <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
+            {/* Product Screens */}
+            <Stack.Screen name="ProductList" component={ProductListScreen} />
+            <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
 
-        {/* Shopping Flow */}
-        <Stack.Screen name="Cart" component={CartScreen} />
-        <Stack.Screen name="Checkout" component={CheckoutScreen} />
-        <Stack.Screen name="OrderConfirmation" component={OrderConfirmationScreen} />
+            {/* Shopping Flow */}
+            <Stack.Screen name="Cart" component={CartScreen} />
+            <Stack.Screen name="Checkout" component={CheckoutScreen} />
+            <Stack.Screen name="OrderConfirmation" component={OrderConfirmationScreen} />
 
-        {/* User Account */}
-        <Stack.Screen name="Orders" component={OrdersScreen} />
-        <Stack.Screen name="RecentlyViewed" component={RecentlyViewedScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-
-        {/* Additional Screens - Commented out until implemented */}
-        <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} />
-        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-        <Stack.Screen name="Addresses" component={AddressesScreen} />
-        {/* <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} /> */}
-        <Stack.Screen name="Settings" component={SettingsScreen} />
-        <Stack.Screen name="Policy" component={PolicyScreen} />
-        <Stack.Screen name="Support" component={SupportScreen} />
-        {/* <Stack.Screen name="Notifications" component={NotificationsScreen} /> */}
+            {/* User Account */}
+            <Stack.Screen name="Orders" component={OrdersScreen} />
+            <Stack.Screen name="RecentlyViewed" component={RecentlyViewedScreen} />
+            <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} />
+            <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+            <Stack.Screen name="Addresses" component={AddressesScreen} />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen name="Policy" component={PolicyScreen} />
+            <Stack.Screen name="Support" component={SupportScreen} />
+          </>
+        ) : (
+          <Stack.Screen name="Login" component={MobileLoginScreen} />
+        )}
 
       </Stack.Navigator>
     </NavigationContainer>
