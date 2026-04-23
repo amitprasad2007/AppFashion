@@ -97,7 +97,7 @@ class OAuthService {
           paramsObj[key] = value;
         });
 
-        const response = await apiService.handleOAuthCallback(provider, paramsObj);
+        const response = await apiService.handleOAuthCallback(`${provider}Mobile` as 'googleMobile' | 'facebookMobile' | 'appleMobile', paramsObj);
 
         if (response.success && response.token) {
           return {
