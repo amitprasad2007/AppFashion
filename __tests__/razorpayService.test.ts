@@ -1,8 +1,8 @@
 import { razorpayService } from '../src/services/razorpayService';
-import { apiService } from '../src/services/api';
+import { apiService } from '../src/services/api_service';
 
-jest.mock('../src/services/api', () => {
-  const actual = jest.requireActual('../src/services/api');
+jest.mock('../src/services/api_service', () => {
+  const actual = jest.requireActual('../src/services/api_service');
   return {
     ...actual,
     apiService: {
