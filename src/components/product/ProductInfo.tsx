@@ -12,6 +12,8 @@ interface ProductInfoProps {
     originalPrice?: number;
     discountPercentage?: number;
     description?: string;
+    quantity?: number;
+    unit?: string;
 }
 
 const ProductInfo: React.FC<ProductInfoProps> = ({
@@ -23,6 +25,8 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
     originalPrice,
     discountPercentage,
     description,
+    quantity,
+    unit,
 }) => {
     const savings = originalPrice && originalPrice > price ? originalPrice - price : 0;
 
@@ -46,15 +50,29 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
 
             {/* Price Section */}
             <View style={styles.priceSection}>
-                <Text style={styles.currentPrice}>₹{price?.toLocaleString()}</Text>
-                {(originalPrice || 0) > (price || 0) && (
-                    <Text style={styles.originalPrice}>₹{originalPrice?.toLocaleString()}</Text>
-                )}
-                {savings > 0 && (
-                    <View style={styles.savingsTag}>
-                        <Text style={styles.savingsText}>Save ₹{savings.toLocaleString()}</Text>
+                <View style={styles.priceColumn}>
+                    <View style={styles.priceRow}>
+                        <Text style={styles.currentPrice}>₹{(price * (quantity || 1)).toLocaleString()}</Text>
+                        {(originalPrice || 0) > (price || 0) && (
+                            <Text style={styles.originalPrice}>₹{(originalPrice! * (quantity || 1)).toLocaleString()}</Text>
+                        )}
+                        {savings > 0 && (
+                            <View style={styles.savingsTag}>
+                                <Text style={styles.savingsText}>Save ₹{(savings * (quantity || 1)).toLocaleString()}</Text>
+                            </View>
+                        )}
                     </View>
-                )}
+                    {unit === 'meter' && (
+                        <Text style={styles.unitPriceText}>
+                            ₹{price.toLocaleString()} × {quantity || 1}m = ₹{(price * (quantity || 1)).toLocaleString()}
+                        </Text>
+                    )}
+                    {unit === 'piece' && (quantity || 1) > 1 && (
+                        <Text style={styles.unitPriceText}>
+                            ₹{price.toLocaleString()} × {quantity || 1} pieces = ₹{(price * (quantity || 1)).toLocaleString()}
+                        </Text>
+                    )}
+                </View>
             </View>
 
             {/* Description */}
@@ -121,9 +139,20 @@ const styles = StyleSheet.create({
         color: theme.colors.neutral[500],
     },
     priceSection: {
+        marginBottom: 24,
+    },
+    priceColumn: {
+        flexDirection: 'column',
+    },
+    priceRow: {
         flexDirection: 'row',
         alignItems: 'baseline',
-        marginBottom: 24,
+    },
+    unitPriceText: {
+        fontSize: 14,
+        color: theme.colors.neutral[500],
+        marginTop: 4,
+        fontWeight: '500',
     },
     currentPrice: {
         fontSize: 28,

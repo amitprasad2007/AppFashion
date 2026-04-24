@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { theme } from '../../theme';
 import { ApiCartItem } from '../../services/api_service/types';
+import { getCartItemUnit, formatQuantity, METER_STEP, METER_MIN } from '../../utils/productUnit';
 
 interface CartItemProps {
     item: ApiCartItem;
@@ -19,6 +20,10 @@ const CartItem: React.FC<CartItemProps> = ({
     const itemPrice = parseFloat(item.price);
     const itemTotal = itemPrice * item.quantity;
     const imageUrl = Array.isArray(item.image) ? item.image[0] : item.image || 'https://via.placeholder.com/100';
+    
+    const unit = getCartItemUnit(item.category_slug || item.slug);
+    const step = unit === 'meter' ? METER_STEP : 1;
+    const minQty = unit === 'meter' ? METER_MIN : 1;
 
     return (
         <View style={styles.cartItem}>
@@ -44,8 +49,8 @@ const CartItem: React.FC<CartItemProps> = ({
                     <View style={styles.quantityContainer}>
                         <TouchableOpacity
                             style={[styles.quantityButton, isUpdating && styles.disabledButton]}
-                            onPress={() => onUpdateQuantity(item.quantity - 1)}
-                            disabled={isUpdating || item.quantity <= 1}>
+                            onPress={() => onUpdateQuantity(item.quantity - step)}
+                            disabled={isUpdating || item.quantity <= minQty}>
                             <Text style={styles.quantityButtonText}>-</Text>
                         </TouchableOpacity>
 
@@ -53,13 +58,13 @@ const CartItem: React.FC<CartItemProps> = ({
                             {isUpdating ? (
                                 <ActivityIndicator size="small" color={theme.colors.primary[500]} />
                             ) : (
-                                <Text style={styles.quantityText}>{item.quantity}</Text>
+                                <Text style={styles.quantityText}>{formatQuantity(item.quantity, unit)}</Text>
                             )}
                         </View>
 
                         <TouchableOpacity
                             style={[styles.quantityButton, isUpdating && styles.disabledButton]}
-                            onPress={() => onUpdateQuantity(item.quantity + 1)}
+                            onPress={() => onUpdateQuantity(item.quantity + step)}
                             disabled={isUpdating}>
                             <Text style={styles.quantityButtonText}>+</Text>
                         </TouchableOpacity>
@@ -147,8 +152,9 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     quantityDisplay: {
-        width: 32,
+        minWidth: 40,
         height: 28,
+        paddingHorizontal: 8,
         alignItems: 'center',
         justifyContent: 'center',
         borderLeftWidth: 1,

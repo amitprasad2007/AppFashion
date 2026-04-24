@@ -22,6 +22,7 @@ import { RootStackParamList } from '../types/navigation';
 import apiService, { ApiProduct } from '../services/api_service';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import { useAuth } from '../contexts/AuthContext';
+import { getProductUnit, METER_MIN, ProductUnit } from '../utils/productUnit';
 
 // Modular Components
 import ProductImageGallery from '../components/product/ProductImageGallery';
@@ -47,6 +48,7 @@ const ProductDetailsScreen = () => {
   // Selection State
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [unitType, setUnitType] = useState<ProductUnit>('piece');
   const [isFavorite, setIsFavorite] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
   const [selectedSize, setSelectedSize] = useState('');
@@ -101,6 +103,12 @@ const ProductDetailsScreen = () => {
       const productData = await apiService.getProductBySlug(slugToUse);
       if (productData) {
         setProduct(productData);
+
+        const calculatedUnit = getProductUnit(productData.category?.slug, productData.slug);
+        setUnitType(calculatedUnit);
+        if (calculatedUnit === 'meter') {
+            setQuantity(prev => prev === 1 ? METER_MIN : prev);
+        }
 
         // Initialize variant selection
         if (productData.variants && productData.variants.length > 0) {
@@ -282,6 +290,8 @@ const ProductDetailsScreen = () => {
           originalPrice={currentOriginalPrice}
           discountPercentage={discount}
           description={product.description}
+          quantity={quantity}
+          unit={unitType}
         />
 
         {/* Variants Component */}
@@ -298,6 +308,7 @@ const ProductDetailsScreen = () => {
           onAddToCart={handleAddToCart}
           onBuyNow={handleBuyNow}
           addingToCart={addingToCart}
+          unit={unitType}
         />
 
         {/* Reviews Section */}

@@ -175,6 +175,8 @@ export interface ApiCartItem {
     image: string[];
     variant_id?: number;
     product_variant_id?: number;
+    slug?: string;
+    category_slug?: string;
 }
 
 export interface ApiCart {

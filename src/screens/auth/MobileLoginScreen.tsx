@@ -72,7 +72,7 @@ const MobileLoginScreen = () => {
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.headerContainer}>
-          <Text style={styles.title}>Varanasi Saree</Text>
+          <Text style={styles.title}>Samar Silk Palace</Text>
           <Text style={styles.subtitle}>
             {step === 'PHONE' ? 'Login or Register with Mobile Number' : 'Enter OTP Verification Code'}
           </Text>

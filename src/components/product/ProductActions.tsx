@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { theme } from '../../theme';
+import { ProductUnit, METER_STEP, METER_MIN, METER_PRESETS, formatQuantity } from '../../utils/productUnit';
 
 interface ProductActionsProps {
     quantity: number;
@@ -8,6 +9,7 @@ interface ProductActionsProps {
     onAddToCart: () => void;
     onBuyNow: () => void;
     addingToCart: boolean;
+    unit?: ProductUnit;
 }
 
 const ProductActions: React.FC<ProductActionsProps> = ({
@@ -16,27 +18,65 @@ const ProductActions: React.FC<ProductActionsProps> = ({
     onAddToCart,
     onBuyNow,
     addingToCart,
+    unit = 'piece',
 }) => {
+    const isMeter = unit === 'meter';
+    const step = isMeter ? METER_STEP : 1;
+    const minQty = isMeter ? METER_MIN : 1;
+
+    const handleDecrement = () => {
+        if (quantity > minQty) {
+            onUpdateQuantity(Math.max(minQty, quantity - step));
+        }
+    };
+
+    const handleIncrement = () => {
+        onUpdateQuantity(quantity + step);
+    };
     return (
         <View style={styles.actionsSection}>
+            {/* Presets for Meter-based Products */}
+            {isMeter && (
+                <View style={styles.presetsSection}>
+                    <Text style={styles.sectionTitle}>Select Length</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.presetsList}>
+                        {METER_PRESETS.map((preset) => (
+                            <TouchableOpacity
+                                key={preset}
+                                style={[styles.presetButton, quantity === preset && styles.presetButtonActive]}
+                                onPress={() => onUpdateQuantity(preset)}
+                            >
+                                <Text style={[styles.presetText, quantity === preset && styles.presetTextActive]}>
+                                    {preset}m
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </View>
+            )}
+
             {/* Quantity Selector */}
             <View style={styles.quantitySection}>
-                <Text style={styles.sectionTitle}>Quantity</Text>
+                <Text style={styles.sectionTitle}>{isMeter ? 'Custom Length' : 'Quantity'}</Text>
                 <View style={styles.quantitySelector}>
                     <TouchableOpacity
-                        style={styles.quantityButton}
-                        onPress={() => quantity > 1 && onUpdateQuantity(quantity - 1)}>
-                        <Text style={styles.quantityButtonText}>−</Text>
+                        style={[styles.quantityButton, quantity <= minQty && styles.disabledButton]}
+                        onPress={handleDecrement}
+                        disabled={quantity <= minQty}>
+                        <Text style={[styles.quantityButtonText, quantity <= minQty && styles.disabledText]}>−</Text>
                     </TouchableOpacity>
                     <View style={styles.quantityDisplay}>
-                        <Text style={styles.quantityText}>{quantity}</Text>
+                        <Text style={styles.quantityText}>{formatQuantity(quantity, unit)}</Text>
                     </View>
                     <TouchableOpacity
                         style={styles.quantityButton}
-                        onPress={() => onUpdateQuantity(quantity + 1)}>
+                        onPress={handleIncrement}>
                         <Text style={styles.quantityButtonText}>+</Text>
                     </TouchableOpacity>
                 </View>
+                {isMeter && (
+                    <Text style={styles.minimumNotice}>Minimum {METER_MIN} meters required.</Text>
+                )}
             </View>
 
             {/* Buttons */}
@@ -84,10 +124,10 @@ const styles = StyleSheet.create({
         borderColor: theme.colors.neutral[300],
         borderRadius: 8,
         alignSelf: 'flex-start',
-        height: 44,
+        height: 55,
     },
     quantityButton: {
-        width: 44,
+        width: 55,
         height: '100%',
         alignItems: 'center',
         justifyContent: 'center',
@@ -97,7 +137,7 @@ const styles = StyleSheet.create({
         color: theme.colors.neutral[600],
     },
     quantityDisplay: {
-        width: 44,
+        width: 55,
         height: '100%',
         alignItems: 'center',
         justifyContent: 'center',
@@ -144,6 +184,42 @@ const styles = StyleSheet.create({
     },
     disabledButton: {
         opacity: 0.6,
+    },
+    disabledText: {
+        color: theme.colors.neutral[400],
+    },
+    presetsSection: {
+        marginBottom: 20,
+    },
+    presetsList: {
+        flexDirection: 'row',
+        gap: 12,
+        paddingVertical: 4,
+    },
+    presetButton: {
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: theme.colors.neutral[300],
+        backgroundColor: theme.colors.white,
+    },
+    presetButtonActive: {
+        borderColor: theme.colors.primary[600],
+        backgroundColor: theme.colors.primary[50],
+    },
+    presetText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: theme.colors.neutral[700],
+    },
+    presetTextActive: {
+        color: theme.colors.primary[700],
+    },
+    minimumNotice: {
+        fontSize: 12,
+        color: theme.colors.neutral[500],
+        marginTop: 8,
     },
 });
 

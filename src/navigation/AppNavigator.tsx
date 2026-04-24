@@ -97,8 +97,15 @@ const TabIcon = ({ icon, color }: { icon: string; color: string }) => (
 // Main Stack Navigator
 const AppNavigator = () => {
   const { state } = useAuth();
+  const [isReady, setIsReady] = React.useState(false);
 
-  if (state.isLoading) {
+  React.useEffect(() => {
+    if (!state.isLoading) {
+      setIsReady(true);
+    }
+  }, [state.isLoading]);
+
+  if (!isReady) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
         <ActivityIndicator size="large" color="#ff6b6b" />
