@@ -23,6 +23,7 @@
     "@react-navigation/stack": "^6.3.20",
     "react": "19.1.0",
     "react-native": "0.80.2",
+    "react-native-encrypted-storage": "^4.0.3",
     "react-native-fbsdk-next": "^13.4.1",
     "react-native-geocoding": "^0.5.0",
     "react-native-geolocation-service": "^5.3.1",

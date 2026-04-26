@@ -86,7 +86,10 @@ const HomeScreen = () => {
   };
 
   const handleProductPress = (product: ApiProduct) => {
-    navigation.navigate('ProductDetails', { product });
+    navigation.navigate('ProductDetails', { 
+      productSlug: product.slug,
+      product 
+    });
   };
 
   if (loading && !refreshing) {

@@ -34,7 +34,7 @@ const AddressesScreen = () => {
             setAddresses(data);
         } catch (error) {
             console.error('Error fetching addresses:', error);
-            Alert.alert('Error', 'Failed to load addresses');
+            SafeAlert.show('Error', 'Failed to load addresses');
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -61,7 +61,7 @@ const AddressesScreen = () => {
     };
 
     const handleDeleteAddress = (id: number) => {
-        Alert.alert(
+        SafeAlert.show(
             'Delete Address',
             'Are you sure you want to delete this address?',
             [
@@ -75,9 +75,9 @@ const AddressesScreen = () => {
                             await apiService.deleteAddress(id);
                             await fetchAddresses();
                             await refreshUserData(); // Sync profile context
-                            Alert.alert('Success', 'Address deleted successfully');
+                            SafeAlert.show('Success', 'Address deleted successfully');
                         } catch (error) {
-                            Alert.alert('Error', 'Failed to delete address');
+                            SafeAlert.show('Error', 'Failed to delete address');
                         } finally {
                             setLoading(false);
                         }

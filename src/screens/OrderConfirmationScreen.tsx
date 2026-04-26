@@ -15,15 +15,17 @@ import EnhancedImage from '../components/EnhancedImage';
 import AnimatedCard from '../components/AnimatedCard';
 import EnhancedHeader from '../components/EnhancedHeader';
 import { theme } from '../theme';
+import { getProductUnit, formatQuantity } from '../utils/productUnit';
+import { formatCurrency } from '../utils/pricing';
 
 type OrderItem = {
-  id: string;
+  id: string | number;
   name: string;
-  price: number;
-  quantity: number;
+  price: string | number;
+  quantity: string | number;
   image: string;
   color?: string;
-  amount?: string;
+  amount?: string | number;
 };
 
 type OrderConfirmationRouteProps = RouteProp<RootStackParamList, 'OrderConfirmation'>;
@@ -58,11 +60,7 @@ const OrderConfirmationScreen = () => {
     }, [navigation])
   );
 
-  // Helper function to format currency
-  const formatCurrency = (amount: number | string) => {
-    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-    return `₹${numAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
+
 
   // Helper function to get estimated delivery date
   const getEstimatedDelivery = () => {
@@ -142,6 +140,12 @@ const OrderConfirmationScreen = () => {
         ? `https://superadmin.samarsilkpalace.com/storage/${item.image}`
         : 'https://via.placeholder.com/60';
 
+    const unit = getProductUnit(null, item.name || '');
+    const isMeter = unit === 'meter';
+    const itemPrice = Number(item.price || 0);
+    const itemQuantity = Number(item.quantity || 1);
+    const itemTotal = Number(item.amount || (itemPrice * itemQuantity));
+
     return (
       <View key={item.id} style={styles.orderItem}>
         <EnhancedImage
@@ -155,17 +159,19 @@ const OrderConfirmationScreen = () => {
         />
         <View style={styles.itemDetails}>
           <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
-          {!!item.color && item.color !== 'Default' && (
-            <Text style={styles.itemColor}>Color: {item.color}</Text>
-          )}
-          <Text style={styles.itemPrice}>
-            {formatCurrency(item.price)} × {item.quantity}
+          <Text style={styles.itemSubtext}>
+            Qty: {formatQuantity(itemQuantity, unit)}
           </Text>
         </View>
         <View style={styles.itemTotalContainer}>
           <Text style={styles.itemTotal}>
-            {formatCurrency(item.amount || (item.price * item.quantity))}
+            {formatCurrency(itemTotal)}
           </Text>
+          {isMeter && (
+            <Text style={styles.priceBreakdown}>
+              {formatCurrency(itemPrice)}/m × {itemQuantity}m
+            </Text>
+          )}
         </View>
       </View>
     );
@@ -493,6 +499,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     lineHeight: 20,
   },
+  itemSubtext: {
+    fontSize: 12,
+    color: theme.colors.neutral[500],
+    marginTop: 2,
+  },
   itemColor: {
     fontSize: 12,
     color: theme.colors.neutral[500],
@@ -511,6 +522,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: theme.colors.neutral[900],
+  },
+  priceBreakdown: {
+    fontSize: 11,
+    color: theme.colors.neutral[500],
+    marginTop: 2,
   },
   emptyState: {
     backgroundColor: theme.colors.neutral[50],

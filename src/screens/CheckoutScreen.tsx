@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
-  Alert,
   ActivityIndicator,
   StatusBar,
 } from 'react-native';
@@ -21,6 +20,9 @@ import { apiService, ShippingAddress, PaymentMethod } from '../services/api_serv
 import { useUserProfile } from '../contexts/UserProfileContext';
 import ProtectedScreen from '../components/ProtectedScreen';
 import razorpayService from '../services/razorpayService';
+import { getProductUnit, formatQuantity, METER_MIN } from '../utils/productUnit';
+import { formatCurrency } from '../utils/pricing';
+import SafeAlert from '../utils/safeAlert';
 
 const CheckoutScreenContent = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -202,7 +204,7 @@ const CheckoutScreenContent = () => {
 
     } catch (error) {
       console.error('Error saving address:', error);
-      Alert.alert('Error', 'Failed to save address. Please try again.');
+      SafeAlert.show('Error', 'Failed to save address. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -273,7 +275,7 @@ const CheckoutScreenContent = () => {
 
       const authToken = apiService.getAuthToken();
       if (!authToken) {
-        Alert.alert('Authentication Required', 'Please login to place an order.');
+        SafeAlert.show('Authentication Required', 'Please login to place an order.');
         return;
       }
 
@@ -304,9 +306,9 @@ const CheckoutScreenContent = () => {
           console.warn('Could not clear cart after order:', clearError);
         }
 
-        Alert.alert(
+        SafeAlert.show(
           'Order Placed Successfully! 🎉',
-          `Your order has been placed successfully!\n\nOrder ID: ${orderId}\nPayment: Cash on Delivery\nStatus: ${orderDetails?.status || 'Pending'}\nTotal: ₹${orderDetails?.total_amount || finalTotal}`,
+          `Your order has been placed successfully!\n\nOrder ID: ${orderId}\nPayment: Cash on Delivery\nStatus: ${orderDetails?.status || 'Pending'}\nTotal: ${formatCurrency(orderDetails?.total_amount || finalTotal)}`,
           [{
             text: 'View Order',
             onPress: () => {
@@ -345,7 +347,7 @@ const CheckoutScreenContent = () => {
     try {
       const authToken = apiService.getAuthToken();
       if (!authToken) {
-        Alert.alert('Authentication Required', 'Please login to place an order.');
+        SafeAlert.show('Authentication Required', 'Please login to place an order.');
         return;
       }
       const orderData = {
@@ -404,9 +406,9 @@ const CheckoutScreenContent = () => {
           console.warn('Could not clear cart after order:', clearError);
         }
 
-        Alert.alert(
+        SafeAlert.show(
           'Payment Successful! 🎉',
-          `Your order has been placed successfully!\n\nPayment: ${selectedPayment!.name}\nAmount: ₹${finalTotal}`,
+          `Your order has been placed successfully!\n\nPayment: ${selectedPayment!.name}\nAmount: ${formatCurrency(finalTotal)}`,
           [{
             text: 'View Order',
             onPress: () => {
@@ -428,7 +430,7 @@ const CheckoutScreenContent = () => {
       }
     } catch (error) {
       console.error('❌ Razorpay payment failed:', error);
-      Alert.alert(
+      SafeAlert.show(
         'Payment Failed',
         `Payment could not be completed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         [
@@ -457,12 +459,12 @@ const CheckoutScreenContent = () => {
   const placeOrder = async () => {
     try {
       if (!selectedAddress) {
-        Alert.alert('Error', 'Please select a delivery address');
+        SafeAlert.show('Error', 'Please select a delivery address');
         return;
       }
 
       if (!selectedPayment) {
-        Alert.alert('Error', 'Please select a payment method');
+        SafeAlert.show('Error', 'Please select a payment method');
         return;
       }
 
@@ -471,21 +473,21 @@ const CheckoutScreenContent = () => {
       const items = cart?.items || cartItems || [];
 
       // Calculate totals (prefer server summary if available)
-      const itemsCount = summary?.total_items ?? (cart?.totalItems ||
-        (cartItems ? cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0) : 0));
-      const itemsTotal = summary?.subtotal ?? (cart?.totalAmount || subtotal || 0);
-      const discountAmount = summary?.discount ?? (cart?.discount || discount || 0);
-      const shippingAmount = summary?.shipping ?? (cart?.deliveryCharge || shipping || 0);
-      const taxAmount = summary?.tax ?? (tax || 0);
-      const finalTotal = summary?.total ?? (cart?.finalAmount || total || 0);
+      const itemsCount = Number(summary?.total_items ?? (cart?.totalItems ||
+        (cartItems ? cartItems.reduce((sum: number, item: any) => sum + Number(item.quantity || 0), 0) : 0)));
+      const itemsTotal = Number(summary?.subtotal ?? (cart?.totalAmount || subtotal || 0));
+      const discountAmount = Number(summary?.discount ?? (cart?.discount || discount || 0));
+      const shippingAmount = Number(summary?.shipping ?? (cart?.deliveryCharge || shipping || 0));
+      const taxAmount = Number(summary?.tax ?? (tax || 0));
+      const finalTotal = Number(summary?.total ?? (cart?.finalAmount || total || 0));
 
       if (items.length === 0) {
-        Alert.alert('Error', 'No items found in cart. Please add items to cart first.');
+        SafeAlert.show('Error', 'No items found in cart. Please add items to cart first.');
         return;
       }
 
       if (finalTotal <= 0) {
-        Alert.alert('Error', 'Invalid order total. Please check your cart.');
+        SafeAlert.show('Error', 'Invalid order total. Please check your cart.');
         return;
       }
 
@@ -500,7 +502,7 @@ const CheckoutScreenContent = () => {
 
     } catch (error) {
       console.error('Error placing order:', error);
-      Alert.alert('Error', 'Failed to place order. Please try again.');
+      SafeAlert.show('Error', 'Failed to place order. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -510,45 +512,59 @@ const CheckoutScreenContent = () => {
     const items = cart?.items || cartItems || [];
     const itemsToShow = items.slice(0, 3);
 
-    const itemsCount = summary?.total_items ?? (cart?.totalItems ||
-      (cartItems ? cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0) : 0));
-    const itemsTotal = summary?.subtotal ?? (cart?.totalAmount || subtotal || 0);
-    const discountAmount = summary?.discount ?? (cart?.discount || discount || 0);
-    const shippingAmount = summary?.shipping ?? (cart?.deliveryCharge || shipping || 0);
-    const taxAmount = summary?.tax ?? (cart?.tax || tax || 0);
-    const finalTotal = summary?.total ?? (cart?.finalAmount || total || 0);
+    const itemsCount = Number(summary?.total_items ?? (cart?.totalItems ||
+      (cartItems ? cartItems.reduce((sum: number, item: any) => sum + Number(item.quantity || 0), 0) : 0)));
+    const itemsTotal = Number(summary?.subtotal ?? (cart?.totalAmount || subtotal || 0));
+    const discountAmount = Number(summary?.discount ?? (cart?.discount || discount || 0));
+    const shippingAmount = Number(summary?.shipping ?? (cart?.deliveryCharge || shipping || 0));
+    const taxAmount = Number(summary?.tax ?? (cart?.tax || tax || 0));
+    const finalTotal = Number(summary?.total ?? (cart?.finalAmount || total || 0));
 
     return (
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>📦 Order Summary</Text>
 
-        {itemsToShow.map((item: any, index: number) => (
-          <View key={item.id || index} style={styles.orderItem}>
-            <Image
-              source={{
-                uri: item.product?.images?.[0] ||
-                  (Array.isArray(item.image) ? item.image[0] : item.image) ||
-                  item.images?.[0] ||
-                  'https://via.placeholder.com/50'
-              }}
-              style={styles.orderItemImage}
-            />
-            <View style={styles.orderItemDetails}>
-              <Text style={styles.orderItemName} numberOfLines={2}>
-                {item.product?.name || item.name}
+        {itemsToShow.map((item: any, index: number) => {
+          const productName = item.product?.name || item.name;
+          const productSlug = item.product?.slug || item.slug;
+          const categorySlug = item.product?.category?.slug || item.category_slug;
+          const unit = getProductUnit(categorySlug, productSlug || productName);
+          const itemPrice = Number(item.product?.price || item.price || 0);
+          const itemQty = Number(item.quantity || 0);
+          const itemSubtotal = Number(item.subtotal || (itemPrice * itemQty));
+
+          return (
+            <View key={item.id || index} style={styles.orderItem}>
+              <Image
+                source={{
+                  uri: item.product?.images?.[0] ||
+                    (Array.isArray(item.image) ? item.image[0] : item.image) ||
+                    item.images?.[0] ||
+                    'https://via.placeholder.com/50'
+                }}
+                style={styles.orderItemImage}
+              />
+              <View style={styles.orderItemDetails}>
+                <Text style={styles.orderItemName} numberOfLines={2}>
+                  {productName}
+                </Text>
+                <Text style={styles.orderItemInfo}>
+                  {unit === 'meter' ? (
+                    `${formatCurrency(itemPrice)}/m × ${formatQuantity(itemQty, unit)}`
+                  ) : (
+                    `Qty: ${itemQty} • ${formatCurrency(itemPrice)}`
+                  )}
+                </Text>
+                {item.selectedSize && (
+                  <Text style={styles.orderItemOption}>Size: {item.selectedSize}</Text>
+                )}
+              </View>
+              <Text style={styles.orderItemPrice}>
+                {formatCurrency(itemSubtotal)}
               </Text>
-              <Text style={styles.orderItemInfo}>
-                Qty: {item.quantity} • ₹{item.product?.price || item.price}
-              </Text>
-              {item.selectedSize && (
-                <Text style={styles.orderItemOption}>Size: {item.selectedSize}</Text>
-              )}
             </View>
-            <Text style={styles.orderItemPrice}>
-              ₹{item.subtotal || (parseFloat(item.price) * item.quantity)}
-            </Text>
-          </View>
-        ))}
+          );
+        })}
 
         {items.length > 3 && (
           <Text style={styles.moreItems}>
@@ -559,32 +575,32 @@ const CheckoutScreenContent = () => {
         <View style={styles.orderSummary}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Items ({itemsCount})</Text>
-            <Text style={styles.summaryValue}>₹{itemsTotal}</Text>
+            <Text style={styles.summaryValue}>{formatCurrency(itemsTotal)}</Text>
           </View>
 
           {discountAmount > 0 && (
             <View style={styles.summaryRow}>
               <Text style={[styles.summaryLabel, styles.discountLabel]}>Discount</Text>
-              <Text style={[styles.summaryValue, styles.discountValue]}>-₹{discountAmount}</Text>
+              <Text style={[styles.summaryValue, styles.discountValue]}>-{formatCurrency(discountAmount)}</Text>
             </View>
           )}
 
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Delivery</Text>
             <Text style={styles.summaryValue}>
-              {shippingAmount > 0 ? `₹${shippingAmount}` : 'FREE'}
+              {shippingAmount > 0 ? formatCurrency(shippingAmount) : 'FREE'}
             </Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Tax</Text>
             <Text style={styles.summaryValue}>
-              {taxAmount > 0 ? `₹${taxAmount}` : 'FREE'}
+              {taxAmount > 0 ? formatCurrency(taxAmount) : 'FREE'}
             </Text>
           </View>
 
           <View style={[styles.summaryRow, styles.totalRow]}>
             <Text style={styles.totalLabel}>Total Amount</Text>
-            <Text style={styles.totalValue}>₹{finalTotal.toFixed(2)}</Text>
+            <Text style={styles.totalValue}>{formatCurrency(finalTotal)}</Text>
           </View>
         </View>
       </View>
@@ -844,7 +860,7 @@ const CheckoutScreenContent = () => {
         {renderCartSummary()}
 
         <GradientButton
-          title={loading ? 'Processing...' : `Place Order - ₹${params?.total.toFixed(2) || params?.cart?.total.toFixed(2) || 0}`}
+          title={loading ? 'Processing...' : `Place Order - ₹${formatCurrency(Math.round(Number(params?.total || params?.cart?.total || 0)))}`}
           onPress={placeOrder}
           disabled={loading}
           gradient={theme.colors.gradients.primary}

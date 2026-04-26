@@ -67,7 +67,7 @@ const ProfileScreenContent = () => {
       title: 'Notifications',
       subtitle: 'Manage your preferences',
       icon: '🔔',
-      onPress: () => Alert.alert('Notifications', 'Notification preferences coming soon!'),
+      onPress: () => SafeAlert.show('Notifications', 'Notification preferences coming soon!'),
     },
     {
       id: '5',
@@ -86,7 +86,7 @@ const ProfileScreenContent = () => {
   ];
 
   const handleLogout = () => {
-    Alert.alert(
+    SafeAlert.show(
       'Logout',
       'Are you sure you want to logout?',
       [

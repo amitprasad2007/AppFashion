@@ -210,7 +210,7 @@ export interface ApiWishlistItem {
     id: number;
     name: string;
     slug: string;
-    image: string[];
+    images: string[];
     price: string;
     originalPrice: number | null;
     category: string;

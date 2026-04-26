@@ -48,12 +48,14 @@ export const METER_PRESETS = [15, 20, 25, 30, 40, 50];
  * e.g., formatQuantity(2.5, 'meter') → "2.5m"
  *        formatQuantity(2, 'piece')  → "2"
  */
-export function formatQuantity(qty: number, unit: ProductUnit): string {
+export function formatQuantity(qty: number | string, unit: ProductUnit): string {
+  const num = typeof qty === 'string' ? parseFloat(qty) : qty;
+  const safeQty = num || 0;
   if (unit === 'meter') {
     // Remove trailing .0 for whole numbers
-    return Number.isInteger(qty) ? `${qty}m` : `${qty}m`;
+    return `${safeQty}m`;
   }
-  return `${qty}`;
+  return `${safeQty}`;
 }
 
 /**

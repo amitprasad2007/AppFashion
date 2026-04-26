@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator } fr
 import { theme } from '../../theme';
 import { ApiCartItem } from '../../services/api_service/types';
 import { getCartItemUnit, formatQuantity, METER_STEP, METER_MIN } from '../../utils/productUnit';
+import { formatCurrency } from '../../utils/pricing';
 
 interface CartItemProps {
     item: ApiCartItem;
@@ -33,9 +34,17 @@ const CartItem: React.FC<CartItemProps> = ({
                 <View style={styles.itemDetails}>
                     <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
                     <View style={styles.priceContainer}>
-                        <Text style={styles.currentPrice}>₹{item.price}</Text>
+                        <Text style={styles.currentPrice}>{formatCurrency(itemTotal)}</Text>
+                        {unit === 'meter' ? (
+                            <Text style={styles.priceBreakdown}>
+                                {formatCurrency(itemPrice)}/m × {formatQuantity(item.quantity, unit)}
+                            </Text>
+                        ) : item.quantity > 1 ? (
+                            <Text style={styles.priceBreakdown}>
+                                {formatCurrency(itemPrice)} × {item.quantity}
+                            </Text>
+                        ) : null}
                     </View>
-                    <Text style={styles.subtotal}>Subtotal: ₹{itemTotal.toFixed(2)}</Text>
                 </View>
 
                 <View style={styles.itemActions}>
@@ -116,9 +125,10 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: theme.colors.primary[600],
     },
-    subtotal: {
+    priceBreakdown: {
         fontSize: 12,
         color: theme.colors.neutral[500],
+        marginTop: 2,
     },
     itemActions: {
         alignItems: 'flex-end',

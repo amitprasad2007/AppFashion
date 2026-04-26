@@ -33,7 +33,7 @@ const EditProfileScreen = () => {
 
     const handleSave = async () => {
         if (!name.trim()) {
-            Alert.alert('Error', 'Name cannot be empty');
+            SafeAlert.show('Error', 'Name cannot be empty');
             return;
         }
 
@@ -46,15 +46,15 @@ const EditProfileScreen = () => {
 
             if (response.success) {
                 await refreshUserData();
-                Alert.alert('Success', 'Profile updated successfully', [
+                SafeAlert.show('Success', 'Profile updated successfully', [
                     { text: 'OK', onPress: () => navigation.goBack() }
                 ]);
             } else {
-                Alert.alert('Error', response.message || 'Failed to update profile');
+                SafeAlert.show('Error', response.message || 'Failed to update profile');
             }
         } catch (error) {
             console.error('Update profile error:', error);
-            Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+            SafeAlert.show('Error', 'An unexpected error occurred. Please try again.');
         } finally {
             setIsSubmitting(false);
         }

@@ -11,6 +11,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AppNavigator from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { UserProfileProvider } from './src/contexts/UserProfileContext';
+import GlobalAlert from './src/components/GlobalAlert';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import razorpayService from './src/services/razorpayService';
 import { PAYMENT_CONFIG } from './src/config/payment';
@@ -62,6 +63,7 @@ function App(): React.JSX.Element {
             translucent={false}
           />
           <AppNavigator />
+          <GlobalAlert />
         </UserProfileProvider>
       </AuthProvider>
     </GestureHandlerRootView>

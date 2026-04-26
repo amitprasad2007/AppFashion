@@ -24,6 +24,7 @@ import CollectionsSection from '../components/CollectionsSection';
 import { apiService, ApiCategory, ApiProduct, ApiCollection } from '../services/api_service';
 import type { Product, Category, RootStackParamList } from '../types/navigation';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { getProductUnit, METER_MIN } from '../utils/productUnit';
 
 const { width, height } = Dimensions.get('window');
 
@@ -133,7 +134,24 @@ const HomeScreen = () => {
     </AnimatedCard>
   );
 
-  const renderProduct = ({ item, index }: { item: ApiProduct; index: number }) => (
+  const renderProduct = ({ item, index }: { item: ApiProduct; index: number }) => {
+    const unitType = getProductUnit(item.category?.slug, item.slug || item.name);
+    const minQuantity = unitType === 'meter' ? METER_MIN : 1;
+    let basePrice = Number(item.price) || 0;
+    let baseOriginalPrice = Number(item.originalPrice) || 0;
+    
+    if (item.variants && item.variants.length > 0) {
+        const defaultVar = item.variants.find(v => v.id === item.defaultVariantId) || item.variants[0];
+        if (defaultVar) {
+            basePrice = Number(defaultVar.price ?? item.price) || basePrice;
+            baseOriginalPrice = Number(defaultVar.originalPrice ?? item.originalPrice) || baseOriginalPrice;
+        }
+    }
+    
+    const displayPrice = basePrice * minQuantity;
+    const displayOriginalPrice = baseOriginalPrice * minQuantity;
+
+    return (
     <AnimatedCard
       style={styles.productItem}
       onPress={() => (navigation as any).navigate('ProductDetails', { productSlug: item.slug })}
@@ -146,22 +164,36 @@ const HomeScreen = () => {
         style={styles.productOverlay}>
         <View style={styles.productInfo}>
           <Text style={styles.productName}>{item.name}</Text>
-          <Text style={styles.productPrice}>₹{item.price}</Text>
+          <Text style={styles.productPrice}>₹{displayPrice.toLocaleString()}</Text>
           <View style={styles.ratingContainer}>
             <Text style={styles.rating}>⭐ {item.rating || 4.8}</Text>
             <Text style={styles.wishlistIcon}>🤍</Text>
           </View>
-          {item.originalPrice && item.originalPrice > item.price && (
+          {displayOriginalPrice > displayPrice && (
             <View style={styles.discountBadge}>
-              <Text style={styles.discountText}>{Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)}% OFF</Text>
+              <Text style={styles.discountText}>{Math.round(((displayOriginalPrice - displayPrice) / displayOriginalPrice) * 100)}% OFF</Text>
             </View>
           )}
         </View>
       </LinearGradient>
     </AnimatedCard>
-  );
+  )};
 
-  const renderBestsellerProduct = ({ item, index }: { item: ApiProduct; index: number }) => (
+  const renderBestsellerProduct = ({ item, index }: { item: ApiProduct; index: number }) => {
+    const unitType = getProductUnit(item.category?.slug, item.slug || item.name);
+    const minQuantity = unitType === 'meter' ? METER_MIN : 1;
+    let basePrice = Number(item.price) || 0;
+    
+    if (item.variants && item.variants.length > 0) {
+        const defaultVar = item.variants.find(v => v.id === item.defaultVariantId) || item.variants[0];
+        if (defaultVar) {
+            basePrice = Number(defaultVar.price ?? item.price) || basePrice;
+        }
+    }
+    
+    const displayPrice = basePrice * minQuantity;
+
+    return (
     <AnimatedCard
       style={styles.bestsellerItem}
       onPress={() => (navigation as any).navigate('ProductDetails', { productSlug: item.slug })}
@@ -177,7 +209,7 @@ const HomeScreen = () => {
         style={styles.bestsellerOverlay}>
         <View style={styles.bestsellerInfo}>
           <Text style={styles.bestsellerName}>{item.name}</Text>
-          <Text style={styles.bestsellerPrice}>₹{item.price}</Text>
+          <Text style={styles.bestsellerPrice}>₹{displayPrice.toLocaleString()}</Text>
           <View style={styles.ratingContainer}>
             <Text style={styles.rating}>⭐ {item.rating || 4.9}</Text>
             <Text style={styles.wishlistIcon}>❤️</Text>
@@ -185,7 +217,7 @@ const HomeScreen = () => {
         </View>
       </LinearGradient>
     </AnimatedCard>
-  );
+  )};
 
   // Show loading spinner on initial load
   if (loading && !refreshing) {

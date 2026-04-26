@@ -29,7 +29,7 @@ const SettingsScreen = () => {
     const toggleEmail = () => setEmailEnabled(previousState => !previousState);
 
     const handleDeleteAccount = () => {
-        Alert.alert(
+        SafeAlert.show(
             'Delete Account',
             'Are you sure you want to permanently delete your account? This action cannot be undone.',
             [
@@ -37,7 +37,7 @@ const SettingsScreen = () => {
                 {
                     text: 'Delete',
                     style: 'destructive',
-                    onPress: () => Alert.alert('Request Sent', 'Your account deletion request has been submitted.')
+                    onPress: () => SafeAlert.show('Request Sent', 'Your account deletion request has been submitted.')
                 }
             ]
         );
@@ -122,7 +122,7 @@ const SettingsScreen = () => {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Account</Text>
 
-                    <TouchableOpacity style={styles.linkRow} onPress={() => Alert.alert('Change Password', 'This feature is coming soon!')}>
+                    <TouchableOpacity style={styles.linkRow} onPress={() => SafeAlert.show('Change Password', 'This feature is coming soon!')}>
                         <Text style={styles.linkText}>Change Password</Text>
                         <Text style={styles.arrow}>→</Text>
                     </TouchableOpacity>

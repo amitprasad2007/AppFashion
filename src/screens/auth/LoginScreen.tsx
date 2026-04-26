@@ -82,11 +82,11 @@ const LoginScreen = () => {
         // Success is handled by the useEffect above
         console.log('Login successful');
       } else {
-        Alert.alert('Login Failed', response.message || 'Invalid credentials. Please try again.');
+        SafeAlert.show('Login Failed', response.message || 'Invalid credentials. Please try again.');
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      Alert.alert(
+      SafeAlert.show(
         'Login Error',
         error.message || 'Unable to connect to server. Please check your internet connection and try again.'
       );
@@ -97,12 +97,12 @@ const LoginScreen = () => {
 
   const handleForgotPassword = async () => {
     if (!email.trim()) {
-      Alert.alert('Enter Email', 'Please enter your email address first.');
+      SafeAlert.show('Enter Email', 'Please enter your email address first.');
       return;
     }
 
     if (!/\S+@\S+\.\S+/.test(email)) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+      SafeAlert.show('Invalid Email', 'Please enter a valid email address.');
       return;
     }
 
@@ -110,16 +110,16 @@ const LoginScreen = () => {
       const response = await forgotPassword(email.trim());
 
       if (response.success) {
-        Alert.alert(
+        SafeAlert.show(
           'Reset Email Sent! 📧',
           'Password reset instructions have been sent to your email address.',
           [{ text: 'OK' }]
         );
       } else {
-        Alert.alert('Error', response.message || 'Failed to send reset email. Please try again.');
+        SafeAlert.show('Error', response.message || 'Failed to send reset email. Please try again.');
       }
     } catch (error: any) {
-      Alert.alert('Network Error', 'Unable to send reset email. Please check your connection.');
+      SafeAlert.show('Network Error', 'Unable to send reset email. Please check your connection.');
     }
   };
 

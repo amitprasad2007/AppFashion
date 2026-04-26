@@ -62,7 +62,7 @@ const OAuthButton: React.FC<OAuthButtonProps> = ({
       
       if (result.success) {
         console.log(`✅ ${config.name} OAuth completed successfully`);
-        Alert.alert(
+        SafeAlert.show(
           'Success!',
           `${config.name} login successful!`,
           [{ text: 'OK', onPress: onSuccess }]
@@ -70,7 +70,7 @@ const OAuthButton: React.FC<OAuthButtonProps> = ({
       } else {
         console.warn(`⚠️ ${config.name} OAuth failed:`, result.message);
         const errorMessage = result.message || `${config.name} login failed`;
-        Alert.alert('Login Failed', errorMessage);
+        SafeAlert.show('Login Failed', errorMessage);
         onError?.(errorMessage);
       }
     } catch (error: any) {
@@ -89,7 +89,7 @@ const OAuthButton: React.FC<OAuthButtonProps> = ({
           : `${config.name} Sign-In is not available on this device.`;
       }
       
-      Alert.alert('Login Error', userMessage);
+      SafeAlert.show('Login Error', userMessage);
       onError?.(userMessage);
     } finally {
       setIsLoading(false);

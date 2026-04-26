@@ -19,6 +19,8 @@ import CartIcon from '../components/CartIcon';
 import SafeAlert from '../utils/safeAlert';
 import { theme } from '../theme';
 import { useUserProfile } from '../contexts/UserProfileContext';
+import { getProductUnit, METER_MIN } from '../utils/productUnit';
+import { resolveProductDisplayData } from '../utils/pricing';
 
 const RecentlyViewedScreen = () => {
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -51,13 +53,16 @@ const RecentlyViewedScreen = () => {
         await loadData();
     };
 
-    const handleAddToCart = async (productId: number, productName: string) => {
-        setAddLoading(productId);
+    const handleAddToCart = async (product: ApiProduct) => {
+        setAddLoading(product.id);
         try {
-            await addToCart(productId, 1);
+            const unitType = getProductUnit((product.category as any)?.slug, product.slug || product.name);
+            const minQuantity = unitType === 'meter' ? METER_MIN : 1;
+            
+            await addToCart(product.id, minQuantity);
             SafeAlert.show(
                 'Added to Cart',
-                `${productName} has been added to your cart successfully!`,
+                `${product.name} has been added to your cart successfully!`,
                 [
                     { text: 'Continue Shopping', style: 'cancel' },
                     { text: 'View Cart', onPress: () => navigation.navigate('Cart') },
@@ -72,15 +77,23 @@ const RecentlyViewedScreen = () => {
     };
 
     const renderItem = ({ item }: { item: ApiProduct }) => {
-        const imageUrl = item.images && item.images.length > 0
-            ? item.images[0]
-            : 'https://via.placeholder.com/150';
+        const {
+            displayPrice,
+            displayOriginalPrice,
+            imageUrl,
+            minQuantity
+        } = resolveProductDisplayData(item);
+        
         const isAdding = addLoading === item.id;
-        console.log(item.images[0]);
+        const unitType = getProductUnit((item.category as any)?.slug, item.slug || item.name);
+
         return (
             <View style={styles.itemCard}>
                 <TouchableOpacity
-                    onPress={() => navigation.navigate('ProductDetails', { productSlug: item.slug })}
+                    onPress={() => navigation.navigate('ProductDetails', { 
+                        productSlug: item.slug,
+                        product: item
+                    })}
                     style={styles.itemContent}
                     activeOpacity={0.8}
                 >
@@ -91,9 +104,14 @@ const RecentlyViewedScreen = () => {
                     <View style={styles.itemDetails}>
                         <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
                         <View style={styles.priceContainer}>
-                            <Text style={styles.currentPrice}>₹{(item.price || 0).toLocaleString()}</Text>
-                            {item.originalPrice > (item.price || 0) && (
-                                <Text style={styles.originalPrice}>₹{item.originalPrice.toLocaleString()}</Text>
+                            <View>
+                                <Text style={styles.currentPrice}>₹{displayPrice.toLocaleString()}</Text>
+                                {unitType === 'meter' && (
+                                    <Text style={styles.minLabel}>(Min {METER_MIN}m)</Text>
+                                )}
+                            </View>
+                            {displayOriginalPrice > displayPrice && (
+                                <Text style={styles.originalPrice}>₹{displayOriginalPrice.toLocaleString()}</Text>
                             )}
                         </View>
                     </View>
@@ -101,7 +119,7 @@ const RecentlyViewedScreen = () => {
 
                 <TouchableOpacity
                     style={[styles.addButton, isAdding && styles.disabledButton]}
-                    onPress={() => handleAddToCart(item.id, item.name)}
+                    onPress={() => handleAddToCart(item)}
                     disabled={isAdding}
                 >
                     {isAdding ? (
@@ -223,6 +241,11 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: theme.colors.primary[700],
         marginRight: 8,
+    },
+    minLabel: {
+        fontSize: 10,
+        color: theme.colors.neutral[500],
+        marginTop: -2,
     },
     originalPrice: {
         fontSize: 12,

@@ -8,17 +8,19 @@ import {
   Image,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   StatusBar,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { theme } from '../theme';
 import EnhancedHeader from '../components/EnhancedHeader';
+import { theme } from '../theme';
+import { getProductUnit, formatQuantity } from '../utils/productUnit';
+import { formatCurrency } from '../utils/pricing';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import { ApiOrder } from '../services/api_service';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import ProtectedScreen from '../components/ProtectedScreen';
+import SafeAlert from '../utils/safeAlert';
 
 const OrdersScreenContent = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -106,7 +108,7 @@ const OrdersScreenContent = () => {
 
   // Cancel order
   const cancelOrder = (orderId: string) => {
-    Alert.alert(
+    SafeAlert.show(
       'Cancel Order',
       'Are you sure you want to cancel this order?',
       [
@@ -115,7 +117,7 @@ const OrdersScreenContent = () => {
           text: 'Yes, Cancel',
           style: 'destructive',
           onPress: () => {
-            Alert.alert('Cancel Order', 'Order cancellation functionality coming soon!');
+            SafeAlert.show('Cancel Order', 'Order cancellation functionality coming soon!');
           },
         },
       ]
@@ -175,26 +177,32 @@ const OrdersScreenContent = () => {
 
         {/* Order Items Preview */}
         <View style={styles.itemsPreview}>
-          {item.items.slice(0, 2).map((orderItem) => (
-            <View key={orderItem.id} style={styles.orderItemRow}>
-              <Image
-                source={{
-                  uri: Array.isArray(orderItem.image)
-                    ? orderItem.image[0]
-                    : orderItem.image || 'https://via.placeholder.com/50'
-                }}
-                style={styles.orderItemImage}
-              />
-              <View style={styles.orderItemDetails}>
-                <Text style={styles.orderItemName} numberOfLines={1}>
-                  {orderItem.name}
-                </Text>
-                <Text style={styles.orderItemInfo}>
-                  Qty: {orderItem.quantity} • ₹{orderItem.price}
-                </Text>
+          {item.items.slice(0, 2).map((orderItem) => {
+            const unit = getProductUnit(null, orderItem.name || '');
+            const itemPrice = Number(orderItem.price) || 0;
+            const itemQuantity = Number(orderItem.quantity) || 0;
+            
+            return (
+              <View key={orderItem.id} style={styles.orderItemRow}>
+                <Image
+                  source={{
+                    uri: Array.isArray(orderItem.image)
+                      ? orderItem.image[0]
+                      : orderItem.image || 'https://via.placeholder.com/50'
+                  }}
+                  style={styles.orderItemImage}
+                />
+                <View style={styles.orderItemDetails}>
+                  <Text style={styles.orderItemName} numberOfLines={1}>
+                    {orderItem.name}
+                  </Text>
+                  <Text style={styles.orderItemInfo}>
+                    Qty: {formatQuantity(itemQuantity, unit)} • {formatCurrency(itemPrice)}
+                  </Text>
+                </View>
               </View>
-            </View>
-          ))}
+            );
+          })}
           {item.items.length > 2 && (
             <Text style={styles.moreItems}>
               +{item.items.length - 2} more item{item.items.length > 3 ? 's' : ''}
@@ -206,11 +214,11 @@ const OrdersScreenContent = () => {
         <View style={styles.orderSummary}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Total Items:</Text>
-            <Text style={styles.summaryValue}>{item.items.reduce((sum, orderItem) => sum + orderItem.quantity, 0)}</Text>
+            <Text style={styles.summaryValue}>{item.items.length}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Order Total:</Text>
-            <Text style={styles.summaryValue}>₹{item.total}</Text>
+            <Text style={styles.summaryValue}>{formatCurrency(item.total)}</Text>
           </View>
         </View>
 
@@ -235,7 +243,7 @@ const OrdersScreenContent = () => {
           {item.status.toLowerCase() === 'delivered' ? (
             <TouchableOpacity
               style={[styles.actionButton, styles.reorderButton]}
-              onPress={() => Alert.alert('Reorder', 'Reorder functionality coming soon!')}>
+              onPress={() => SafeAlert.show('Reorder', 'Reorder functionality coming soon!')}>
               <Text style={styles.actionButtonText}>🔄 Reorder</Text>
             </TouchableOpacity>
           ) : null}

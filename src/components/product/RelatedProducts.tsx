@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { theme } from '../../theme';
 import { ApiProduct } from '../../services/api_service/types';
+import { getProductUnit, METER_MIN } from '../../utils/productUnit';
 
 interface RelatedProductsProps {
     products: ApiProduct[];
@@ -15,18 +16,38 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ products, onProductPr
         <View style={styles.relatedContainer}>
             <Text style={styles.relatedTitle}>You May Also Like</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {products.map((item) => (
-                    <TouchableOpacity
-                        key={item.id}
-                        style={styles.relatedProduct}
-                        onPress={() => onProductPress(item)}>
-                        <Image source={{ uri: item.images[0] }} style={styles.relatedImage} />
-                        <Text style={styles.relatedName} numberOfLines={1}>{item.name}</Text>
-                        <View style={styles.priceRow}>
-                            <Text style={styles.relatedPrice}>₹{item.price?.toLocaleString()}</Text>
-                        </View>
-                    </TouchableOpacity>
-                ))}
+                {products.map((item) => {
+                    const unitType = getProductUnit(item.category?.slug, item.slug || item.name);
+                    const minQuantity = unitType === 'meter' ? METER_MIN : 1;
+                    let basePrice = Number(item.price) || 0;
+                    
+                    if (item.variants && item.variants.length > 0) {
+                        const defaultVar = item.variants.find(v => v.id === item.defaultVariantId) || item.variants[0];
+                        if (defaultVar) {
+                            basePrice = Number(defaultVar.price ?? item.price) || basePrice;
+                        }
+                    }
+                    
+                    const displayPrice = basePrice * minQuantity;
+
+                    return (
+                        <TouchableOpacity
+                            key={item.id}
+                            style={styles.relatedProduct}
+                            onPress={() => onProductPress(item)}>
+                            <Image source={{ uri: item.images[0] }} style={styles.relatedImage} />
+                            <Text style={styles.relatedName} numberOfLines={1}>{item.name}</Text>
+                            <View style={styles.priceRow}>
+                                <View>
+                                    <Text style={styles.relatedPrice}>₹{displayPrice.toLocaleString()}</Text>
+                                    {unitType === 'meter' && (
+                                        <Text style={styles.minLabel}>(Min {METER_MIN}m)</Text>
+                                    )}
+                                </View>
+                            </View>
+                        </TouchableOpacity>
+                    );
+                })}
             </ScrollView>
         </View>
     );
@@ -70,6 +91,11 @@ const styles = StyleSheet.create({
         fontSize: theme.typography.size.sm,
         fontWeight: theme.typography.weight.semibold,
         color: theme.colors.primary[500],
+    },
+    minLabel: {
+        fontSize: 9,
+        color: theme.colors.neutral[500],
+        marginTop: -2,
     },
 });
 

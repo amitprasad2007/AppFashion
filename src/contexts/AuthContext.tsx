@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useReducer, useEffect, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import EncryptedStorage from 'react-native-encrypted-storage';
 import { Linking } from 'react-native';
 import { apiService, AuthUser, LoginCredentials, RegisterCredentials, AuthResponse } from '../services/api_service';
 import { oauthService, OAuthUserInfo } from '../services/oauthService';
@@ -126,9 +127,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const saveAuthData = useCallback(async (token: string, user: AuthUser, refreshToken?: string) => {
     try {
       await Promise.all([
-        AsyncStorage.setItem(STORAGE_KEYS.TOKEN, token),
+        EncryptedStorage.setItem(STORAGE_KEYS.TOKEN, token),
         AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user)),
-        refreshToken ? AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken) : Promise.resolve(),
+        refreshToken ? EncryptedStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken) : Promise.resolve(),
       ]);
     } catch (error) {
       console.error('Error saving auth data:', error);
@@ -139,9 +140,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearAuthData = useCallback(async () => {
     try {
       await Promise.all([
-        AsyncStorage.removeItem(STORAGE_KEYS.TOKEN),
+        EncryptedStorage.removeItem(STORAGE_KEYS.TOKEN),
         AsyncStorage.removeItem(STORAGE_KEYS.USER),
-        AsyncStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN),
+        EncryptedStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN),
       ]);
     } catch (error) {
       console.error('Error clearing auth data:', error);
@@ -154,9 +155,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       dispatch({ type: 'LOADING', payload: true });
 
       const [token, userData, refreshToken] = await Promise.all([
-        AsyncStorage.getItem(STORAGE_KEYS.TOKEN),
+        EncryptedStorage.getItem(STORAGE_KEYS.TOKEN),
         AsyncStorage.getItem(STORAGE_KEYS.USER),
-        AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN),
+        EncryptedStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN),
       ]);
 
       if (token && userData) {

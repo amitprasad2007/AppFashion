@@ -17,6 +17,8 @@ import { RootStackParamList } from '../types/navigation';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import { useAuth } from '../contexts/AuthContext';
 import SafeAlert from '../utils/safeAlert';
+import { getProductUnit, METER_MIN } from '../utils/productUnit';
+import { resolveProductDisplayData, formatCurrency } from '../utils/pricing';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.44; // Approx 44% of screen width
@@ -45,6 +47,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, onPress, 
     const {
         id = 0,
         name = 'Unknown Product',
+        slug = '',
         price = 0,
         originalPrice = 0,
         rating = 0,
@@ -55,6 +58,17 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, onPress, 
         defaultVariantId,
     } = product;
 
+    // Use centralized logic to resolve price, image and variant
+    const displayData = resolveProductDisplayData(product);
+    const { 
+        displayPrice, 
+        displayOriginalPrice, 
+        imageUrl, 
+        discount, 
+        minQuantity,
+        unitType
+    } = displayData;
+
     const [addingToCart, setAddingToCart] = useState(false);
     const [isWishlisted, setIsWishlisted] = useState(false);
     const [togglingWishlist, setTogglingWishlist] = useState(false);
@@ -64,7 +78,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, onPress, 
         let isMounted = true;
 
         const checkStatus = async () => {
-            if (!id || !authState.isAuthenticated) return;
+            if (!id) return;
 
             try {
                 // Determine default variant for checking
@@ -90,19 +104,6 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, onPress, 
 
     const handleWishlistToggle = async () => {
         if (togglingWishlist) return;
-
-        // Check if user is authenticated
-        if (!authState.isAuthenticated) {
-            SafeAlert.show(
-                'Login Required',
-                'Please login to manage your wishlist',
-                [
-                    { text: 'Cancel', style: 'cancel' },
-                    { text: 'Login', onPress: () => navigation.navigate('Login') }
-                ]
-            );
-            return;
-        }
 
         try {
             setTogglingWishlist(true);
@@ -155,7 +156,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, onPress, 
                 variantId = defaultVar?.id;
             }
 
-            await addToCart(id, 1, {
+            await addToCart(id, minQuantity, {
                 variant_id: variantId,
             });
 
@@ -175,13 +176,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, onPress, 
         }
     };
 
-    const imageUrl = images && images.length > 0
-        ? images[0]
-        : `https://picsum.photos/300/400?random=${id}`;
-
-    const discount = (originalPrice && originalPrice > price)
-        ? Math.round(((originalPrice - price) / originalPrice) * 100)
-        : 0;
+    // Handlers and derived values moved up or simplified
 
     return (
         <TouchableOpacity
@@ -235,13 +230,18 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, onPress, 
 
                 {/* Price Section */}
                 <View style={styles.priceContainer}>
-                    <Text style={styles.price}>₹{(price || 0).toLocaleString()}</Text>
-                    {(originalPrice || 0) > (price || 0) && (
+                    <Text style={styles.price}>{formatCurrency(displayPrice)}</Text>
+                    {displayOriginalPrice > displayPrice && (
                         <Text style={styles.originalPrice}>
-                            ₹{originalPrice.toLocaleString()}
+                            {formatCurrency(displayOriginalPrice)}
                         </Text>
                     )}
                 </View>
+                {unitType === 'meter' && (
+                    <Text style={{ fontSize: 10, color: theme.colors.neutral[500], marginTop: -6, marginBottom: 8 }}>
+                        (Min {METER_MIN}m)
+                    </Text>
+                )}
 
                 {/* Rating */}
                 {rating > 0 && (

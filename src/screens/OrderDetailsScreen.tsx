@@ -16,6 +16,9 @@ import { RootStackParamList } from '../types/navigation';
 import EnhancedHeader from '../components/EnhancedHeader';
 import { theme } from '../theme';
 import api, { ApiOrderItem, ApiAddress } from '../services/api_service';
+import { getProductUnit, formatQuantity } from '../utils/productUnit';
+import { formatCurrency } from '../utils/pricing';
+import { SafeAlert } from '../utils/safeAlert';
 
 type OrderDetailsRouteProp = RouteProp<RootStackParamList, 'OrderDetails'>;
 
@@ -120,19 +123,32 @@ const OrderDetailsScreen = () => {
                 {/* Order Items */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Items in Order</Text>
-                    {order.items.map((item, index) => (
-                        <View key={item.id || index} style={styles.itemRow}>
-                            <Image
-                                source={{ uri: Array.isArray(item.image) ? item.image[0] : (item.image || 'https://via.placeholder.com/60') }}
-                                style={styles.itemImage}
-                            />
-                            <View style={styles.itemInfo}>
-                                <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
-                                <Text style={styles.itemMeta}>Qty: {item.quantity}</Text>
-                                <Text style={styles.itemPrice}>₹{item.price}</Text>
+                    {order.items.map((item, index) => {
+                        const unit = getProductUnit(null, item.name || '');
+                        const isThan = unit === 'meter';
+                        const itemPrice = Number(item.price) || 0;
+                        const itemQuantity = Number(item.quantity) || 0;
+                        const itemTotal = itemPrice * itemQuantity;
+                        
+                        return (
+                            <View key={item.id || index} style={styles.itemRow}>
+                                <Image
+                                    source={{ uri: Array.isArray(item.image) ? item.image[0] : (item.image || 'https://via.placeholder.com/60') }}
+                                    style={styles.itemImage}
+                                />
+                                <View style={styles.itemInfo}>
+                                    <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+                                    <Text style={styles.itemMeta}>Qty: {formatQuantity(itemQuantity, unit)}</Text>
+                                </View>
+                                <View style={styles.itemPriceContainer}>
+                                    <Text style={styles.itemPrice}>{formatCurrency(itemTotal)}</Text>
+                                    {isThan && (
+                                        <Text style={styles.priceBreakdown}>{formatCurrency(itemPrice)}/m × {itemQuantity}m</Text>
+                                    )}
+                                </View>
                             </View>
-                        </View>
-                    ))}
+                        );
+                    })}
                 </View>
 
                 {/* Shipping Address */}
@@ -168,7 +184,7 @@ const OrderDetailsScreen = () => {
                     <Text style={styles.sectionTitle}>Order Summary</Text>
                     <View style={styles.row}>
                         <Text style={styles.label}>Subtotal</Text>
-                        <Text style={styles.value}>₹{order.total}</Text>
+                        <Text style={styles.value}>{formatCurrency(order.total)}</Text>
                     </View>
                     <View style={styles.row}>
                         <Text style={styles.label}>Shipping</Text>
@@ -176,7 +192,7 @@ const OrderDetailsScreen = () => {
                     </View>
                     <View style={[styles.row, styles.totalRow]}>
                         <Text style={styles.totalLabel}>Total Amount</Text>
-                        <Text style={styles.totalValue}>₹{order.total}</Text>
+                        <Text style={styles.totalValue}>{formatCurrency(order.total)}</Text>
                     </View>
                 </View>
 
@@ -184,7 +200,7 @@ const OrderDetailsScreen = () => {
                 {order.status === 'pending' && (
                     <TouchableOpacity
                         style={styles.cancelButton}
-                        onPress={() => Alert.alert('Cancel Order', 'To cancel this order, please contact support.')}>
+                        onPress={() => SafeAlert.show('Cancel Order', 'To cancel this order, please contact support.')}>
                         <Text style={styles.cancelButtonText}>Cancel Order</Text>
                     </TouchableOpacity>
                 )}
@@ -268,10 +284,18 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: theme.colors.neutral[500],
     },
+    itemPriceContainer: {
+        alignItems: 'flex-end',
+        justifyContent: 'center',
+    },
     itemPrice: {
         fontSize: 14,
         fontWeight: '600',
         color: theme.colors.neutral[900],
+    },
+    priceBreakdown: {
+        fontSize: 10,
+        color: theme.colors.neutral[500],
         marginTop: 2,
     },
     addressContainer: {

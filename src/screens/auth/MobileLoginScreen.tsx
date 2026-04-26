@@ -25,7 +25,7 @@ const MobileLoginScreen = () => {
 
   const handleSendOtp = async () => {
     if (!phone || phone.length < 10) {
-      Alert.alert('Error', 'Please enter a valid 10-digit mobile number');
+      SafeAlert.show('Error', 'Please enter a valid 10-digit mobile number');
       return;
     }
 
@@ -35,10 +35,10 @@ const MobileLoginScreen = () => {
       if (response.success) {
         setStep('OTP');
       } else {
-        Alert.alert('Error', response.message || 'Failed to send OTP');
+        SafeAlert.show('Error', response.message || 'Failed to send OTP');
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Something went wrong');
+      SafeAlert.show('Error', error.message || 'Something went wrong');
     } finally {
       setIsLoading(false);
     }
@@ -46,7 +46,7 @@ const MobileLoginScreen = () => {
 
   const handleVerifyOtp = async () => {
     if (!otp || otp.length < 4) {
-      Alert.alert('Error', 'Please enter a valid OTP');
+      SafeAlert.show('Error', 'Please enter a valid OTP');
       return;
     }
 
@@ -56,10 +56,10 @@ const MobileLoginScreen = () => {
       if (response.success) {
         // AppNavigator will handle the redirection automatically based on auth state
       } else {
-        Alert.alert('Error', response.message || 'Invalid OTP');
+        SafeAlert.show('Error', response.message || 'Invalid OTP');
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Something went wrong');
+      SafeAlert.show('Error', error.message || 'Something went wrong');
     } finally {
       setIsLoading(false);
     }

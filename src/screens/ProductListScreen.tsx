@@ -20,6 +20,7 @@ import SafeAlert from '../utils/safeAlert';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import apiService, { ApiProduct, ApiCategory } from '../services/api_service';
+import ProductCard from '../components/ProductCard';
 
 const ProductListScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -138,41 +139,16 @@ const ProductListScreen = () => {
       product.category?.title?.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  const renderProduct = ({ item, index }: { item: ApiProduct; index: number }) => {
+  const renderProductItem = ({ item }: { item: ApiProduct }) => {
     return (
-      <TouchableOpacity
-        onPress={() => navigation.navigate('ProductDetails', { productSlug: item.slug || item.id.toString() })}
-        style={styles.productCard}
-        activeOpacity={0.8}>
-
-        <View style={styles.imageContainer}>
-          <Image source={{ uri: item.images[0] }} style={styles.productImage} />
-          {item.isBestseller && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>Bestseller</Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.productInfo}>
-          <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
-          <Text style={styles.productCategory}>
-            {typeof item.category === 'string' ? item.category : (item.category as any)?.title || 'Category'}
-          </Text>
-
-          <View style={styles.priceRow}>
-            <Text style={styles.price}>₹{item.price}</Text>
-            {(item.originalPrice || 0) > (item.price || 0) && (
-              <Text style={styles.originalPrice}>₹{item.originalPrice}</Text>
-            )}
-          </View>
-
-          <View style={styles.ratingRow}>
-            <Text style={styles.rating}>★ {item.rating || 4.5}</Text>
-            <Text style={styles.reviewCount}>({item.reviewCount || 0} reviews)</Text>
-          </View>
-        </View>
-      </TouchableOpacity>
+      <ProductCard 
+        product={item} 
+        onPress={(product) => navigation.navigate('ProductDetails', { 
+            productSlug: product.slug,
+            product: product
+        })}
+        style={{ width: '48%', marginBottom: 16 }}
+      />
     );
   };
 
@@ -306,8 +282,8 @@ const ProductListScreen = () => {
       {filteredProducts.length > 0 ? (
         <FlatList
           data={filteredProducts}
-          renderItem={renderProduct}
-          keyExtractor={item => item.id.toString()}
+          renderItem={renderProductItem}
+          keyExtractor={(item) => `product_list_${item.id}`}
           numColumns={2}
           contentContainerStyle={styles.productsList}
           columnWrapperStyle={styles.columnWrapper}

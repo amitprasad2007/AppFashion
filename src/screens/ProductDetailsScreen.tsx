@@ -23,6 +23,7 @@ import apiService, { ApiProduct } from '../services/api_service';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import { useAuth } from '../contexts/AuthContext';
 import { getProductUnit, METER_MIN, ProductUnit } from '../utils/productUnit';
+import { resolveProductDisplayData } from '../utils/pricing';
 
 // Modular Components
 import ProductImageGallery from '../components/product/ProductImageGallery';
@@ -45,31 +46,44 @@ const ProductDetailsScreen = () => {
     addToRecentlyViewed
   } = useUserProfile();
 
+  // Navigation Parameters handling (Standardization)
+  const params = route.params as any || {};
+  const initialProduct = params.product as ApiProduct | null;
+
+  // Initial derived data from passed product
+  const initialData = useMemo(() => {
+    if (!initialProduct) return null;
+    return resolveProductDisplayData(initialProduct);
+  }, [initialProduct]);
+
+  // Data State
+  const [product, setProduct] = useState<ApiProduct | null>(initialProduct);
+  const [relatedProducts, setRelatedProducts] = useState<ApiProduct[]>([]);
+
   // Selection State
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [quantity, setQuantity] = useState(1);
-  const [unitType, setUnitType] = useState<ProductUnit>('piece');
+  const [quantity, setQuantity] = useState(initialData?.isThan ? METER_MIN : 1);
+  const [unitType, setUnitType] = useState<ProductUnit>(initialData?.isThan ? 'meter' : 'piece');
   const [isFavorite, setIsFavorite] = useState(false);
-  const [selectedVariant, setSelectedVariant] = useState<any>(null);
+  const [selectedVariant, setSelectedVariant] = useState<any>(() => {
+    if (!initialProduct?.variants?.length) return null;
+    const vId = initialData?.variantId || initialProduct.defaultVariantId;
+    return initialProduct.variants.find(v => v.id === vId) || initialProduct.variants[0];
+  });
   const [selectedSize, setSelectedSize] = useState('');
 
   // UI State
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialProduct);
   const [refreshing, setRefreshing] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
   const [togglingWishlist, setTogglingWishlist] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Data State
-  const [product, setProduct] = useState<ApiProduct | null>(null);
-  const [relatedProducts, setRelatedProducts] = useState<ApiProduct[]>([]);
-
   // Navigation Parameters handling (Standardization)
-  const params = route.params as any || {};
   const slugToUse = useMemo(() => {
-    // Priority: direct productSlug > slug from product object > productId (legacy)
-    return params.productSlug || params.product?.slug || params.productId;
-  }, [params.productSlug, params.product?.slug, params.productId]);
+    // Priority: direct productSlug > slug from initialProduct > productId (legacy)
+    return params.productSlug || initialProduct?.slug || params.productId;
+  }, [params.productSlug, initialProduct?.slug, params.productId]);
 
   // Derived Values
   const currentImages = useMemo(() => {
@@ -79,13 +93,15 @@ const ProductDetailsScreen = () => {
     return [];
   }, [product, selectedVariant]);
 
-  const currentPrice = selectedVariant?.price || product?.price || 0;
-  const currentOriginalPrice = selectedVariant?.originalPrice || product?.originalPrice || 0;
+  // Derived Values using standardized logic
+  const displayData = useMemo(() => {
+    if (!product) return null;
+    return resolveProductDisplayData(product, selectedVariant?.id);
+  }, [product, selectedVariant]);
 
-  const discount = useMemo(() => {
-    if (!currentOriginalPrice || currentOriginalPrice <= currentPrice) return 0;
-    return Math.round(((currentOriginalPrice - currentPrice) / currentOriginalPrice) * 100);
-  }, [currentPrice, currentOriginalPrice]);
+  const currentPrice = displayData?.price || 0;
+  const currentOriginalPrice = displayData?.originalPrice || 0;
+  const discount = displayData?.discount || 0;
 
   // Load Data
   const loadProductData = useCallback(async (isRefresh = false) => {
@@ -110,10 +126,11 @@ const ProductDetailsScreen = () => {
             setQuantity(prev => prev === 1 ? METER_MIN : prev);
         }
 
-        // Initialize variant selection
         if (productData.variants && productData.variants.length > 0) {
-          const defaultVar = productData.variants.find(v => v.id === productData.defaultVariantId) || productData.variants[0];
-          setSelectedVariant(defaultVar);
+          // Keep selection if possible, otherwise default
+          const vId = selectedVariant?.id || productData.defaultVariantId;
+          const newVar = productData.variants.find(v => v.id === vId) || productData.variants[0];
+          setSelectedVariant(newVar);
         }
 
         const variantId = productData.variants?.[0]?.id;

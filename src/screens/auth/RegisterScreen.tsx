@@ -109,17 +109,17 @@ const RegisterScreen = () => {
 
       if (response.success) {
         // Success is handled by the useEffect above
-        Alert.alert(
+        SafeAlert.show(
           'Account Created! 🎉',
           'Your account has been created successfully. Welcome to AppFashion!',
           [{ text: 'OK' }]
         );
       } else {
-        Alert.alert('Registration Failed', response.message || 'Unable to create account. Please try again.');
+        SafeAlert.show('Registration Failed', response.message || 'Unable to create account. Please try again.');
       }
     } catch (error: any) {
       console.error('Registration error:', error);
-      Alert.alert(
+      SafeAlert.show(
         'Registration Error',
         error.message || 'Unable to connect to server. Please check your internet connection and try again.'
       );

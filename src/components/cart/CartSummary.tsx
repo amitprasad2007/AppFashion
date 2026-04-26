@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { theme } from '../../theme';
 import GradientButton from '../GradientButton';
+import { formatCurrency } from '../../utils/pricing';
 
 interface CartSummaryProps {
     subtotal: number;
@@ -26,31 +27,31 @@ const CartSummary: React.FC<CartSummaryProps> = ({
 
             <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Subtotal</Text>
-                <Text style={styles.summaryValue}>₹{subtotal.toLocaleString()}</Text>
+                <Text style={styles.summaryValue}>{formatCurrency(subtotal)}</Text>
             </View>
 
             {discount > 0 && (
                 <View style={styles.summaryRow}>
                     <Text style={[styles.summaryLabel, styles.discountLabel]}>Discount</Text>
-                    <Text style={[styles.summaryValue, styles.discountValue]}>- ₹{discount.toLocaleString()}</Text>
+                    <Text style={[styles.summaryValue, styles.discountValue]}>- {formatCurrency(discount)}</Text>
                 </View>
             )}
 
             <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Shipping</Text>
                 <Text style={styles.summaryValue}>
-                    {shipping === 0 ? 'FREE' : `₹${shipping.toLocaleString()}`}
+                    {shipping === 0 ? 'FREE' : formatCurrency(shipping)}
                 </Text>
             </View>
 
             <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Tax</Text>
-                <Text style={styles.summaryValue}>₹{tax.toLocaleString()}</Text>
+                <Text style={styles.summaryValue}>{formatCurrency(tax)}</Text>
             </View>
 
             <View style={[styles.summaryRow, styles.totalRow]}>
                 <Text style={styles.totalLabel}>Grand Total</Text>
-                <Text style={styles.totalValue}>₹{total.toLocaleString()}</Text>
+                <Text style={styles.totalValue}>{formatCurrency(total)}</Text>
             </View>
 
             <GradientButton

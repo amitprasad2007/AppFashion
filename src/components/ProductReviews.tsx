@@ -53,7 +53,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productSlug }) => {
     const handleSubmitReview = async () => {
 
         if (!isAuthenticated || !user) {
-            Alert.alert(
+            SafeAlert.show(
                 'Login Required',
                 'Please log in to submit a review.',
                 [
@@ -65,7 +65,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productSlug }) => {
         }
 
         if (!reviewText.trim()) {
-            Alert.alert('Error', 'Please enter a review text.');
+            SafeAlert.show('Error', 'Please enter a review text.');
             return;
         }
 
@@ -80,16 +80,16 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productSlug }) => {
             });
 
             if (response && response.success === false) {
-                Alert.alert('Notice', response.message || 'You have already reviewed this product.');
+                SafeAlert.show('Notice', response.message || 'You have already reviewed this product.');
                 return;
             }
-            Alert.alert('Success', 'Your review has been submitted!');
+            SafeAlert.show('Success', 'Your review has been submitted!');
             setReviewText('');
             setRating(5);
             fetchReviews(); // Refresh reviews
         } catch (error: any) {
             console.error('Failed to submit review:', error);
-            Alert.alert('Error', error.message || 'Failed to submit review. Please try again.');
+            SafeAlert.show('Error', error.message || 'Failed to submit review. Please try again.');
         } finally {
             setSubmitting(false);
         }

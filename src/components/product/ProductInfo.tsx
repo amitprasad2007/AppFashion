@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { theme } from '../../theme';
 import { removeHtmlTags } from '../../utils/textUtils';
+import { formatCurrency } from '../../utils/pricing';
 
 interface ProductInfoProps {
     name: string;
@@ -52,24 +53,24 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
             <View style={styles.priceSection}>
                 <View style={styles.priceColumn}>
                     <View style={styles.priceRow}>
-                        <Text style={styles.currentPrice}>₹{(price * (quantity || 1)).toLocaleString()}</Text>
-                        {(originalPrice || 0) > (price || 0) && (
-                            <Text style={styles.originalPrice}>₹{(originalPrice! * (quantity || 1)).toLocaleString()}</Text>
+                        <Text style={styles.currentPrice}>{formatCurrency(price * (quantity || 1))}</Text>
+                        {originalPrice && originalPrice > price && (
+                            <Text style={styles.originalPrice}>{formatCurrency(originalPrice * (quantity || 1))}</Text>
                         )}
                         {savings > 0 && (
                             <View style={styles.savingsTag}>
-                                <Text style={styles.savingsText}>Save ₹{(savings * (quantity || 1)).toLocaleString()}</Text>
+                                <Text style={styles.savingsText}>Save {formatCurrency(savings * (quantity || 1))}</Text>
                             </View>
                         )}
                     </View>
                     {unit === 'meter' && (
                         <Text style={styles.unitPriceText}>
-                            ₹{price.toLocaleString()} × {quantity || 1}m = ₹{(price * (quantity || 1)).toLocaleString()}
+                            Total: {formatCurrency(price)} × {quantity || 1}m = {formatCurrency(price * (quantity || 1))}
                         </Text>
                     )}
                     {unit === 'piece' && (quantity || 1) > 1 && (
                         <Text style={styles.unitPriceText}>
-                            ₹{price.toLocaleString()} × {quantity || 1} pieces = ₹{(price * (quantity || 1)).toLocaleString()}
+                            Total: {formatCurrency(price)} × {quantity || 1} pieces = {formatCurrency(price * (quantity || 1))}
                         </Text>
                     )}
                 </View>

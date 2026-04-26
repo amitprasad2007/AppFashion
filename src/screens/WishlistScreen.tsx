@@ -20,6 +20,9 @@ import EnhancedHeader from '../components/EnhancedHeader';
 import CartIcon from '../components/CartIcon';
 import SafeAlert from '../utils/safeAlert';
 import { theme } from '../theme';
+import { getProductUnit, METER_MIN } from '../utils/productUnit';
+import { resolveProductDisplayData } from '../utils/pricing';
+import { ApiProduct } from '../services/api_service';
 
 const WishlistScreenContent = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -103,11 +106,13 @@ const WishlistScreenContent = () => {
     );
   };
 
-  const handleAddToCart = async (productId: number, productName: string) => {
+  const handleAddToCart = async (productId: number, productName: string, category: string, slug: string) => {
     setAddLoading(productId);
 
     try {
-      await addToCart(productId, 1);
+      const unit = getProductUnit(category, slug);
+      const minQty = unit === 'meter' ? METER_MIN : 1;
+      await addToCart(productId, minQty);
       SafeAlert.show(
         'Added to Cart',
         `${productName} has been added to your cart successfully!`,
@@ -125,23 +130,41 @@ const WishlistScreenContent = () => {
   };
 
   const renderWishlistItem = ({ item }: { item: ApiWishlistItem }) => {
-    const discountPercentage = item.originalPrice
-      ? Math.round(((item.originalPrice - parseFloat(item.price)) / item.originalPrice) * 100)
-      : 0;
+    // Map ApiWishlistItem to ApiProduct structure for the utility
+    const productAdapter: any = {
+      ...item,
+      category: { slug: item.category, title: item.category },
+      price: parseFloat(item.price),
+      originalPrice: item.originalPrice
+    };
+
+    const displayData = resolveProductDisplayData(productAdapter);
+    const { 
+        displayPrice: itemPrice, 
+        displayOriginalPrice: itemOriginalPrice, 
+        discount: discountPercentage,
+        isThan,
+        minQuantity: minQty
+    } = displayData;
+
+    const unit = isThan ? 'meter' : 'piece';
     const isRemoving = removeLoading === item.id;
     const isAdding = addLoading === item.id;
 
     return (
       <View style={styles.itemCard}>
         <TouchableOpacity
-          onPress={() => navigation.navigate('ProductDetails', { productSlug: item.slug })}
+          onPress={() => navigation.navigate('ProductDetails', { 
+            productSlug: item.slug,
+            product: productAdapter 
+          })}
           style={styles.itemContent}
           activeOpacity={0.8}>
           <Image
             source={{
-              uri: Array.isArray(item.image)
-                ? item.image[0]
-                : item.image || 'https://via.placeholder.com/150'
+              uri: Array.isArray(item.images)
+                ? item.images[0]
+                : item.images || 'https://via.placeholder.com/150'
             }}
             style={styles.itemImage}
           />
@@ -157,14 +180,19 @@ const WishlistScreenContent = () => {
             <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
             <Text style={styles.category}>{item.category}</Text>
             <View style={styles.priceContainer}>
-              <Text style={styles.currentPrice}>₹{parseFloat(item.price).toLocaleString()}</Text>
-              {item.originalPrice && (
-                <Text style={styles.originalPrice}>₹{item.originalPrice.toLocaleString()}</Text>
+              <View>
+                <Text style={styles.currentPrice}>₹{itemPrice.toLocaleString()}</Text>
+                {unit === 'meter' && (
+                  <Text style={styles.minLabel}>(Min {METER_MIN}m)</Text>
+                )}
+              </View>
+              {itemOriginalPrice > itemPrice && (
+                <Text style={styles.originalPrice}>₹{itemOriginalPrice.toLocaleString()}</Text>
               )}
             </View>
-            {item.originalPrice && (
+            {itemOriginalPrice > itemPrice && (
               <Text style={styles.savings}>
-                You save ₹{(item.originalPrice - parseFloat(item.price)).toFixed(0)}
+                You save ₹{(itemOriginalPrice - itemPrice).toLocaleString()}
               </Text>
             )}
           </View>
@@ -173,7 +201,7 @@ const WishlistScreenContent = () => {
         <View style={styles.itemActions}>
           <TouchableOpacity
             style={[styles.actionButton, styles.addToCartButton, isAdding && styles.disabledButton]}
-            onPress={() => handleAddToCart(item.id, item.name)}
+            onPress={() => handleAddToCart(item.id, item.name, item.category, item.slug)}
             disabled={isAdding || isRemoving}>
             {isAdding ? (
               <ActivityIndicator size="small" color={theme.colors.white} />
@@ -273,7 +301,9 @@ const WishlistScreenContent = () => {
                   async () => {
                     try {
                       for (const item of wishlistItems) {
-                        await addToCart(item.id, 1);
+                        const unit = getProductUnit(item.category, item.slug);
+                        const minQty = unit === 'meter' ? METER_MIN : 1;
+                        await addToCart(item.id, minQty);
                       }
                       SafeAlert.success('Items Moved', 'All items have been moved to your cart.');
                       navigation.navigate('Cart');
@@ -393,6 +423,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: theme.colors.primary[600],
+  },
+  minLabel: {
+    fontSize: 10,
+    color: theme.colors.neutral[500],
+    marginTop: -2,
   },
   originalPrice: {
     fontSize: 12,

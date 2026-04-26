@@ -37,14 +37,14 @@ class OAuthService {
       if (canOpen) {
         await Linking.openURL(redirectUrl);
       } else {
-        Alert.alert(
+        SafeAlert.show(
           'Unable to Open',
           `Cannot open ${provider} login. Please check your internet connection.`
         );
       }
     } catch (error) {
       console.error(`Error starting ${provider} OAuth:`, error);
-      Alert.alert(
+      SafeAlert.show(
         'Login Error',
         `Unable to start ${provider} login. Please try again.`
       );

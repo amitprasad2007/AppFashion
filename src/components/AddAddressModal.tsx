@@ -80,7 +80,7 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
     const handleSubmit = async () => {
         // Validation
         if (!formData.full_name || !formData.phone || !formData.address_line1 || !formData.city || !formData.state || !formData.postal_code) {
-            Alert.alert('Error', 'Please fill in all required fields');
+            SafeAlert.show('Error', 'Please fill in all required fields');
             return;
         }
 
@@ -88,15 +88,15 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
         try {
             if (editAddress) {
                 await apiService.updateAddress(editAddress.id, formData);
-                Alert.alert('Success', 'Address updated successfully');
+                SafeAlert.show('Success', 'Address updated successfully');
             } else {
                 await apiService.addAddress(formData);
-                Alert.alert('Success', 'Address added successfully');
+                SafeAlert.show('Success', 'Address added successfully');
             }
             onSuccess();
             onClose();
         } catch (error: any) {
-            Alert.alert('Error', error.message || 'Failed to save address');
+            SafeAlert.show('Error', error.message || 'Failed to save address');
         } finally {
             setLoading(false);
         }
@@ -120,11 +120,11 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
             }));
 
             if (addressData.address === 'API Key Missing') {
-                Alert.alert('Note', 'Location coordinates fetched, but address lookup requires configuration.');
+                SafeAlert.show('Note', 'Location coordinates fetched, but address lookup requires configuration.');
             }
         } catch (error: any) {
             console.error('Location error:', error);
-            Alert.alert('Error', 'Failed to get current location. Please ensure location services are enabled.');
+            SafeAlert.show('Error', 'Failed to get current location. Please ensure location services are enabled.');
         } finally {
             setFetchingLocation(false);
         }
