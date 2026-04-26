@@ -264,6 +264,7 @@ export interface PolicyMetadata {
     tracking?: TrackingInfo;
     delivery_areas?: DeliveryArea[];
     shipping_methods?: ShippingMethod[];
+    refund_timelines?: DeliveryArea[];
 }
 
 export interface ApiPolicy {

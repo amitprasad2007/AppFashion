@@ -1,13 +1,6 @@
 import React, { useState } from 'react';
 import {
-    View,
-    Text,
-    StyleSheet,
-    TouchableOpacity,
-    Switch,
-    ScrollView,
-    Alert,
-    StatusBar,
+    View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView, StatusBar,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -15,6 +8,7 @@ import { RootStackParamList } from '../types/navigation';
 import EnhancedHeader from '../components/EnhancedHeader';
 import { theme } from '../theme';
 import { useAuth } from '../contexts/AuthContext';
+import SafeAlert from '../utils/safeAlert';
 
 type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
 
@@ -24,9 +18,6 @@ const SettingsScreen = () => {
 
     const [pushEnabled, setPushEnabled] = useState(true);
     const [emailEnabled, setEmailEnabled] = useState(true);
-
-    const toggleSwitch = () => setPushEnabled(previousState => !previousState);
-    const toggleEmail = () => setEmailEnabled(previousState => !previousState);
 
     const handleDeleteAccount = () => {
         SafeAlert.show(
@@ -43,180 +34,177 @@ const SettingsScreen = () => {
         );
     };
 
+    const policyItems = [
+        { title: 'Privacy Policy', icon: '🔒', type: 'privacy', navTitle: 'Privacy Policy' },
+        { title: 'Terms of Service', icon: '📋', type: 'terms', navTitle: 'Terms of Service' },
+        { title: 'Refund Policy', icon: '💸', type: 'refund', navTitle: 'Refund Policy' },
+        { title: 'Shipping Policy', icon: '🚚', type: 'shipping', navTitle: 'Shipping Policy' },
+    ];
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor={theme.colors.neutral[50]} />
             <EnhancedHeader title="Settings" showBackButton={true} onBackPress={() => navigation.goBack()} />
 
-            <ScrollView contentContainerStyle={styles.content}>
+            <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-                {/* Notifications */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Notifications</Text>
+                {/* Notifications Section */}
+                <View style={styles.card}>
+                    <View style={styles.cardHeader}>
+                        <Text style={styles.cardIcon}>🔔</Text>
+                        <Text style={styles.cardTitle}>Notifications</Text>
+                    </View>
 
                     <View style={styles.row}>
-                        <View>
+                        <View style={styles.rowInfo}>
                             <Text style={styles.rowTitle}>Push Notifications</Text>
-                            <Text style={styles.rowSubtitle}>Receive updates on your orders and offers</Text>
+                            <Text style={styles.rowSubtitle}>Order updates & offers</Text>
                         </View>
                         <Switch
-                            trackColor={{ false: theme.colors.neutral[300], true: theme.colors.primary[500] }}
-                            thumbColor={pushEnabled ? theme.colors.primary[50] : '#f4f3f4'}
-                            onValueChange={toggleSwitch}
+                            trackColor={{ false: theme.colors.neutral[300], true: theme.colors.primary[400] }}
+                            thumbColor={pushEnabled ? theme.colors.white : '#f4f3f4'}
+                            onValueChange={() => setPushEnabled(prev => !prev)}
                             value={pushEnabled}
                         />
                     </View>
 
-                    <View style={[styles.row, { borderBottomWidth: 0 }]}>
-                        <View>
+                    <View style={[styles.row, styles.lastRow]}>
+                        <View style={styles.rowInfo}>
                             <Text style={styles.rowTitle}>Email Notifications</Text>
-                            <Text style={styles.rowSubtitle}>Receive invoices and newsletters</Text>
+                            <Text style={styles.rowSubtitle}>Invoices & newsletters</Text>
                         </View>
                         <Switch
-                            trackColor={{ false: theme.colors.neutral[300], true: theme.colors.primary[500] }}
-                            thumbColor={emailEnabled ? theme.colors.primary[50] : '#f4f3f4'}
-                            onValueChange={toggleEmail}
+                            trackColor={{ false: theme.colors.neutral[300], true: theme.colors.primary[400] }}
+                            thumbColor={emailEnabled ? theme.colors.white : '#f4f3f4'}
+                            onValueChange={() => setEmailEnabled(prev => !prev)}
                             value={emailEnabled}
                         />
                     </View>
                 </View>
 
-                {/* Legal */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Legal & Privacy</Text>
+                {/* Legal & Privacy */}
+                <View style={styles.card}>
+                    <View style={styles.cardHeader}>
+                        <Text style={styles.cardIcon}>⚖️</Text>
+                        <Text style={styles.cardTitle}>Legal & Privacy</Text>
+                    </View>
+                    {policyItems.map((item, index) => (
+                        <TouchableOpacity
+                            key={item.type}
+                            style={[styles.linkRow, index === policyItems.length - 1 && styles.lastRow]}
+                            onPress={() => navigation.navigate('Policy', { type: item.type, title: item.navTitle })}
+                            activeOpacity={0.7}
+                        >
+                            <View style={styles.linkIconBg}>
+                                <Text style={styles.linkIcon}>{item.icon}</Text>
+                            </View>
+                            <Text style={styles.linkText}>{item.title}</Text>
+                            <Text style={styles.arrow}>›</Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+
+                {/* Account Section */}
+                <View style={styles.card}>
+                    <View style={styles.cardHeader}>
+                        <Text style={styles.cardIcon}>👤</Text>
+                        <Text style={styles.cardTitle}>Account</Text>
+                    </View>
 
                     <TouchableOpacity
                         style={styles.linkRow}
-                        onPress={() => navigation.navigate('Policy', { type: 'privacy', title: 'Privacy Policy' })}
+                        onPress={() => SafeAlert.show('Change Password', 'This feature is coming soon!')}
+                        activeOpacity={0.7}
                     >
-                        <Text style={styles.linkText}>Privacy Policy</Text>
-                        <Text style={styles.arrow}>→</Text>
+                        <View style={styles.linkIconBg}>
+                            <Text style={styles.linkIcon}>🔑</Text>
+                        </View>
+                        <Text style={styles.linkText}>Change Password</Text>
+                        <Text style={styles.arrow}>›</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={styles.linkRow}
-                        onPress={() => navigation.navigate('Policy', { type: 'terms', title: 'Terms of Service' })}
+                        style={[styles.linkRow, styles.lastRow]}
+                        onPress={() => navigation.navigate('Policy' as any, { type: 'about_us', title: 'About Us' })}
+                        activeOpacity={0.7}
                     >
-                        <Text style={styles.linkText}>Terms of Service</Text>
-                        <Text style={styles.arrow}>→</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={styles.linkRow}
-                        onPress={() => navigation.navigate('Policy', { type: 'refund', title: 'Refund Policy' })}
-                    >
-                        <Text style={styles.linkText}>Refund Policy</Text>
-                        <Text style={styles.arrow}>→</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={styles.linkRow}
-                        onPress={() => navigation.navigate('Policy', { type: 'shipping', title: 'Shipping Policy' })}
-                    >
-                        <Text style={styles.linkText}>Shipping Policy</Text>
-                        <Text style={styles.arrow}>→</Text>
+                        <View style={styles.linkIconBg}>
+                            <Text style={styles.linkIcon}>ℹ️</Text>
+                        </View>
+                        <Text style={styles.linkText}>About Us</Text>
+                        <Text style={styles.arrow}>›</Text>
                     </TouchableOpacity>
                 </View>
 
-                {/* Account Actions */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Account</Text>
-
-                    <TouchableOpacity style={styles.linkRow} onPress={() => SafeAlert.show('Change Password', 'This feature is coming soon!')}>
-                        <Text style={styles.linkText}>Change Password</Text>
-                        <Text style={styles.arrow}>→</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
-                        <Text style={styles.deleteText}>Delete Account</Text>
+                {/* Danger Zone */}
+                <View style={styles.dangerCard}>
+                    <View style={styles.cardHeader}>
+                        <Text style={styles.cardIcon}>⚠️</Text>
+                        <Text style={[styles.cardTitle, { color: theme.colors.error[700] }]}>Danger Zone</Text>
+                    </View>
+                    <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount} activeOpacity={0.7}>
+                        <Text style={styles.deleteIcon}>🗑️</Text>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.deleteText}>Delete Account</Text>
+                            <Text style={styles.deleteSubtext}>Permanently delete your account and data</Text>
+                        </View>
+                        <Text style={[styles.arrow, { color: theme.colors.error[400] }]}>›</Text>
                     </TouchableOpacity>
                 </View>
 
                 <Text style={styles.versionText}>App Version 1.0.0</Text>
-
             </ScrollView>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: theme.colors.neutral[50],
-    },
-    content: {
-        padding: 16,
-        paddingBottom: 30,
-    },
-    section: {
-        backgroundColor: theme.colors.white,
-        borderRadius: 12,
-        marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 2,
+    container: { flex: 1, backgroundColor: theme.colors.neutral[50] },
+    content: { padding: 16, paddingBottom: 40 },
+    card: {
+        backgroundColor: theme.colors.white, borderRadius: 16, marginBottom: 16,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06,
+        shadowRadius: 10, elevation: 3, borderWidth: 1, borderColor: theme.colors.neutral[100],
         overflow: 'hidden',
     },
-    sectionTitle: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: theme.colors.neutral[900],
-        padding: 16,
-        paddingBottom: 8,
-        backgroundColor: theme.colors.neutral[50],
+    dangerCard: {
+        backgroundColor: theme.colors.white, borderRadius: 16, marginBottom: 16,
+        borderWidth: 1, borderColor: theme.colors.error[100], overflow: 'hidden',
     },
+    cardHeader: {
+        flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 10,
+        borderBottomWidth: 1, borderBottomColor: theme.colors.neutral[100],
+    },
+    cardIcon: { fontSize: 18, marginRight: 10 },
+    cardTitle: { fontSize: 15, fontWeight: '700', color: theme.colors.neutral[800], letterSpacing: 0.3 },
     row: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.colors.neutral[100],
+        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+        paddingHorizontal: 20, paddingVertical: 16,
+        borderBottomWidth: 1, borderBottomColor: theme.colors.neutral[50],
     },
-    rowTitle: {
-        fontSize: 16,
-        color: theme.colors.neutral[900],
-        fontWeight: '500',
-    },
-    rowSubtitle: {
-        fontSize: 12,
-        color: theme.colors.neutral[500],
-        marginTop: 2,
-        maxWidth: 200,
-    },
+    lastRow: { borderBottomWidth: 0 },
+    rowInfo: { flex: 1, marginRight: 16 },
+    rowTitle: { fontSize: 15, color: theme.colors.neutral[900], fontWeight: '600' },
+    rowSubtitle: { fontSize: 12, color: theme.colors.neutral[500], marginTop: 2 },
     linkRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.colors.neutral[100],
+        flexDirection: 'row', alignItems: 'center',
+        paddingHorizontal: 20, paddingVertical: 14,
+        borderBottomWidth: 1, borderBottomColor: theme.colors.neutral[50],
     },
-    linkText: {
-        fontSize: 16,
-        color: theme.colors.neutral[900],
+    linkIconBg: {
+        width: 36, height: 36, borderRadius: 10, backgroundColor: theme.colors.neutral[50],
+        alignItems: 'center', justifyContent: 'center', marginRight: 14,
     },
-    arrow: {
-        fontSize: 18,
-        color: theme.colors.neutral[400],
-    },
+    linkIcon: { fontSize: 16 },
+    linkText: { flex: 1, fontSize: 15, color: theme.colors.neutral[900], fontWeight: '500' },
+    arrow: { fontSize: 24, color: theme.colors.neutral[300], fontWeight: '300' },
     deleteButton: {
-        padding: 16,
-        alignItems: 'center',
+        flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16,
     },
-    deleteText: {
-        color: theme.colors.error[600],
-        fontWeight: '600',
-        fontSize: 16,
-    },
-    versionText: {
-        textAlign: 'center',
-        color: theme.colors.neutral[400],
-        marginTop: 16,
-        fontSize: 12,
-    },
+    deleteIcon: { fontSize: 20, marginRight: 14 },
+    deleteText: { color: theme.colors.error[600], fontWeight: '600', fontSize: 15 },
+    deleteSubtext: { color: theme.colors.error[400], fontSize: 12, marginTop: 2 },
+    versionText: { textAlign: 'center', color: theme.colors.neutral[400], marginTop: 16, fontSize: 12 },
 });
 
 export default SettingsScreen;

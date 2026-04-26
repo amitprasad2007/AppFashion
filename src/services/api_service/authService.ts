@@ -179,6 +179,30 @@ export class AuthService extends ProductService {
         }
     }
 
+    async requestPhoneUpdate(phone: string): Promise<{ success: boolean; message: string }> {
+        try {
+            return await this.fetchApi<{ success: boolean; message: string }>('/auth/request-phone-update', {
+                method: 'POST',
+                body: JSON.stringify({ phone }),
+            });
+        } catch (error) {
+            console.error('Error requesting phone update:', error);
+            throw error;
+        }
+    }
+
+    async verifyPhoneUpdate(phone: string, otp: string): Promise<AuthResponse> {
+        try {
+            return await this.fetchApi<AuthResponse>('/auth/verify-phone-update', {
+                method: 'POST',
+                body: JSON.stringify({ phone, otp }),
+            });
+        } catch (error) {
+            console.error('Error verifying phone update:', error);
+            throw error;
+        }
+    }
+
     async oauthLogin(provider: 'googleMobile' | 'facebookMobile' | 'appleMobile', token: string, userInfo?: any): Promise<AuthResponse> {
         try {
             const response = await this.fetchApi<AuthResponse>('/auth/oauth/login', {
