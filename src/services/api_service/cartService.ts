@@ -249,4 +249,15 @@ export class CartService extends AuthService {
     async syncRecentlyViewed(items: { product_id: number; product_variant_id?: number }[]): Promise<any> {
         return this.fetchApi('/sync-recently-viewed', { method: 'POST', body: JSON.stringify({ recently_viewed: items }) });
     }
+    async validateCoupon(code: string, total: number): Promise<any> {
+        try {
+            return await this.fetchApi('/coupons/validate', {
+                method: 'POST',
+                body: JSON.stringify({ code, total }),
+            });
+        } catch (error) {
+            console.error('Error validating coupon:', error);
+            throw error;
+        }
+    }
 }

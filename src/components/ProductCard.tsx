@@ -19,6 +19,7 @@ import { useAuth } from '../contexts/AuthContext';
 import SafeAlert from '../utils/safeAlert';
 import { getProductUnit, METER_MIN } from '../utils/productUnit';
 import { resolveProductDisplayData, formatCurrency } from '../utils/pricing';
+import Feather from 'react-native-vector-icons/Feather';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.44; // Approx 44% of screen width
@@ -188,7 +189,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, onPress, 
             <View style={styles.imageContainer}>
                 <Image
                     source={{ uri: imageUrl }}
-                    style={styles.image}
+                    style={styles.image as any}
                     resizeMode="cover"
                 />
 
@@ -209,9 +210,12 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, onPress, 
                     {togglingWishlist ? (
                         <ActivityIndicator size="small" color={theme.colors.primary[500]} />
                     ) : (
-                        <Text style={[styles.heartIcon, isWishlisted && { color: 'red' }]}>
-                            {isWishlisted ? '❤️' : '🤍'}
-                        </Text>
+                        <Feather 
+                            name="heart" 
+                            size={16} 
+                            color={isWishlisted ? theme.colors.primary[500] : theme.colors.neutral[600]} 
+                            style={isWishlisted ? styles.heartFilled : {}}
+                        />
                     )}
                 </TouchableOpacity>
             </View>
@@ -246,7 +250,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, onPress, 
                 {/* Rating */}
                 {rating > 0 && (
                     <View style={styles.ratingContainer}>
-                        <Text style={styles.star}>⭐</Text>
+                        <Feather name="star" size={12} color="#FBBF24" style={styles.star} />
                         <Text style={styles.rating}>{rating}</Text>
                         <Text style={styles.reviews}>({reviewCount || 0})</Text>
                     </View>
@@ -276,11 +280,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         marginBottom: 16,
         marginRight: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
+        ...theme.shadows.md,
         borderWidth: 1,
         borderColor: theme.colors.neutral[200],
         overflow: 'hidden',
@@ -313,37 +313,35 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 8,
         right: 8,
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        backgroundColor: 'rgba(255,255,255,0.9)',
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: 'rgba(255,255,255,0.95)',
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        elevation: 2,
+        ...theme.shadows.sm,
     },
-    heartIcon: {
-        fontSize: 14,
+    heartFilled: {
+        color: theme.colors.primary[500],
     },
     content: {
         padding: 12,
     },
     category: {
-        fontSize: 12,
+        fontSize: 10,
         color: theme.colors.neutral[500],
         marginBottom: 4,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
+        fontWeight: '600',
     },
     title: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '600',
         color: theme.colors.neutral[900],
         marginBottom: 8,
-        lineHeight: 20,
-        height: 40,
+        lineHeight: 18,
+        height: 36,
     },
     priceContainer: {
         flexDirection: 'row',
@@ -351,13 +349,13 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     price: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '700',
         color: theme.colors.primary[800],
         marginRight: 6,
     },
     originalPrice: {
-        fontSize: 12,
+        fontSize: 11,
         color: theme.colors.neutral[400],
         textDecorationLine: 'line-through',
     },
@@ -365,32 +363,37 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 12,
+        backgroundColor: theme.colors.neutral[50],
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+        alignSelf: 'flex-start',
     },
     star: {
-        fontSize: 10,
-        marginRight: 2,
+        marginRight: 4,
+        color: '#FBBF24',
     },
     rating: {
-        fontSize: 12,
-        fontWeight: '600',
+        fontSize: 11,
+        fontWeight: '700',
         color: theme.colors.neutral[800],
-        marginRight: 2,
+        marginRight: 4,
     },
     reviews: {
-        fontSize: 12,
-        color: theme.colors.neutral[400],
+        fontSize: 11,
+        color: theme.colors.neutral[500],
     },
     addButton: {
-        backgroundColor: theme.colors.neutral[900],
-        paddingVertical: 8,
-        borderRadius: 6,
+        backgroundColor: theme.colors.primary[900],
+        paddingVertical: 10,
+        borderRadius: 8,
         alignItems: 'center',
     },
     addButtonText: {
-        color: theme.colors.gold,
-        fontSize: 10,
+        color: theme.colors.white,
+        fontSize: 11,
         fontWeight: 'bold',
-        letterSpacing: 1,
+        letterSpacing: 0.5,
     },
     errorContainer: {
         height: CARD_WIDTH * 1.5,

@@ -21,6 +21,8 @@ import { ApiOrder } from '../services/api_service';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import ProtectedScreen from '../components/ProtectedScreen';
 import SafeAlert from '../utils/safeAlert';
+import Icon from 'react-native-vector-icons/Feather';
+import LinearGradient from 'react-native-linear-gradient';
 
 const OrdersScreenContent = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -226,25 +228,30 @@ const OrdersScreenContent = () => {
         <View style={styles.orderActions}>
           {item.status.toLowerCase() === 'shipped' || item.status.toLowerCase() === 'out for delivery' ? (
             <TouchableOpacity
-              style={[styles.actionButton, styles.trackButton]}
+              style={styles.actionButtonContainer}
               onPress={() => trackOrder(item.id)}>
-              <Text style={styles.actionButtonText}>🚚 Track</Text>
+              <LinearGradient colors={theme.colors.gradients?.primary || ['#6366f1', '#4f46e5']} style={styles.actionGradient}>
+                <Icon name="truck" size={16} color={theme.colors.white} style={styles.actionIcon} />
+                <Text style={[styles.actionButtonText, { color: theme.colors.white }]}>Track</Text>
+              </LinearGradient>
             </TouchableOpacity>
           ) : null}
 
           {item.status.toLowerCase() === 'pending' || item.status.toLowerCase() === 'confirmed' ? (
             <TouchableOpacity
-              style={[styles.actionButton, styles.cancelButton]}
+              style={[styles.actionButtonContainer, styles.cancelButtonContainer]}
               onPress={() => cancelOrder(item.id)}>
-              <Text style={styles.actionButtonText}>❌ Cancel</Text>
+              <Icon name="x" size={16} color={theme.colors.error?.[500] || '#ef4444'} style={styles.actionIcon} />
+              <Text style={[styles.actionButtonText, { color: theme.colors.error?.[500] || '#ef4444' }]}>Cancel</Text>
             </TouchableOpacity>
           ) : null}
 
           {item.status.toLowerCase() === 'delivered' ? (
             <TouchableOpacity
-              style={[styles.actionButton, styles.reorderButton]}
+              style={[styles.actionButtonContainer, styles.reorderButtonContainer]}
               onPress={() => SafeAlert.show('Reorder', 'Reorder functionality coming soon!')}>
-              <Text style={styles.actionButtonText}>🔄 Reorder</Text>
+              <Icon name="rotate-cw" size={16} color={theme.colors.primary[600]} style={styles.actionIcon} />
+              <Text style={[styles.actionButtonText, { color: theme.colors.primary[600] }]}>Reorder</Text>
             </TouchableOpacity>
           ) : null}
         </View>
@@ -288,7 +295,7 @@ const OrdersScreenContent = () => {
       <View style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor={theme.colors.neutral[50]} />
         <EnhancedHeader
-          title=" 🗳️ My Orders"
+          title="My Orders"
           showBackButton={true}
           onBackPress={() => navigation.goBack()}
         />
@@ -304,7 +311,7 @@ const OrdersScreenContent = () => {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.neutral[50]} />
       <EnhancedHeader
-        title="🗳️ My Orders"
+        title="My Orders"
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
       />
@@ -312,7 +319,8 @@ const OrdersScreenContent = () => {
       {/* Error Message */}
       {error && (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>⚠️ {error}</Text>
+          <Icon name="alert-circle" size={16} color={theme.colors.error?.[700] || '#b91c1c'} style={{ marginRight: 6 }} />
+          <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
 
@@ -331,7 +339,9 @@ const OrdersScreenContent = () => {
       {/* Orders List */}
       {filteredOrders.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>📦</Text>
+          <View style={styles.emptyIconContainer}>
+            <Icon name="package" size={48} color={theme.colors.neutral[400]} />
+          </View>
           <Text style={styles.emptyTitle}>
             {selectedFilter === 'ALL' ? 'No orders yet' : `No ${formatStatus(selectedFilter).toLowerCase()} orders`}
           </Text>
@@ -374,15 +384,18 @@ const styles = StyleSheet.create({
   },
   errorContainer: {
     padding: 12,
-    backgroundColor: theme.colors.error[50],
+    backgroundColor: theme.colors.error?.[50] || '#fef2f2',
     marginHorizontal: 16,
     marginTop: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: theme.colors.error[200],
+    borderColor: theme.colors.error?.[200] || '#fecaca',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   errorText: {
-    color: theme.colors.error[700],
+    color: theme.colors.error?.[700] || '#b91c1c',
     fontSize: 14,
     textAlign: 'center',
   },
@@ -444,10 +457,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 32,
   },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: 16,
-    opacity: 0.5,
+  emptyIconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: theme.colors.neutral[100],
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   emptyTitle: {
     fontSize: 18,
@@ -474,10 +491,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.neutral[100],
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 2,
   },
   orderHeader: {
     flexDirection: 'row',
@@ -568,26 +585,41 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
   },
-  actionButton: {
+  actionButtonContainer: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  actionGradient: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 12,
+  },
+  actionIcon: {
+    marginRight: 6,
   },
   actionButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: theme.colors.white,
   },
-  trackButton: {
-    backgroundColor: theme.colors.primary[600],
+  cancelButtonContainer: {
+    borderWidth: 1,
+    borderColor: theme.colors.error?.[200] || '#fecaca',
+    backgroundColor: theme.colors.error?.[50] || '#fef2f2',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 11,
   },
-  cancelButton: {
-    backgroundColor: theme.colors.error[500],
-  },
-  reorderButton: {
-    backgroundColor: theme.colors.secondary[500],
+  reorderButtonContainer: {
+    borderWidth: 1,
+    borderColor: theme.colors.primary[200],
+    backgroundColor: theme.colors.primary[50],
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 11,
   },
 });
 

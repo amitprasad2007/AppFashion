@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 import { theme } from '../../theme';
 import { removeHtmlTags } from '../../utils/textUtils';
 import { formatCurrency } from '../../utils/pricing';
@@ -44,7 +45,8 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
             {/* Rating */}
             <View style={styles.ratingSection}>
                 <View style={styles.ratingBadge}>
-                    <Text style={styles.ratingText}>⭐ {rating || 4.5}</Text>
+                    <Feather name="star" size={14} color={theme.colors.secondary[700]} />
+                    <Text style={styles.ratingText}>{rating || 4.5}</Text>
                 </View>
                 <Text style={styles.reviewText}>({reviewCount || 0} reviews)</Text>
             </View>
@@ -124,15 +126,18 @@ const styles = StyleSheet.create({
     },
     ratingBadge: {
         backgroundColor: theme.colors.secondary[50],
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 4,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 6,
         borderWidth: 1,
         borderColor: theme.colors.secondary[200],
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
     },
     ratingText: {
         fontSize: 14,
-        color: theme.colors.secondary[700],
+        color: theme.colors.secondary[800],
         fontWeight: '700',
     },
     reviewText: {

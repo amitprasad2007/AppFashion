@@ -2,6 +2,7 @@
 // This service handles social authentication (Google, Facebook, Apple)
 import { Linking, Alert } from 'react-native';
 import { apiService } from './api_service';
+import SafeAlert from '../utils/safeAlert';
 
 export type OAuthProvider = 'google' | 'facebook' | 'apple';
 

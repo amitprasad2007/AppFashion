@@ -15,6 +15,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../types/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { theme } from '../../theme';
+import SafeAlert from '../../utils/safeAlert';
 import GradientButton from '../../components/GradientButton';
 import OAuthButton from '../../components/OAuth/OAuthButton';
 import EnhancedHeader from '../../components/EnhancedHeader';

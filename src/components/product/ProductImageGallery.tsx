@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet, Text, ActivityIndicator, ScrollView, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 import { theme } from '../../theme';
 
 const { width } = Dimensions.get('window');
@@ -84,9 +85,14 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
                     onPress={onToggleWishlist}
                     disabled={togglingWishlist}>
                     {togglingWishlist ? (
-                        <ActivityIndicator size="small" color="#ff6b6b" />
+                        <ActivityIndicator size="small" color={theme.colors.error[500]} />
                     ) : (
-                        <Text style={styles.heartIcon}>{isFavorite ? '❤️' : '🤍'}</Text>
+                        <Feather 
+                            name="heart" 
+                            size={20} 
+                            color={isFavorite ? theme.colors.error[500] : theme.colors.neutral[600]} 
+                            style={isFavorite ? styles.heartFilled : {}}
+                        />
                     )}
                 </TouchableOpacity>
 
@@ -183,6 +189,9 @@ const styles = StyleSheet.create({
     heartIcon: {
         fontSize: 20,
     },
+    heartFilled: {
+        color: theme.colors.error[500],
+    },
     imageIndicators: {
         position: 'absolute',
         bottom: 20,
@@ -204,7 +213,8 @@ const styles = StyleSheet.create({
     },
     thumbnailSection: {
         paddingHorizontal: 16,
-        paddingVertical: 16,
+        paddingTop: 16,
+        paddingBottom: 40, // Increased to prevent overlap from ProductInfo (which has marginTop: -24)
         backgroundColor: theme.colors.white,
     },
     thumbnailContainer: {

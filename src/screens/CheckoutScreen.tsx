@@ -27,7 +27,7 @@ import SafeAlert from '../utils/safeAlert';
 const CheckoutScreenContent = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute();
-  const { refreshUserData } = useUserProfile();
+  const { userData, refreshUserData } = useUserProfile();
 
   const params = route.params as any;
   const cart = params?.cart;
@@ -240,6 +240,7 @@ const CheckoutScreenContent = () => {
           const productPrice = (itemData.price || item.price || 0).toString();
           const quantity = item.quantity || 1;
           const color = item.selectedColor || item.color || itemData.color || 'Default';
+          const size = item.selectedSize || item.size || itemData.size || '';
           const slug = itemData.slug || item.slug || `product-${productId}`;
 
           if (!productId || !productName || !productPrice) {
@@ -258,6 +259,7 @@ const CheckoutScreenContent = () => {
             quantity: quantity,
             image: itemImage,
             color: color,
+            size: size,
             slug: slug,
           };
         }),
@@ -270,7 +272,8 @@ const CheckoutScreenContent = () => {
         tax: Number(taxAmount) || 0,
         total: Number(finalTotal) || 0,
         totalquantity: Number(itemsCount) || 0,
-        coupon_code: null,
+        coupon_code: params?.coupon_code || null,
+        shipping_notes: orderNotes,
       };
 
       const authToken = apiService.getAuthToken();
@@ -279,22 +282,39 @@ const CheckoutScreenContent = () => {
         return;
       }
 
-      try {
-        const serverCart = await apiService.getCart();
-        if (serverCart.items.length === 0) {
-          for (const item of codOrderData.items) {
-            try {
-              await apiService.addToCart(item.id, item.quantity);
-            } catch (addError) {
-              console.warn(`Failed to add item ${item.id}:`, addError);
+      let response;
+      if (params?.isBuyNow) {
+        const buyNowPayload = {
+          product_id: params.productId,
+          quantity: params.quantity,
+          variant_id: params.variantId,
+          address_id: parseInt(address.id || '1', 10),
+          payment_method: 'cod',
+          shipping_notes: orderNotes,
+        };
+        response = await apiService.buyNow(buyNowPayload);
+      } else {
+        try {
+          const serverCart = await apiService.getCart();
+          if (serverCart.items.length === 0) {
+            for (const item of codOrderData.items) {
+              try {
+                await apiService.addToCart(item.id, item.quantity, {
+                  variant_id: item.variant_id,
+                  color: item.color,
+                  size: item.size
+                });
+              } catch (addError) {
+                console.warn(`Failed to add item ${item.id}:`, addError);
+              }
             }
           }
+        } catch (cartError) {
+          console.warn('Could not check/sync cart:', cartError);
         }
-      } catch (cartError) {
-        console.warn('Could not check/sync cart:', cartError);
-      }
 
-      const response = await apiService.checkoutCOD(codOrderData);
+        response = await apiService.checkoutCOD(codOrderData);
+      }
 
       if (response.success) {
         const orderDetails = response.order;
@@ -334,6 +354,8 @@ const CheckoutScreenContent = () => {
     }
   };
 
+  const [pendingRazorpayOrder, setPendingRazorpayOrder] = useState<any>(null);
+
   const handleRazorpayPayment = async (
     items: any[],
     address: ShippingAddress,
@@ -351,6 +373,7 @@ const CheckoutScreenContent = () => {
         return;
       }
       const orderData = {
+        is_buy_now: params?.isBuyNow || false,
         items: items.map((item: any) => {
           const itemData = item.product || item;
           const itemImage = Array.isArray(itemData.images)
@@ -370,6 +393,7 @@ const CheckoutScreenContent = () => {
             quantity: item.quantity || 1,
             image: itemImage,
             color: item.selectedColor || item.color || itemData.color || 'Default',
+            size: item.selectedSize || item.size || itemData.size || '',
             slug: itemData.slug || item.slug || `product-${itemData.id}`,
           };
         }),
@@ -382,23 +406,60 @@ const CheckoutScreenContent = () => {
         discount: Number(discountAmount) || 0,
         total: Number(finalTotal) || 0,
         totalquantity: Number(itemsCount) || 0,
-        coupon_code: null,
+        coupon_code: params?.coupon_code || null,
+        shipping_notes: orderNotes,
       };
 
       const userInfo = {
         name: address.name,
-        email: address.email || 'customer@example.com',
+        email: address.email || userData?.user?.email || 'customer@example.com',
         phone: address.phone
       };
 
-      const paymentResult = await razorpayService.processPayment(selectedPayment!, orderData, userInfo);
+      let razorpayOrder = pendingRazorpayOrder;
 
-      if (paymentResult.success) {
-        console.log('✅ Razorpay payment successful:', paymentResult);
+      // If we don't have a pending order, create a new one on the backend
+      if (!razorpayOrder) {
+        razorpayOrder = await razorpayService.createOrder(orderData);
+        setPendingRazorpayOrder(razorpayOrder);
+      }
 
-        const orderDetails = paymentResult.paymentData?.order;
-        const orderId = orderDetails?.order_id || paymentResult.paymentData?.razorpay_order_id || '';
-        const orderNumber = orderDetails?.order_number || orderDetails?.order_id || paymentResult.paymentData?.razorpay_order_id || '';
+      const paymentData = {
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        orderId: razorpayOrder.order_id,
+        key: razorpayOrder.key,
+        customerEmail: userInfo.email,
+        customerPhone: userInfo.phone,
+        customerName: userInfo.name,
+        description: razorpayOrder.rzdetails.receipt,
+        prefill: {
+          email: userInfo.email,
+          contact: userInfo.phone,
+          name: userInfo.name,
+        },
+        theme: {
+          color: '#f43f5e'
+        },
+        notes: {
+          payment_method: 'ONLINE'
+        }
+      };
+
+      const razorpayResponse = await razorpayService.openPaymentGateway(paymentData);
+      
+      // Pass original orderData to handleSuccessfulPayment for saving
+      const successResult = await razorpayService.handleSuccessfulPayment(razorpayResponse, orderData);
+
+      if (successResult.success) {
+        console.log('✅ Razorpay payment successful:', successResult);
+
+        // Clear the pending order since payment succeeded
+        setPendingRazorpayOrder(null);
+
+        const orderDetails = successResult.order?.paymentData?.order || successResult.order?.order || successResult.order;
+        const orderId = orderDetails?.order_id || razorpayResponse.razorpay_order_id || '';
+        const orderNumber = orderDetails?.order_number || orderDetails?.order_id || razorpayResponse.razorpay_order_id || '';
 
         try {
           await refreshUserData();
@@ -426,26 +487,42 @@ const CheckoutScreenContent = () => {
           }]
         );
       } else {
-        throw new Error(paymentResult.message || 'Payment failed');
+        throw new Error(successResult.message || 'Payment failed');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Razorpay payment failed:', error);
+      
+      let errorMessage = 'Payment failed. Please try again.';
+      if (error && typeof error === 'object' && 'code' in error) {
+        errorMessage = razorpayService.handlePaymentFailure(error);
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
       SafeAlert.show(
         'Payment Failed',
-        `Payment could not be completed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Payment could not be completed: ${errorMessage}`,
         [
           {
             text: 'Retry',
             onPress: () => {
+              setLoading(true);
+              // Will reuse pendingRazorpayOrder since it wasn't cleared
               handleRazorpayPayment(items, address, finalTotal, itemsCount, itemsTotal, discountAmount, shippingAmount, taxAmount)
+                .finally(() => setLoading(false))
                 .catch(() => { });
             }
           },
           {
             text: 'Use COD',
             onPress: () => {
-              setSelectedPayment({ id: 'cod', type: 'COD', name: 'Cash on Delivery' });
+              // If switching to COD, we might leave a pending order on the backend,
+              // but we prevent creating multiple pending orders for the same checkout session.
+              const codMethod = paymentMethods.find(m => m.type === 'COD' || m.id === 'cod') || { id: 'cod', type: 'COD', name: 'Cash on Delivery' };
+              setSelectedPayment(codMethod);
+              setLoading(true);
               handleCODPayment(items, address, finalTotal, itemsCount, itemsTotal, discountAmount, shippingAmount, taxAmount)
+                .finally(() => setLoading(false))
                 .catch(() => { });
             }
           },
@@ -857,6 +934,7 @@ const CheckoutScreenContent = () => {
 
         {renderAddressSelection()}
         {renderPaymentMethods()}
+        {renderOrderNotes()}
         {renderCartSummary()}
 
         <GradientButton

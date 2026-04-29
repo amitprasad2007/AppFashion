@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { theme } from '../../theme';
+import Feather from 'react-native-vector-icons/Feather';
 
 interface ProductVariantsProps {
     variants: any[];
@@ -32,14 +33,15 @@ const ProductVariants: React.FC<ProductVariantsProps> = ({
                                 key={variant.id}
                                 style={[
                                     styles.colorOption,
-                                    isSelected && styles.selectedColorOption,
-                                    { backgroundColor: variant.color?.value || '#eee' }
+                                    { backgroundColor: variant.color?.value || '#eee' },
+                                    isSelected && styles.selectedColorOption
                                 ]}
                                 onPress={() => onSelectVariant(variant)}
+                                activeOpacity={0.8}
                             >
                                 {isSelected && (
                                     <View style={styles.checkIcon}>
-                                        <Text style={{ color: '#fff', fontSize: 10 }}>✓</Text>
+                                        <Feather name="check" size={14} color="#fff" />
                                     </View>
                                 )}
                             </TouchableOpacity>
@@ -48,7 +50,7 @@ const ProductVariants: React.FC<ProductVariantsProps> = ({
                 </ScrollView>
                 {selectedVariant && (
                     <Text style={styles.selectedColorText}>
-                        Selected: {selectedVariant.color?.name || 'Standard'}
+                        Selected: <Text style={styles.selectedColorValue}>{selectedVariant.color?.name || 'Standard'}</Text>
                     </Text>
                 )}
             </View>
@@ -62,47 +64,56 @@ const ProductVariants: React.FC<ProductVariantsProps> = ({
 const styles = StyleSheet.create({
     variantsSection: {
         backgroundColor: theme.colors.white,
-        paddingHorizontal: 20,
-        paddingBottom: 24,
+        paddingHorizontal: theme.spacing.xl,
+        paddingBottom: theme.spacing.xl,
     },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: '700',
+        fontSize: theme.typography.size.lg,
+        fontWeight: theme.typography.weight.bold,
         color: theme.colors.neutral[900],
-        marginBottom: 12,
+        marginBottom: theme.spacing.md,
     },
     colorSection: {
         marginBottom: 0,
     },
     colorContainer: {
         flexDirection: 'row',
-        gap: 12,
-        paddingVertical: 8,
+        gap: theme.spacing.md,
+        paddingVertical: theme.spacing.sm,
     },
     colorOption: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
         borderWidth: 2,
         borderColor: theme.colors.neutral[200],
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 8,
+        marginRight: theme.spacing.sm,
     },
     selectedColorOption: {
-        borderColor: theme.colors.primary[600],
+        borderColor: theme.colors.primary[500],
         borderWidth: 2,
         transform: [{ scale: 1.1 }],
+        ...theme.shadows.sm,
     },
     checkIcon: {
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.2)',
+        width: '100%',
+        height: '100%',
+        borderRadius: 20,
     },
     selectedColorText: {
-        marginTop: 8,
-        fontSize: 14,
-        color: theme.colors.neutral[600],
-        fontWeight: '500',
+        marginTop: theme.spacing.md,
+        fontSize: theme.typography.size.sm,
+        color: theme.colors.neutral[500],
+        fontWeight: theme.typography.weight.medium,
+    },
+    selectedColorValue: {
+        color: theme.colors.neutral[900],
+        fontWeight: theme.typography.weight.bold,
     },
 });
 

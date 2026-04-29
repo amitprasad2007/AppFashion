@@ -38,23 +38,19 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ category, onPress, style })
 const styles = StyleSheet.create({
     container: {
         alignItems: 'center',
-        marginRight: 16,
+        marginRight: theme.spacing.lg,
         width: 80,
     },
     imageContainer: {
-        width: 70,
-        height: 70,
-        borderRadius: 35, // Perfectly rounded
+        width: 72,
+        height: 72,
+        borderRadius: 36, // Perfectly rounded
         overflow: 'hidden',
-        backgroundColor: theme.colors.neutral[200],
-        marginBottom: 8,
+        backgroundColor: theme.colors.neutral[100],
+        marginBottom: theme.spacing.sm,
         borderWidth: 2,
         borderColor: theme.colors.gold, // Gold border for 'Royal' feel
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        ...theme.shadows.sm,
     },
     image: {
         width: '100%',
@@ -66,8 +62,8 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.05)', // Subtle darkening
     },
     title: {
-        fontSize: 12,
-        fontWeight: '600',
+        fontSize: theme.typography.size.sm,
+        fontWeight: theme.typography.weight.medium,
         color: theme.colors.neutral[800],
         textAlign: 'center',
         width: '100%',

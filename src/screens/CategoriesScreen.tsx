@@ -17,6 +17,8 @@ import EnhancedHeader from '../components/EnhancedHeader';
 import CartIcon from '../components/CartIcon';
 import apiService, { ApiCategory } from '../services/api_service';
 import { theme } from '../theme';
+import Icon from 'react-native-vector-icons/Feather';
+import LinearGradient from 'react-native-linear-gradient';
 
 type Category = {
   id: string;
@@ -187,7 +189,7 @@ const CategoriesScreen = () => {
             )}
           </View>
           <View style={styles.arrowContainer}>
-            <Text style={styles.arrow}>→</Text>
+            <Icon name="chevron-right" size={20} color={theme.colors.neutral[400]} />
           </View>
         </View>
       </TouchableOpacity>
@@ -225,7 +227,8 @@ const CategoriesScreen = () => {
 
       {error && (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>⚠️ {error}</Text>
+          <Icon name="alert-circle" size={16} color={theme.colors.error?.[700] || '#b91c1c'} style={{ marginRight: 6 }} />
+          <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
 
@@ -243,7 +246,10 @@ const CategoriesScreen = () => {
         />
       ) : (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>📦 No categories available</Text>
+          <View style={styles.emptyIconContainer}>
+            <Icon name="layers" size={48} color={theme.colors.neutral[400]} />
+          </View>
+          <Text style={styles.emptyText}>No categories available</Text>
           <Text style={styles.emptySubtext}>Pull down to refresh</Text>
         </View>
       )}
@@ -267,23 +273,20 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   errorContainer: {
-    backgroundColor: theme.colors.error[50],
-    padding: 12,
-    marginHorizontal: 16,
-    marginTop: 8,
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: theme.colors.error[500],
+    padding: 12, backgroundColor: theme.colors.error?.[50] || '#fef2f2', marginHorizontal: 16, marginTop: 8,
+    borderRadius: 10, borderWidth: 1, borderColor: theme.colors.error?.[200] || '#fecaca',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
   },
-  errorText: {
-    fontSize: 14,
-    color: theme.colors.error[700],
-  },
+  errorText: { color: theme.colors.error?.[700] || '#b91c1c', fontSize: 13, textAlign: 'center' },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
+  },
+  emptyIconContainer: {
+    width: 100, height: 100, borderRadius: 50, backgroundColor: theme.colors.neutral[100],
+    justifyContent: 'center', alignItems: 'center', marginBottom: 20,
   },
   emptyText: {
     fontSize: 18,
@@ -301,20 +304,20 @@ const styles = StyleSheet.create({
   categoryCardWrapper: {
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-    borderRadius: 12,
+    shadowRadius: 12,
+    elevation: 3,
+    borderRadius: 16,
     backgroundColor: theme.colors.white,
   },
   categoryCard: {
     flexDirection: 'row',
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: 'hidden',
     backgroundColor: theme.colors.white,
     borderWidth: 1,
-    borderColor: theme.colors.neutral[200],
+    borderColor: theme.colors.neutral[100],
   },
   categoryImage: {
     width: 100,
@@ -387,11 +390,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingRight: 12,
     paddingLeft: 4,
-  },
-  arrow: {
-    fontSize: 18,
-    color: theme.colors.neutral[400],
-    fontWeight: 'bold',
   },
 });
 

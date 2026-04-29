@@ -3,6 +3,8 @@ import {
     View, Text, StyleSheet, FlatList, TouchableOpacity, Image,
     ActivityIndicator, RefreshControl, StatusBar,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/Feather';
+import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
@@ -90,16 +92,26 @@ const RecentlyViewedScreen = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    style={[styles.addButton, isAdding && styles.disabledButton]}
+                    style={[styles.addButtonContainer, isAdding && styles.disabledButton]}
                     onPress={() => handleAddToCart(item)}
                     disabled={isAdding}
                     activeOpacity={0.7}
                 >
-                    {isAdding ? (
-                        <ActivityIndicator size="small" color={theme.colors.white} />
-                    ) : (
-                        <Text style={styles.addButtonText}>🛒 Add</Text>
-                    )}
+                    <LinearGradient
+                        colors={isAdding ? [theme.colors.neutral[400], theme.colors.neutral[500]] : theme.colors.gradients.primary}
+                        style={styles.addButton}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                    >
+                        {isAdding ? (
+                            <ActivityIndicator size="small" color={theme.colors.white} />
+                        ) : (
+                            <>
+                                <Icon name="shopping-cart" size={14} color="#fff" style={{ marginRight: 6 }} />
+                                <Text style={styles.addButtonText}>Add</Text>
+                            </>
+                        )}
+                    </LinearGradient>
                 </TouchableOpacity>
             </View>
         );
@@ -142,11 +154,21 @@ const RecentlyViewedScreen = () => {
                 </>
             ) : (
                 <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyEmoji}>👀</Text>
+                    <View style={styles.emptyIconContainer}>
+                        <Icon name="eye-off" size={48} color={theme.colors.neutral[400]} />
+                    </View>
                     <Text style={styles.emptyTitle}>No Recently Viewed Items</Text>
                     <Text style={styles.emptySubtitle}>Items you view will appear here. Start exploring our collections!</Text>
-                    <TouchableOpacity style={styles.shopButton} onPress={() => navigation.navigate('Home')} activeOpacity={0.8}>
-                        <Text style={styles.shopButtonText}>🛍️  Explore Now</Text>
+                    <TouchableOpacity style={styles.shopButtonContainer} onPress={() => navigation.navigate('Home')} activeOpacity={0.8}>
+                        <LinearGradient
+                            colors={theme.colors.gradients.primary}
+                            style={styles.shopButton}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                        >
+                            <Icon name="shopping-bag" size={18} color="#fff" style={{ marginRight: 8 }} />
+                            <Text style={styles.shopButtonText}>Explore Now</Text>
+                        </LinearGradient>
                     </TouchableOpacity>
                 </View>
             )}
@@ -183,20 +205,29 @@ const styles = StyleSheet.create({
     currentPrice: { fontSize: 16, fontWeight: '700', color: theme.colors.primary[700] },
     originalPrice: { fontSize: 12, color: theme.colors.neutral[400], textDecorationLine: 'line-through' },
     minLabel: { fontSize: 11, color: theme.colors.neutral[500], marginTop: 3 },
+    addButtonContainer: {
+        borderRadius: 10, overflow: 'hidden', minWidth: 74,
+    },
     addButton: {
-        backgroundColor: theme.colors.primary[600], paddingHorizontal: 14, paddingVertical: 10,
-        borderRadius: 10, minWidth: 70, alignItems: 'center',
+        paddingHorizontal: 14, paddingVertical: 10,
+        alignItems: 'center', justifyContent: 'center', flexDirection: 'row',
     },
     disabledButton: { opacity: 0.7 },
     addButtonText: { color: 'white', fontSize: 12, fontWeight: '700' },
     emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
-    emptyEmoji: { fontSize: 56, marginBottom: 16 },
+    emptyIconContainer: {
+        width: 100, height: 100, borderRadius: 50, backgroundColor: theme.colors.neutral[100],
+        alignItems: 'center', justifyContent: 'center', marginBottom: 24,
+    },
     emptyTitle: { fontSize: 20, fontWeight: '700', color: theme.colors.neutral[900], marginBottom: 8 },
     emptySubtitle: { textAlign: 'center', color: theme.colors.neutral[500], marginBottom: 24, lineHeight: 22, fontSize: 15 },
-    shopButton: {
-        backgroundColor: theme.colors.primary[600], paddingHorizontal: 28, paddingVertical: 14,
-        borderRadius: 12, shadowColor: theme.colors.primary[600], shadowOffset: { width: 0, height: 4 },
+    shopButtonContainer: {
+        borderRadius: 12, overflow: 'hidden',
+        shadowColor: theme.colors.primary[600], shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.25, shadowRadius: 8, elevation: 4,
+    },
+    shopButton: {
+        paddingHorizontal: 28, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     },
     shopButtonText: { color: 'white', fontWeight: '700', fontSize: 15 },
 });

@@ -236,6 +236,10 @@ const ProductDetailsScreen = () => {
     };
 
     navigation.navigate('Checkout', {
+      isBuyNow: true,
+      productId: product.id,
+      variantId: selectedVariant?.id,
+      quantity: quantity,
       cartItems: [item],
       total: currentPrice * quantity,
       subtotal: currentPrice * quantity,

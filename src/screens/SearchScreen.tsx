@@ -17,6 +17,8 @@ import EnhancedImage from '../components/EnhancedImage';
 import EnhancedHeader from '../components/EnhancedHeader';
 import { theme } from '../theme';
 import apiService, { ApiSearchSuggestion } from '../services/api_service';
+import Icon from 'react-native-vector-icons/Feather';
+import LinearGradient from 'react-native-linear-gradient';
 
 const SearchScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -69,9 +71,13 @@ const SearchScreen = () => {
       onPress={() => navigateToItem(item)}
       activeOpacity={0.7}>
       <View style={styles.iconContainer}>
-        <Text style={styles.resultIcon}>
-          {item.type === 'product' ? '👗' : item.type === 'category' ? '📂' : '✨'}
-        </Text>
+        {item.type === 'product' ? (
+          <Icon name="shopping-bag" size={20} color={theme.colors.primary[600]} />
+        ) : item.type === 'category' ? (
+          <Icon name="grid" size={20} color={theme.colors.secondary[600]} />
+        ) : (
+          <Icon name="star" size={20} color={theme.colors.primary[600]} />
+        )}
       </View>
       <View style={styles.resultInfo}>
         <Text style={styles.resultName}>{item.label}</Text>
@@ -83,7 +89,7 @@ const SearchScreen = () => {
           }
         ]}>{item.type.charAt(0).toUpperCase() + item.type.slice(1)}</Text>
       </View>
-      <Text style={styles.arrow}>→</Text>
+      <Icon name="chevron-right" size={20} style={styles.arrow} />
     </TouchableOpacity>
   );
 
@@ -108,7 +114,7 @@ const SearchScreen = () => {
       {/* Search Input */}
       <View style={styles.searchContainer}>
         <View style={styles.searchInputWrapper}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Icon name="search" size={20} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search products, brands, categories..."
@@ -120,8 +126,8 @@ const SearchScreen = () => {
           {isLoading ? (
             <ActivityIndicator size="small" color={theme.colors.primary[600]} style={{ marginRight: 8 }} />
           ) : searchQuery.length > 0 ? (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Text style={styles.clearButton}>✕</Text>
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={{ padding: 4 }}>
+              <Icon name="x" size={18} style={styles.clearButton} />
             </TouchableOpacity>
           ) : null}
         </View>
@@ -131,7 +137,10 @@ const SearchScreen = () => {
         <ScrollView style={styles.contentContainer} showsVerticalScrollIndicator={false}>
           {/* Recent Searches */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>⏰ Recent Searches</Text>
+            <View style={styles.sectionHeader}>
+              <Icon name="clock" size={18} color={theme.colors.neutral[700]} style={{ marginRight: 8 }} />
+              <Text style={styles.sectionTitle}>Recent Searches</Text>
+            </View>
             <View style={styles.tagsContainer}>
               {recentSearches.map((search) => renderSearchTag(search, handleSearch))}
             </View>
@@ -139,7 +148,10 @@ const SearchScreen = () => {
 
           {/* Popular Searches */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>🔥 Popular Searches</Text>
+            <View style={styles.sectionHeader}>
+              <Icon name="trending-up" size={18} color={theme.colors.neutral[700]} style={{ marginRight: 8 }} />
+              <Text style={styles.sectionTitle}>Popular Searches</Text>
+            </View>
             <View style={styles.tagsContainer}>
               {popularSearches.map((search) => renderSearchTag(search, handleSearch))}
             </View>
@@ -147,30 +159,41 @@ const SearchScreen = () => {
 
           {/* Quick Categories */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>📂 Shop by Category</Text>
+            <View style={styles.sectionHeader}>
+              <Icon name="grid" size={18} color={theme.colors.neutral[700]} style={{ marginRight: 8 }} />
+              <Text style={styles.sectionTitle}>Shop by Category</Text>
+            </View>
             <View style={styles.quickCategories}>
               <TouchableOpacity
                 style={styles.categoryCard}
                 onPress={() => navigation.navigate('ProductList', { categoryName: 'Fashion' })}>
-                <Text style={styles.categoryEmoji}>👗</Text>
+                <View style={styles.categoryIconContainer}>
+                  <Icon name="shopping-bag" size={24} color={theme.colors.primary[600]} />
+                </View>
                 <Text style={styles.categoryName}>Fashion</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.categoryCard}
                 onPress={() => navigation.navigate('ProductList', { categoryName: 'Sarees' })}>
-                <Text style={styles.categoryEmoji}>👘</Text>
+                <View style={styles.categoryIconContainer}>
+                  <Icon name="image" size={24} color={theme.colors.primary[600]} />
+                </View>
                 <Text style={styles.categoryName}>Sarees</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.categoryCard}
                 onPress={() => navigation.navigate('ProductList', { categoryName: 'Jewelry' })}>
-                <Text style={styles.categoryEmoji}>💍</Text>
+                <View style={styles.categoryIconContainer}>
+                  <Icon name="target" size={24} color={theme.colors.primary[600]} />
+                </View>
                 <Text style={styles.categoryName}>Jewelry</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.categoryCard}
                 onPress={() => navigation.navigate('ProductList', { categoryName: 'Home' })}>
-                <Text style={styles.categoryEmoji}>🏠</Text>
+                <View style={styles.categoryIconContainer}>
+                  <Icon name="home" size={24} color={theme.colors.primary[600]} />
+                </View>
                 <Text style={styles.categoryName}>Home</Text>
               </TouchableOpacity>
             </View>
@@ -241,11 +264,15 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 24,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: theme.colors.neutral[900],
-    marginBottom: 12,
   },
   tagsContainer: {
     flexDirection: 'row',
@@ -276,17 +303,21 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: theme.colors.neutral[200],
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderColor: theme.colors.neutral[100],
+    shadowColor: theme.colors.neutral[900],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
   },
-  categoryEmoji: {
-    fontSize: 32,
-    marginBottom: 8,
+  categoryIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: theme.colors.primary[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
   },
   categoryName: {
     fontSize: 15,

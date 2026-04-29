@@ -60,6 +60,23 @@ export class OrderService extends CartService {
         }
     }
 
+    async buyNow(orderData: any): Promise<any> {
+        try {
+            const response = await this.fetchApi<any>('/order/buy-now', {
+                method: 'POST',
+                body: JSON.stringify(orderData),
+            });
+            return {
+                success: true,
+                message: response.message,
+                order: response.order,
+            };
+        } catch (error) {
+            console.error('Error in Buy Now:', error);
+            throw error;
+        }
+    }
+
     async getOrdersList(params?: any): Promise<any> {
         try {
             const queryParams = new URLSearchParams();

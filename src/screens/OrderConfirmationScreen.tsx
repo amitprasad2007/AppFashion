@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,8 @@ import EnhancedHeader from '../components/EnhancedHeader';
 import { theme } from '../theme';
 import { getProductUnit, formatQuantity } from '../utils/productUnit';
 import { formatCurrency } from '../utils/pricing';
+import { apiService } from '../services/api_service';
+import { getApiBaseUrl } from '../utils/networkConfig';
 
 type OrderItem = {
   id: string | number;
@@ -45,6 +47,30 @@ const OrderConfirmationScreen = () => {
     orderItems = [],
     orderDetails: serverOrderDetails,
   } = route.params || {};
+
+  const [loading, setLoading] = useState(false);
+  const [fetchedOrderData, setFetchedOrderData] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchOrderData = async () => {
+      if (orderId !== 'N/A' && (!serverOrderDetails && (!orderItems || orderItems.length === 0))) {
+        try {
+          setLoading(true);
+          const response = await apiService.getOrderById(orderId as string);
+          if (response) {
+            setFetchedOrderData(response.order || response.data || response);
+          }
+        } catch (error) {
+          console.error('Error fetching order details:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    fetchOrderData();
+  }, [orderId, serverOrderDetails, orderItems]);
+
+  const activeServerOrderDetails = fetchedOrderData || serverOrderDetails;
 
   // Handle hardware back button
   useFocusEffect(
@@ -75,8 +101,18 @@ const OrderConfirmationScreen = () => {
 
   // Transform cart items to display format
   const transformOrderItems = () => {
-    if (serverOrderDetails?.cart_items && Array.isArray(serverOrderDetails.cart_items)) {
-      return serverOrderDetails.cart_items.map((item: any) => ({
+    if (activeServerOrderDetails?.cart_items && Array.isArray(activeServerOrderDetails.cart_items)) {
+      return activeServerOrderDetails.cart_items.map((item: any) => ({
+        id: item.id?.toString() || item.product_id?.toString() || Math.random().toString(),
+        name: item.product?.name || item.name || 'Unknown Product',
+        price: parseFloat(item.price || item.product?.price || '0'),
+        quantity: item.quantity || 1,
+        image: item.product?.image || item.image || 'https://via.placeholder.com/60',
+        color: item.product?.color || item.color || '',
+        amount: item.amount || (parseFloat(item.price || '0') * (item.quantity || 1)).toString(),
+      }));
+    } else if (activeServerOrderDetails?.items && Array.isArray(activeServerOrderDetails.items)) {
+      return activeServerOrderDetails.items.map((item: any) => ({
         id: item.id?.toString() || item.product_id?.toString() || Math.random().toString(),
         name: item.product?.name || item.name || 'Unknown Product',
         price: parseFloat(item.price || item.product?.price || '0'),
@@ -100,28 +136,28 @@ const OrderConfirmationScreen = () => {
   };
 
   const orderDetails = {
-    orderNumber: orderNumber || orderId,
-    orderDate: serverOrderDetails?.created_at
-      ? new Date(serverOrderDetails.created_at).toLocaleDateString('en-IN')
+    orderNumber: activeServerOrderDetails?.order_number || activeServerOrderDetails?.order_id || orderNumber || orderId,
+    orderDate: activeServerOrderDetails?.created_at
+      ? new Date(activeServerOrderDetails.created_at).toLocaleDateString('en-IN')
       : new Date().toLocaleDateString('en-IN'),
     estimatedDelivery: getEstimatedDelivery(),
-    total: serverOrderDetails?.total_amount || orderTotal,
-    subtotal: serverOrderDetails?.sub_total || orderTotal,
-    tax: serverOrderDetails?.tax || 0, // Calculate if needed
-    shipping_cost: serverOrderDetails?.shipping_cost || 0, // Free shipping for COD
-    discount: serverOrderDetails?.discount || 0, // Calculate if needed
+    total: activeServerOrderDetails?.total_amount || activeServerOrderDetails?.total || orderTotal,
+    subtotal: activeServerOrderDetails?.sub_total || activeServerOrderDetails?.subtotal || orderTotal,
+    tax: activeServerOrderDetails?.tax || 0, // Calculate if needed
+    shipping_cost: activeServerOrderDetails?.shipping_cost || activeServerOrderDetails?.shipping || 0, // Free shipping for COD
+    discount: activeServerOrderDetails?.discount || 0, // Calculate if needed
     items: transformOrderItems(),
     paymentMethod: {
-      type: paymentMethod === 'cod' ? 'Cash on Delivery' : paymentMethod,
-      status: paymentStatus,
-      orderStatus: orderStatus,
+      type: (activeServerOrderDetails?.payment_method || paymentMethod) === 'cod' ? 'Cash on Delivery' : (activeServerOrderDetails?.payment_method || paymentMethod),
+      status: activeServerOrderDetails?.payment_status || paymentStatus,
+      orderStatus: activeServerOrderDetails?.status || orderStatus,
     },
     orderInfo: {
-      orderId: orderId,
-      orderNumber: orderNumber,
-      customerId: serverOrderDetails?.customer_id,
-      addressId: serverOrderDetails?.address_id,
-      paymentDetails: serverOrderDetails?.payment_details,
+      orderId: activeServerOrderDetails?.id || orderId,
+      orderNumber: activeServerOrderDetails?.order_number || activeServerOrderDetails?.order_id || orderNumber,
+      customerId: activeServerOrderDetails?.customer_id,
+      addressId: activeServerOrderDetails?.address_id,
+      paymentDetails: activeServerOrderDetails?.payment_details,
     }
   };
 
@@ -137,7 +173,7 @@ const OrderConfirmationScreen = () => {
     const itemImageUrl = typeof item.image === 'string' && item.image.startsWith('http')
       ? item.image
       : item.image
-        ? `https://superadmin.samarsilkpalace.com/storage/${item.image}`
+        ? `${getApiBaseUrl().replace('/api', '')}/storage/${item.image}`
         : 'https://via.placeholder.com/60';
 
     const unit = getProductUnit(null, item.name || '');

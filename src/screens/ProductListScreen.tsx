@@ -21,6 +21,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import apiService, { ApiProduct, ApiCategory } from '../services/api_service';
 import ProductCard from '../components/ProductCard';
+import Feather from 'react-native-vector-icons/Feather';
 
 const ProductListScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -222,7 +223,7 @@ const ProductListScreen = () => {
       <View style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor={theme.colors.neutral[50]} />
         <EnhancedHeader
-          title={`🛍️ Products`}
+          title="Products"
           showBackButton={true}
           onBackPress={() => navigation.goBack()}
           rightComponent={<CartIcon size="medium" color={theme.colors.neutral[900]} />}
@@ -239,7 +240,7 @@ const ProductListScreen = () => {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.neutral[50]} />
       <EnhancedHeader
-        title={`🛍️ ${categoryName ? categoryName : type ? `${type.charAt(0).toUpperCase() + type.slice(1)} Products` : 'Collection'}`}
+        title={categoryName ? categoryName : type ? `${type.charAt(0).toUpperCase() + type.slice(1)} Products` : 'Collection'}
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
         rightComponent={<CartIcon size="medium" color={theme.colors.neutral[900]} />}
@@ -248,7 +249,7 @@ const ProductListScreen = () => {
       {/* Search */}
       <View style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Feather name="search" size={20} color={theme.colors.neutral[400]} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search our collection..."
@@ -274,7 +275,8 @@ const ProductListScreen = () => {
       {/* Error Message */}
       {error && (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>⚠️ {error}</Text>
+          <Feather name="alert-circle" size={18} color={theme.colors.error[600]} />
+          <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
 
@@ -302,6 +304,9 @@ const ProductListScreen = () => {
         />
       ) : (
         <View style={styles.emptyContainer}>
+          <View style={styles.emptyIconContainer}>
+            <Feather name={searchQuery ? "search" : "inbox"} size={48} color={theme.colors.neutral[300]} />
+          </View>
           <Text style={styles.emptyText}>
             {searchQuery ? `No products found for "${searchQuery}"` : 'No products available'}
           </Text>
@@ -337,17 +342,30 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: theme.colors.error[200],
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   errorText: {
     color: theme.colors.error[700],
     fontSize: 14,
-    textAlign: 'center',
+    flex: 1,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
+    marginTop: 40,
+  },
+  emptyIconContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: theme.colors.neutral[100],
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   emptyText: {
     fontSize: 18,
@@ -364,53 +382,55 @@ const styles = StyleSheet.create({
   searchContainer: {
     paddingHorizontal: 16,
     paddingVertical: 12,
+    backgroundColor: theme.colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.neutral[200],
   },
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.white,
-    borderRadius: 8,
+    backgroundColor: theme.colors.neutral[100],
+    borderRadius: 12,
     paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: theme.colors.neutral[300],
-    height: 48,
+    height: 44,
   },
   searchIcon: {
-    fontSize: 16,
     marginRight: 8,
-    color: theme.colors.neutral[500],
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
     color: theme.colors.neutral[900],
     height: '100%',
   },
   filtersScrollView: {
     maxHeight: 60,
+    backgroundColor: theme.colors.white,
   },
   filtersContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 12,
     gap: 8,
   },
   filterButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.neutral[100],
     borderWidth: 1,
-    borderColor: theme.colors.neutral[300],
+    borderColor: 'transparent',
     marginRight: 8,
+    ...theme.shadows.sm,
   },
   activeFilter: {
     backgroundColor: theme.colors.primary[600],
     borderColor: theme.colors.primary[600],
+    ...theme.shadows.md,
   },
   filterText: {
     fontSize: 14,
     fontWeight: '500',
-    color: theme.colors.neutral[700],
+    color: theme.colors.neutral[600],
   },
   activeFilterText: {
     color: theme.colors.white,

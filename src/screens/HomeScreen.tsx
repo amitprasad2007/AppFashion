@@ -9,6 +9,7 @@ import {
   RefreshControl,
   Dimensions,
   StatusBar,
+  TouchableOpacity,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../theme';
@@ -22,6 +23,7 @@ import UserActivitySection from '../components/UserActivitySection';
 import apiService, { ApiCategory, ApiProduct, ApiCollection } from '../services/api_service';
 import type { RootStackParamList } from '../types/navigation';
 import { StackNavigationProp } from '@react-navigation/stack';
+import Feather from 'react-native-vector-icons/Feather';
 
 const { width } = Dimensions.get('window');
 
@@ -92,6 +94,18 @@ const HomeScreen = () => {
     });
   };
 
+  const SectionHeader = ({ title, onSeeAll }: { title: string, onSeeAll?: () => void }) => (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {onSeeAll && (
+        <TouchableOpacity style={styles.seeAllButton} onPress={onSeeAll}>
+          <Text style={styles.seeAllText}>See All</Text>
+          <Feather name="chevron-right" size={16} color={theme.colors.primary[600]} />
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
   if (loading && !refreshing) {
     return (
       <View style={styles.loadingContainer}>
@@ -130,15 +144,10 @@ const HomeScreen = () => {
 
         {/* Categories Section */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Shop by Category</Text>
-            <Text
-              style={styles.seeAllText}
-              onPress={() => navigation.navigate('Categories', {})}
-            >
-              See All
-            </Text>
-          </View>
+          <SectionHeader 
+            title="Shop by Category" 
+            onSeeAll={() => navigation.navigate('Categories', {})} 
+          />
 
           <FlatList
             data={categories}
@@ -155,8 +164,6 @@ const HomeScreen = () => {
           />
         </View>
 
-
-
         {/* User Activity Section (Recently Viewed / Wishlist) */}
         <UserActivitySection
           recentlyViewed={recentlyViewed}
@@ -167,9 +174,7 @@ const HomeScreen = () => {
         {
           collections.length > 0 && (
             <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Our Collections</Text>
-              </View>
+              <SectionHeader title="Our Collections" />
 
               <FlatList
                 data={collections}
@@ -192,9 +197,7 @@ const HomeScreen = () => {
 
         {/* Featured Products */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Featured Products</Text>
-          </View>
+          <SectionHeader title="Featured Products" />
 
           <FlatList
             data={featuredProducts}
@@ -213,10 +216,7 @@ const HomeScreen = () => {
 
         {/* Bestsellers */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Best Sellers</Text>
-            <Text style={styles.seeAllText}>View All</Text>
-          </View>
+          <SectionHeader title="Best Sellers" onSeeAll={() => {}} />
 
           <FlatList
             data={bestsellerProducts}
@@ -252,43 +252,48 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.neutral[50],
   },
   loadingText: {
-    marginTop: 12,
+    marginTop: theme.spacing.md,
     color: theme.colors.neutral[600],
-    fontSize: 14,
+    fontSize: theme.typography.size.sm,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 20,
+    paddingBottom: theme.spacing.xl,
   },
   heroSection: {
-    marginBottom: 24,
+    marginBottom: theme.spacing.xl,
   },
   section: {
-    marginBottom: 32,
+    marginBottom: theme.spacing.xxl,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    marginBottom: 16,
+    paddingHorizontal: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: theme.colors.primary[900], // Dark Maroon title
-    letterSpacing: 0.5,
+    fontSize: theme.typography.size.xl,
+    fontWeight: theme.typography.weight.bold,
+    color: theme.colors.neutral[900], 
+    letterSpacing: 0.25,
+  },
+  seeAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   seeAllText: {
-    fontSize: 14,
+    fontSize: theme.typography.size.sm,
     color: theme.colors.primary[600],
-    fontWeight: '600',
+    fontWeight: theme.typography.weight.semibold,
+    marginRight: 2,
   },
   horizontalList: {
-    paddingHorizontal: 16,
-    paddingBottom: 8, // For shadow visibility
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.md, // For shadow visibility
   },
 });
 

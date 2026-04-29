@@ -6,7 +6,19 @@ export type RootStackParamList = {
   Categories: { categoryId?: string };
   Search: undefined;
   Cart: undefined;
-  Checkout: { cartItems: Array<{ id: string; name: string; price: number; originalPrice: number; quantity: number; size: string | null; color: string; image: string }>; total: number; subtotal: number; shipping: number; tax: number; discount: number };
+  Checkout: { 
+    cartItems: Array<{ id: string; name: string; price: number; originalPrice: number; quantity: number; size: string | null; color: string; image: string }>; 
+    total: number; 
+    subtotal: number; 
+    shipping: number; 
+    tax: number; 
+    discount: number;
+    isBuyNow?: boolean;
+    productId?: number;
+    variantId?: any;
+    quantity?: number;
+    coupon_code?: string;
+  };
   OrderConfirmation: {
     orderId: string;
     orderNumber: string;

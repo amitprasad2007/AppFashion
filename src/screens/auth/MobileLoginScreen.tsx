@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../contexts/AuthContext';
+import SafeAlert from '../../utils/safeAlert';
 
 const MobileLoginScreen = () => {
   const navigation = useNavigation();

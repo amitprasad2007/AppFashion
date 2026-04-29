@@ -20,6 +20,7 @@ import { ApiCart, ApiCartItem } from '../services/api_service/types';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import ProtectedScreen from '../components/ProtectedScreen';
 import SafeAlert from '../utils/safeAlert';
+import { apiService } from '../services/api_service';
 
 // Modular Components
 import CartItem from '../components/cart/CartItem';
@@ -158,10 +159,22 @@ const CartScreenContent = () => {
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
+    if (!cart?.total) return;
+
     try {
       setApplyingCoupon(true);
-      // Implementation pending API
-      SafeAlert.show('Coming Soon', 'Coupon functionality is being implemented.');
+      const response = await apiService.validateCoupon(couponCode.trim(), cart.total);
+
+      if (response.success || response.discount) {
+        SafeAlert.show('Coupon Applied', `Discount applied successfully!`);
+        await onRefresh(); // Refresh cart to get updated totals from server
+      } else {
+        SafeAlert.error('Invalid Coupon', response.message || 'The coupon code is invalid or expired.');
+        setCouponCode('');
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to apply coupon. Please try again.';
+      SafeAlert.error('Coupon Error', errorMessage);
       setCouponCode('');
     } finally {
       setApplyingCoupon(false);
@@ -191,6 +204,7 @@ const CartScreenContent = () => {
       shipping: cart.shipping,
       tax: cart.tax,
       discount: cart.discount,
+      coupon_code: couponCode,
     });
   };
 
