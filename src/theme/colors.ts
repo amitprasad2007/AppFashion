@@ -2,7 +2,7 @@ export const colors = {
   // Primary Brand Colors - Royal Maroon
   primary: {
     50: '#fdf2f4',
-    100: '#fse1e6',
+    100: '#fce1e6',
     200: '#fecdd6',
     300: '#fda4b4',
     400: '#fb718a',

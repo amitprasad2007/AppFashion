@@ -237,7 +237,9 @@ export interface ApiAddress {
 
 export interface PolicySection {
     title: string;
-    items: string[];
+    content?: string;
+    icon?: string;
+    items?: string[];
 }
 
 export interface DeliveryArea {

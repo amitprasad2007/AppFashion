@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import {
-    View, Text, StyleSheet, ScrollView, ActivityIndicator, StatusBar, TouchableOpacity,
+    View, Text, StyleSheet, ScrollView, ActivityIndicator, StatusBar, TouchableOpacity, Dimensions
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import EnhancedHeader from '../components/EnhancedHeader';
 import { theme } from '../theme';
-import { apiService, ApiPolicy, DeliveryArea } from '../services/api_service';
+import { apiService, ApiPolicy } from '../services/api_service';
+import LinearGradient from 'react-native-linear-gradient';
+import Feather from 'react-native-vector-icons/Feather';
+
+const { width } = Dimensions.get('window');
 
 const getTypeConfig = (type: string) => {
     switch (type) {
-        case 'about_us': return { icon: '🏪', color: theme.colors.primary[50], accent: theme.colors.primary[600] };
-        case 'privacy': return { icon: '🔒', color: '#EEF0F7', accent: '#4F46E5' };
-        case 'terms': return { icon: '📋', color: '#FEF3C7', accent: '#D97706' };
-        case 'refund': return { icon: '💸', color: '#ECFDF5', accent: '#059669' };
-        case 'shipping': return { icon: '🚚', color: '#FFF7ED', accent: '#EA580C' };
-        default: return { icon: '📄', color: theme.colors.neutral[50], accent: theme.colors.neutral[600] };
+        case 'about_us': return { icon: 'info', color: theme.colors.primary[600], bgColors: [theme.colors.primary[50], theme.colors.primary[100]] as [string, string] };
+        case 'privacy': return { icon: 'shield', color: '#4F46E5', bgColors: ['#EEF0F7', '#E0E7FF'] as [string, string] };
+        case 'terms': return { icon: 'file-text', color: '#D97706', bgColors: ['#FEF3C7', '#FDE68A'] as [string, string] };
+        case 'refund': return { icon: 'refresh-ccw', color: '#059669', bgColors: ['#ECFDF5', '#D1FAE5'] as [string, string] };
+        case 'shipping': return { icon: 'truck', color: '#EA580C', bgColors: ['#FFF7ED', '#FFEDD5'] as [string, string] };
+        default: return { icon: 'file', color: theme.colors.neutral[600], bgColors: [theme.colors.neutral[50], theme.colors.neutral[100]] as [string, string] };
     }
 };
 
@@ -28,6 +32,7 @@ const PolicyScreen = () => {
     const [error, setError] = useState<string | null>(null);
 
     const config = getTypeConfig(type);
+    const metadata = policy?.metadata;
 
     useEffect(() => { loadPolicy(); }, [type]);
 
@@ -38,7 +43,7 @@ const PolicyScreen = () => {
             setPolicy(data);
         } catch (err) {
             console.error(`Error loading ${type} policy:`, err);
-            setError('Failed to load content. Please try again later.');
+            setError('Failed to load content. Please check your connection and try again.');
         } finally { setLoading(false); }
     };
 
@@ -49,7 +54,7 @@ const PolicyScreen = () => {
                 <EnhancedHeader title={title} showBackButton={true} onBackPress={() => navigation.goBack()} />
                 <View style={styles.centerContent}>
                     <ActivityIndicator size="large" color={theme.colors.primary[600]} />
-                    <Text style={styles.loadingText}>Loading...</Text>
+                    <Text style={styles.loadingText}>Fetching details...</Text>
                 </View>
             </View>
         );
@@ -62,39 +67,54 @@ const PolicyScreen = () => {
 
             <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-                {/* Type Hero */}
-                <View style={[styles.heroCard, { backgroundColor: config.color }]}>
-                    <Text style={styles.heroEmoji}>{config.icon}</Text>
+                {/* Elegant Hero Section */}
+                <LinearGradient colors={config.bgColors} style={styles.heroCard} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                    <View style={[styles.heroIconContainer, { backgroundColor: 'rgba(255,255,255,0.6)' }]}>
+                        <Feather name={config.icon} size={36} color={config.color} />
+                    </View>
                     <Text style={styles.heroTitle}>{title}</Text>
-                </View>
+                    <View style={styles.heroLine} />
+                </LinearGradient>
 
                 {error ? (
                     <View style={styles.errorCard}>
-                        <Text style={styles.errorIcon}>⚠️</Text>
+                        <View style={styles.errorIconContainer}>
+                            <Feather name="alert-circle" size={32} color={theme.colors.error[500]} />
+                        </View>
                         <Text style={styles.errorText}>{error}</Text>
-                        <TouchableOpacity style={styles.retryBtn} onPress={loadPolicy} activeOpacity={0.7}>
+                        <TouchableOpacity style={styles.retryBtn} onPress={loadPolicy} activeOpacity={0.8}>
                             <Text style={styles.retryText}>Try Again</Text>
                         </TouchableOpacity>
                     </View>
                 ) : (
-                    <View style={styles.card}>
-                        {policy?.metadata && policy.metadata.sections ? (
+                    <View style={styles.mainContent}>
+                        {metadata && metadata.sections ? (
                             <>
-                                {policy.metadata.introduction && (
-                                    <Text style={styles.introduction}>{policy.metadata.introduction}</Text>
+                                {metadata.introduction && (
+                                    <View style={styles.introCard}>
+                                        <Text style={styles.introduction}>{metadata.introduction}</Text>
+                                    </View>
                                 )}
 
                                 {/* Standard Sections */}
-                                {policy.metadata.sections && policy.metadata.sections.map((section, index) => (
-                                    <View key={`section-${index}`} style={styles.sectionContainer}>
+                                {metadata.sections && metadata.sections.map((section, index) => (
+                                    <View key={`section-${index}`} style={styles.sectionCard}>
                                         <View style={styles.sectionHeader}>
-                                            <View style={[styles.sectionDot, { backgroundColor: config.accent }]} />
-                                            <Text style={[styles.sectionTitle, { color: config.accent }]}>{section.title}</Text>
+                                            <View style={[styles.sectionIconBg, { backgroundColor: config.bgColors[0] }]}>
+                                                <Feather name={section.icon || "check-circle"} size={16} color={config.color} />
+                                            </View>
+                                            <Text style={styles.sectionTitle}>{section.title}</Text>
                                         </View>
-                                        <View style={styles.listContainer}>
+                                        
+                                        <View style={styles.sectionBody}>
+                                            {section.content && (
+                                                <Text style={[styles.text, section.items ? { marginBottom: 16 } : undefined]}>
+                                                    {section.content}
+                                                </Text>
+                                            )}
                                             {section.items && section.items.map((item, itemIndex) => (
                                                 <View key={itemIndex} style={styles.listItem}>
-                                                    <View style={styles.bulletDot} />
+                                                    <View style={[styles.bulletDot, { backgroundColor: config.color }]} />
                                                     <Text style={styles.listItemText}>{item}</Text>
                                                 </View>
                                             ))}
@@ -102,182 +122,419 @@ const PolicyScreen = () => {
                                     </View>
                                 ))}
 
-                                {/* Shipping: Note */}
-                                {policy.metadata.note && (
-                                    <View style={styles.noteContainer}>
-                                        <Text style={styles.noteIcon}>📌</Text>
-                                        <View style={{ flex: 1 }}>
+                                {/* Important Note (e.g. for Shipping) */}
+                                {metadata.note && (
+                                    <LinearGradient colors={['#F0FDF4', '#DCFCE7']} style={styles.noteContainer}>
+                                        <View style={styles.noteHeader}>
+                                            <Feather name="info" size={20} color={theme.colors.primary[700]} style={styles.noteIcon} />
                                             <Text style={styles.noteTitle}>Important Note</Text>
-                                            <Text style={styles.noteText}>{policy.metadata.note}</Text>
                                         </View>
-                                    </View>
+                                        <Text style={styles.noteText}>{metadata.note}</Text>
+                                    </LinearGradient>
                                 )}
 
-                                {/* Shipping: Tracking */}
-                                {policy.metadata.tracking && (
-                                    <View style={styles.sectionContainer}>
+                                {/* Tracking Info */}
+                                {metadata.tracking && (
+                                    <View style={styles.sectionCard}>
                                         <View style={styles.sectionHeader}>
-                                            <View style={[styles.sectionDot, { backgroundColor: config.accent }]} />
-                                            <Text style={[styles.sectionTitle, { color: config.accent }]}>{policy.metadata.tracking.title}</Text>
-                                        </View>
-                                        <Text style={styles.text}>{policy.metadata.tracking.content}</Text>
-                                    </View>
-                                )}
-
-                                {/* Shipping: Delivery Areas */}
-                                {policy.metadata.delivery_areas && policy.metadata.delivery_areas.length > 0 && (
-                                    <View style={styles.sectionContainer}>
-                                        <View style={styles.sectionHeader}>
-                                            <View style={[styles.sectionDot, { backgroundColor: config.accent }]} />
-                                            <Text style={[styles.sectionTitle, { color: config.accent }]}>Delivery Areas & Timelines</Text>
-                                        </View>
-                                        {policy.metadata.delivery_areas.map((area, index) => (
-                                            <View key={`area-${index}`} style={styles.rowItem}>
-                                                <Text style={styles.rowLabel}>📍 {area.area}</Text>
-                                                <Text style={styles.rowValue}>{area.time}</Text>
+                                            <View style={[styles.sectionIconBg, { backgroundColor: config.bgColors[0] }]}>
+                                                <Feather name="map-pin" size={16} color={config.color} />
                                             </View>
-                                        ))}
+                                            <Text style={styles.sectionTitle}>{metadata.tracking.title}</Text>
+                                        </View>
+                                        <View style={styles.sectionBody}>
+                                            <Text style={styles.text}>{metadata.tracking.content}</Text>
+                                        </View>
                                     </View>
                                 )}
 
-                                {/* Shipping: Methods */}
-                                {policy.metadata.shipping_methods && policy.metadata.shipping_methods.length > 0 && (
-                                    <View style={styles.sectionContainer}>
+                                {/* Delivery Areas */}
+                                {metadata.delivery_areas && metadata.delivery_areas.length > 0 && (
+                                    <View style={styles.sectionCard}>
                                         <View style={styles.sectionHeader}>
-                                            <View style={[styles.sectionDot, { backgroundColor: config.accent }]} />
-                                            <Text style={[styles.sectionTitle, { color: config.accent }]}>Shipping Methods</Text>
+                                            <View style={[styles.sectionIconBg, { backgroundColor: config.bgColors[0] }]}>
+                                                <Feather name="globe" size={16} color={config.color} />
+                                            </View>
+                                            <Text style={styles.sectionTitle}>Delivery Areas & Timelines</Text>
                                         </View>
-                                        {policy.metadata.shipping_methods.map((method, index) => (
-                                            <View key={`method-${index}`} style={styles.methodCard}>
-                                                <View style={styles.methodHeader}>
-                                                    <Text style={styles.methodName}>{method.name}</Text>
-                                                    <View style={styles.methodPriceBadge}>
-                                                        <Text style={styles.methodPrice}>{method.price}</Text>
+                                        <View style={styles.tableContainer}>
+                                            {metadata.delivery_areas.map((area, index, arr) => (
+                                                <View key={`area-${index}`} style={[styles.rowItem, index === arr.length - 1 && styles.lastRow]}>
+                                                    <View style={styles.rowLabelContainer}>
+                                                        <Feather name="map" size={14} color={theme.colors.neutral[400]} style={{ marginRight: 8 }} />
+                                                        <Text style={styles.rowLabel}>{area.area}</Text>
                                                     </View>
+                                                    <Text style={styles.rowValue}>{area.time}</Text>
                                                 </View>
-                                                <Text style={styles.methodTime}>⏱ {method.time}</Text>
-                                                <Text style={styles.methodDetails}>{method.details}</Text>
+                                            ))}
+                                        </View>
+                                    </View>
+                                )}
+
+                                {/* Shipping Methods */}
+                                {metadata.shipping_methods && metadata.shipping_methods.length > 0 && (
+                                    <View style={styles.sectionCard}>
+                                        <View style={styles.sectionHeader}>
+                                            <View style={[styles.sectionIconBg, { backgroundColor: config.bgColors[0] }]}>
+                                                <Feather name="package" size={16} color={config.color} />
                                             </View>
-                                        ))}
+                                            <Text style={styles.sectionTitle}>Shipping Methods</Text>
+                                        </View>
+                                        <View style={styles.sectionBody}>
+                                            {metadata.shipping_methods.map((method, index) => (
+                                                <View key={`method-${index}`} style={styles.methodCard}>
+                                                    <View style={styles.methodHeader}>
+                                                        <Text style={styles.methodName}>{method.name}</Text>
+                                                        <View style={[styles.methodPriceBadge, { backgroundColor: config.bgColors[0] }]}>
+                                                            <Text style={[styles.methodPrice, { color: config.color }]}>{method.price}</Text>
+                                                        </View>
+                                                    </View>
+                                                    <View style={styles.methodDetailRow}>
+                                                        <Feather name="clock" size={12} color={theme.colors.neutral[500]} />
+                                                        <Text style={styles.methodTime}>{method.time}</Text>
+                                                    </View>
+                                                    <Text style={styles.methodDetails}>{method.details}</Text>
+                                                </View>
+                                            ))}
+                                        </View>
                                     </View>
                                 )}
 
                                 {/* Refund Timelines */}
-                                {policy.metadata.refund_timelines && policy.metadata.refund_timelines.length > 0 && (
-                                    <View style={styles.sectionContainer}>
+                                {metadata.refund_timelines && metadata.refund_timelines.length > 0 && (
+                                    <View style={styles.sectionCard}>
                                         <View style={styles.sectionHeader}>
-                                            <View style={[styles.sectionDot, { backgroundColor: config.accent }]} />
-                                            <Text style={[styles.sectionTitle, { color: config.accent }]}>Refund Timelines</Text>
-                                        </View>
-                                        {policy.metadata.refund_timelines.map((timeline: any, index: number) => (
-                                            <View key={`timeline-${index}`} style={styles.rowItem}>
-                                                <Text style={styles.rowLabel}>💳 {timeline.method || timeline.area}</Text>
-                                                <Text style={styles.rowValue}>{timeline.time}</Text>
+                                            <View style={[styles.sectionIconBg, { backgroundColor: config.bgColors[0] }]}>
+                                                <Feather name="clock" size={16} color={config.color} />
                                             </View>
-                                        ))}
+                                            <Text style={styles.sectionTitle}>Refund Timelines</Text>
+                                        </View>
+                                        <View style={styles.tableContainer}>
+                                            {metadata.refund_timelines.map((timeline: any, index: number, arr: any[]) => (
+                                                <View key={`timeline-${index}`} style={[styles.rowItem, index === arr.length - 1 && styles.lastRow]}>
+                                                    <View style={styles.rowLabelContainer}>
+                                                        <Feather name="credit-card" size={14} color={theme.colors.neutral[400]} style={{ marginRight: 8 }} />
+                                                        <Text style={styles.rowLabel}>{timeline.method || timeline.area}</Text>
+                                                    </View>
+                                                    <Text style={styles.rowValue}>{timeline.time}</Text>
+                                                </View>
+                                            ))}
+                                        </View>
                                     </View>
                                 )}
                             </>
                         ) : (
-                            <Text style={styles.policyText}>
-                                {policy?.content?.replace(/<[^>]*>?/gm, '\n').replace(/&nbsp;/g, ' ') || 'No content available.'}
-                            </Text>
+                            <View style={styles.fallbackCard}>
+                                <Text style={styles.policyText}>
+                                    {policy?.content?.replace(/<[^>]*>?/gm, '\n').replace(/&nbsp;/g, ' ') || 'No content available.'}
+                                </Text>
+                            </View>
                         )}
                     </View>
                 )}
+                
+                <View style={styles.bottomSpacer} />
             </ScrollView>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.colors.neutral[50] },
+    container: { flex: 1, backgroundColor: '#F8F9FA' },
     centerContent: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    loadingText: { marginTop: 12, color: theme.colors.neutral[500], fontSize: 14 },
-    content: { padding: 16, paddingBottom: 40 },
+    loadingText: { marginTop: 16, color: theme.colors.neutral[500], fontSize: 14, fontWeight: '500', letterSpacing: 0.5 },
+    content: { padding: 20 },
+    bottomSpacer: { height: 40 },
 
-    // Hero
+    // Hero Section
     heroCard: {
-        alignItems: 'center', borderRadius: 16, paddingVertical: 24, marginBottom: 16,
-        borderWidth: 1, borderColor: 'rgba(0,0,0,0.04)',
+        alignItems: 'center',
+        borderRadius: 24,
+        paddingVertical: 32,
+        paddingHorizontal: 20,
+        marginBottom: 24,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.05,
+        shadowRadius: 16,
+        elevation: 2,
     },
-    heroEmoji: { fontSize: 40, marginBottom: 10 },
-    heroTitle: { fontSize: 22, fontWeight: '700', color: theme.colors.neutral[900], marginBottom: 4 },
-    heroDate: { fontSize: 12, color: theme.colors.neutral[500] },
+    heroIconContainer: {
+        width: 72,
+        height: 72,
+        borderRadius: 36,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+    },
+    heroTitle: { 
+        fontSize: 26, 
+        fontWeight: '800', 
+        color: theme.colors.neutral[900], 
+        letterSpacing: -0.5,
+        textAlign: 'center',
+    },
+    heroLine: {
+        width: 40,
+        height: 4,
+        backgroundColor: 'rgba(0,0,0,0.1)',
+        borderRadius: 2,
+        marginTop: 16,
+    },
 
-    // Error
+    // Error State
     errorCard: {
-        backgroundColor: theme.colors.white, borderRadius: 16, padding: 32, alignItems: 'center',
-        borderWidth: 1, borderColor: theme.colors.error[100],
+        backgroundColor: theme.colors.white,
+        borderRadius: 20,
+        padding: 32,
+        alignItems: 'center',
+        shadowColor: theme.colors.error[200],
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.1,
+        shadowRadius: 16,
+        elevation: 3,
+        borderWidth: 1,
+        borderColor: theme.colors.error[50],
     },
-    errorIcon: { fontSize: 40, marginBottom: 12 },
-    errorText: { color: theme.colors.error[600], fontSize: 15, textAlign: 'center', marginBottom: 16 },
+    errorIconContainer: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: theme.colors.error[50],
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+    },
+    errorText: { color: theme.colors.error[700], fontSize: 15, textAlign: 'center', marginBottom: 24, lineHeight: 22 },
     retryBtn: {
-        backgroundColor: theme.colors.primary[600], paddingHorizontal: 24, paddingVertical: 12,
-        borderRadius: 10,
+        backgroundColor: theme.colors.error[600],
+        paddingHorizontal: 28,
+        paddingVertical: 14,
+        borderRadius: 12,
+        shadowColor: theme.colors.error[500],
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
     },
-    retryText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+    retryText: { color: '#fff', fontWeight: '700', fontSize: 15, letterSpacing: 0.3 },
 
-    // Main Card
-    card: {
-        backgroundColor: theme.colors.white, borderRadius: 16, padding: 20,
-        shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06,
-        shadowRadius: 10, elevation: 3, borderWidth: 1, borderColor: theme.colors.neutral[100],
+    // Main Content
+    mainContent: {
+        gap: 20,
     },
-    policyText: { fontSize: 15, lineHeight: 24, color: theme.colors.neutral[700] },
+    introCard: {
+        backgroundColor: theme.colors.white,
+        borderRadius: 20,
+        padding: 24,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.03,
+        shadowRadius: 12,
+        elevation: 2,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.02)',
+    },
     introduction: {
-        fontSize: 15, lineHeight: 26, color: theme.colors.neutral[600],
-        marginBottom: 24, textAlign: 'justify',
+        fontSize: 16,
+        lineHeight: 26,
+        color: theme.colors.neutral[700],
+        textAlign: 'justify',
+        letterSpacing: 0.2,
     },
 
-    // Sections
-    sectionContainer: {
-        marginBottom: 20, backgroundColor: theme.colors.neutral[50], padding: 18,
-        borderRadius: 14, borderWidth: 1, borderColor: theme.colors.neutral[100],
+    // Section Cards
+    sectionCard: {
+        backgroundColor: theme.colors.white,
+        borderRadius: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.03,
+        shadowRadius: 12,
+        elevation: 2,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.02)',
+        overflow: 'hidden',
     },
-    sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
-    sectionDot: { width: 8, height: 8, borderRadius: 4, marginRight: 10 },
-    sectionTitle: { fontSize: 17, fontWeight: '700', letterSpacing: 0.3 },
-    listContainer: { paddingLeft: 4 },
-    listItem: { flexDirection: 'row', marginBottom: 10, alignItems: 'flex-start' },
+    sectionHeader: { 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        paddingHorizontal: 20,
+        paddingVertical: 18,
+        borderBottomWidth: 1,
+        borderBottomColor: theme.colors.neutral[50],
+        backgroundColor: '#FAFAFA',
+    },
+    sectionIconBg: {
+        width: 32,
+        height: 32,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    sectionTitle: { 
+        fontSize: 17, 
+        fontWeight: '700', 
+        color: theme.colors.neutral[900],
+        letterSpacing: 0.3 
+    },
+    sectionBody: {
+        padding: 20,
+    },
+    text: { 
+        fontSize: 15, 
+        lineHeight: 24, 
+        color: theme.colors.neutral[600] 
+    },
+    
+    // Lists
+    listItem: { 
+        flexDirection: 'row', 
+        marginBottom: 12, 
+        alignItems: 'flex-start' 
+    },
     bulletDot: {
-        width: 6, height: 6, borderRadius: 3, backgroundColor: theme.colors.neutral[400],
-        marginRight: 12, marginTop: 8,
+        width: 6, 
+        height: 6, 
+        borderRadius: 3, 
+        marginRight: 12, 
+        marginTop: 9,
     },
-    listItemText: { fontSize: 14, lineHeight: 22, color: theme.colors.neutral[600], flex: 1 },
-    text: { fontSize: 14, lineHeight: 22, color: theme.colors.neutral[600] },
+    listItemText: { 
+        fontSize: 15, 
+        lineHeight: 24, 
+        color: theme.colors.neutral[700], 
+        flex: 1 
+    },
 
-    // Note
+    // Important Note Banner
     noteContainer: {
-        backgroundColor: theme.colors.primary[50], padding: 16, borderRadius: 14,
-        marginBottom: 20, borderLeftWidth: 4, borderLeftColor: theme.colors.primary[500],
-        flexDirection: 'row', alignItems: 'flex-start',
+        padding: 20, 
+        borderRadius: 20,
+        shadowColor: theme.colors.primary[200],
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 2,
     },
-    noteIcon: { fontSize: 20, marginRight: 12, marginTop: 2 },
-    noteTitle: { fontSize: 15, fontWeight: '700', color: theme.colors.primary[700], marginBottom: 6 },
-    noteText: { fontSize: 13, lineHeight: 20, color: theme.colors.primary[800] },
+    noteHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    noteIcon: { marginRight: 8 },
+    noteTitle: { 
+        fontSize: 16, 
+        fontWeight: '700', 
+        color: theme.colors.primary[800],
+    },
+    noteText: { 
+        fontSize: 14, 
+        lineHeight: 22, 
+        color: theme.colors.primary[900],
+        opacity: 0.9,
+    },
 
-    // Row items (delivery/refund)
+    // Tables / Rows
+    tableContainer: {
+        paddingHorizontal: 20,
+        paddingVertical: 8,
+    },
     rowItem: {
-        flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12,
-        borderBottomWidth: 1, borderBottomColor: theme.colors.neutral[100],
+        flexDirection: 'row', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        paddingVertical: 14,
+        borderBottomWidth: 1, 
+        borderBottomColor: theme.colors.neutral[100],
     },
-    rowLabel: { fontSize: 14, color: theme.colors.neutral[800], fontWeight: '500', flex: 1 },
-    rowValue: { fontSize: 14, color: theme.colors.neutral[600], textAlign: 'right', flex: 1 },
+    lastRow: {
+        borderBottomWidth: 0,
+    },
+    rowLabelContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    rowLabel: { 
+        fontSize: 15, 
+        color: theme.colors.neutral[800], 
+        fontWeight: '600'
+    },
+    rowValue: { 
+        fontSize: 14, 
+        color: theme.colors.neutral[500], 
+        textAlign: 'right', 
+        flex: 1,
+        fontWeight: '500'
+    },
 
-    // Method cards
+    // Method Cards
     methodCard: {
-        backgroundColor: theme.colors.white, padding: 16, borderRadius: 12,
-        marginBottom: 10, borderWidth: 1, borderColor: theme.colors.neutral[200],
+        backgroundColor: '#FAFAFA', 
+        padding: 16, 
+        borderRadius: 16,
+        marginBottom: 12, 
+        borderWidth: 1, 
+        borderColor: theme.colors.neutral[100],
     },
-    methodHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-    methodName: { fontSize: 15, fontWeight: '700', color: theme.colors.neutral[900] },
+    methodHeader: { 
+        flexDirection: 'row', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: 6 
+    },
+    methodName: { 
+        fontSize: 16, 
+        fontWeight: '700', 
+        color: theme.colors.neutral[900] 
+    },
     methodPriceBadge: {
-        backgroundColor: theme.colors.primary[50], paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6,
+        paddingHorizontal: 10, 
+        paddingVertical: 4, 
+        borderRadius: 8,
     },
-    methodPrice: { fontSize: 14, fontWeight: '700', color: theme.colors.primary[700] },
-    methodTime: { fontSize: 13, color: theme.colors.neutral[600], marginBottom: 4 },
-    methodDetails: { fontSize: 12, color: theme.colors.neutral[500], lineHeight: 18 },
+    methodPrice: { 
+        fontSize: 14, 
+        fontWeight: '700', 
+    },
+    methodDetailRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    methodTime: { 
+        fontSize: 13, 
+        color: theme.colors.neutral[500], 
+        marginLeft: 6,
+        fontWeight: '500'
+    },
+    methodDetails: { 
+        fontSize: 14, 
+        color: theme.colors.neutral[600], 
+        lineHeight: 20 
+    },
+
+    // Fallback Card
+    fallbackCard: {
+        backgroundColor: theme.colors.white,
+        borderRadius: 20,
+        padding: 24,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.03,
+        shadowRadius: 12,
+        elevation: 2,
+    },
+    policyText: { 
+        fontSize: 15, 
+        lineHeight: 26, 
+        color: theme.colors.neutral[700] 
+    },
 });
 
 export default PolicyScreen;
