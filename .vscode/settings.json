@@ -3,5 +3,9 @@
     "java.import.exclusions": [
         "**/node_modules/**",
         "**/bower_components/**"
+    ],
+    "java.project.resourceFilters": [
+        "node_modules",
+        ".git"
     ]
 }
